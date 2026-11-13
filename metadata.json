@@ -1,0 +1,10 @@
+{
+  "name": "ReportSamjho - Simple Medical Report Explainer",
+  "description": "Understand your medical and lab reports through simple visuals, traffic-light status, interactive body map, and multi-language support (English, Hindi, Odia).",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
