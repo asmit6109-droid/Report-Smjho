@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { ReportAnalysis, UserProfile } from './types/report';
+import React, { useMemo, useRef, useState } from 'react';
+import { CombinedReportData, ReportAnalysis, UserProfile } from './types/report';
 import {
   MedicineAnalysis,
   MedicineStep1Result,
@@ -12,20 +12,22 @@ import {
   getStoredProfile,
   saveStoredProfile,
   saveReportToStorage,
+  updateReportInStorage,
   getHealthProfile,
   saveHealthProfile,
 } from './utils/storage';
 import { compressImage } from './utils/imageQuality';
 import { isPdfFile, MAX_SCAN_PAGES, renderPdfToJpegPages } from './utils/pdfUtils';
 import { getClientDeviceId, submitScanJobWithPolling } from './utils/uploadJob';
-import { demoReports } from './utils/demoData';
+import { combineReportsClientSide, mergeAddedPagesIntoReport } from './utils/reportMerge';
+import { demoCombinedReportsPreview, demoReports } from './utils/demoData';
 import { demoMedicines } from './utils/demoMedicineData';
 import { triggerLightHaptic } from './utils/haptics';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { CameraScanner } from './components/CameraScanner';
 import { ProcessingScreen } from './components/ProcessingScreen';
-import { Dashboard } from './components/Dashboard';
+import { Dashboard, FailedAppendPage } from './components/Dashboard';
 import { HistoryScreen } from './components/HistoryScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { MedicineResultScreen } from './components/MedicineResultScreen';
@@ -50,6 +52,7 @@ import {
 type ScreenName =
   | 'home'
   | 'scan'
+  | 'scan_append_pages'
   | 'dashboard'
   | 'history'
   | 'medicine_scan'
@@ -65,6 +68,11 @@ export default function App() {
   const [historyTab, setHistoryTab] = useState<'reports' | 'medicines'>('reports');
   const [scanInitialMode, setScanInitialMode] = useState<'camera' | 'gallery'>('camera');
   const [activeReport, setActiveReport] = useState<ReportAnalysis | null>(null);
+  const [combinedSource, setCombinedSource] = useState<{
+    reports: ReportAnalysis[];
+    groupMeta?: { groupId?: string; groupName?: string; isDemo?: boolean };
+  } | null>(null);
+  const [failedAppendPages, setFailedAppendPages] = useState<FailedAppendPage[]>([]);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingMode, setProcessingMode] = useState<
     'report' | 'medicine_identify' | 'medicine_verify' | 'prescription'
@@ -114,6 +122,15 @@ export default function App() {
   const t = translations[currentLanguage];
   const mt = medicineTranslations[currentLanguage];
 
+  const combinedData: CombinedReportData | null = useMemo(() => {
+    if (!combinedSource || combinedSource.reports.length === 0) return null;
+    return combineReportsClientSide(
+      combinedSource.reports,
+      currentLanguage,
+      combinedSource.groupMeta
+    );
+  }, [combinedSource, currentLanguage]);
+
   const handleLanguageChange = (lang: SupportedLanguage) => {
     const updated = { ...profile, language: lang };
     setProfile(updated);
@@ -133,6 +150,8 @@ export default function App() {
     }
     setErrorMessage(null);
     setShowManualMedOption(false);
+    setCombinedSource(null);
+    setFailedAppendPages([]);
     setScanInitialMode('camera');
     setCurrentScreen('scan');
   };
@@ -343,6 +362,8 @@ export default function App() {
 
       saveReportToStorage(report);
       setPendingImages(null);
+      setCombinedSource(null);
+      setFailedAppendPages([]);
       setActiveReport(report);
       setCurrentScreen('dashboard');
     } catch (err: unknown) {
@@ -357,6 +378,131 @@ export default function App() {
             : 'Could not read the report. Please tap "Try Again".'
         )
       );
+    } finally {
+      setScanProgressTitle(undefined);
+      setScanProgressSubtitle(undefined);
+      setIsProcessing(false);
+    }
+  };
+
+  // Add More Pages to Existing Report (processes each new page cleanly so succeeded pages are kept even if 1 page fails)
+  const handleAppendPagesToActiveReport = async (newImages: string[]) => {
+    if (!activeReport) return;
+    if (!isOnline) {
+      setErrorMessage(t.offlineScanNotice);
+      setCurrentScreen('dashboard');
+      return;
+    }
+
+    const baseCount = activeReport.pages_count || 1;
+    setProcessingMode('report');
+    setScanProgressTitle(
+      currentLanguage === 'hi'
+        ? 'नए पन्ने जोड़े जा रहे हैं...'
+        : currentLanguage === 'or'
+        ? 'ନୂଆ ପୃଷ୍ଠା ଯୋଡାଯାଉଛି...'
+        : `Reading ${newImages.length} new page(s)...`
+    );
+    setScanProgressSubtitle(undefined);
+    setCurrentScreen('dashboard');
+    setIsProcessing(true);
+    setErrorMessage(null);
+
+    const succeededReports: ReportAnalysis[] = [];
+    const newFailed: FailedAppendPage[] = [];
+
+    for (let i = 0; i < newImages.length; i++) {
+      const pageNum = baseCount + i + 1;
+      setScanProgressTitle(
+        currentLanguage === 'hi'
+          ? `पेज ${pageNum} पढ़ा जा रहा है...`
+          : currentLanguage === 'or'
+          ? `ପୃଷ୍ଠା ${pageNum} ପଢ଼ାଯାଉଛି...`
+          : `Reading page ${pageNum}...`
+      );
+      try {
+        const pageResult = await submitScanJobWithPolling<ReportAnalysis>({
+          endpoint: '/api/jobs/scan-report',
+          payload: {
+            images: [newImages[i]],
+            age: profile.age,
+            gender: profile.gender,
+            language: currentLanguage,
+          },
+          language: currentLanguage,
+          onProgress: (upd) => {
+            setScanProgressSubtitle(upd.title);
+          },
+        });
+        if (
+          (pageResult.image_quality === 'poor' && (!pageResult.findings || pageResult.findings.length === 0)) ||
+          pageResult.is_raw_scan_without_text
+        ) {
+          throw new Error('Poor quality page');
+        }
+        succeededReports.push(pageResult);
+      } catch {
+        newFailed.push({
+          id: `fail-${Date.now()}-${i}`,
+          pageNumber: pageNum,
+          imageDataUrl: newImages[i],
+        });
+      }
+    }
+
+    if (succeededReports.length > 0) {
+      const mergedUpdated = mergeAddedPagesIntoReport(activeReport, succeededReports);
+      setActiveReport(mergedUpdated);
+      updateReportInStorage(mergedUpdated);
+    }
+
+    if (newFailed.length > 0) {
+      setFailedAppendPages((prev) => [...prev, ...newFailed]);
+    }
+
+    setScanProgressTitle(undefined);
+    setScanProgressSubtitle(undefined);
+    setIsProcessing(false);
+  };
+
+  const handleRetryFailedAppendPage = async (page: FailedAppendPage) => {
+    if (!activeReport) return;
+    if (!isOnline) {
+      setErrorMessage(t.offlineScanNotice);
+      return;
+    }
+
+    setProcessingMode('report');
+    setScanProgressTitle(`Retrying page ${page.pageNumber}...`);
+    setScanProgressSubtitle(undefined);
+    setIsProcessing(true);
+
+    try {
+      const pageResult = await submitScanJobWithPolling<ReportAnalysis>({
+        endpoint: '/api/jobs/scan-report',
+        payload: {
+          images: [page.imageDataUrl],
+          age: profile.age,
+          gender: profile.gender,
+          language: currentLanguage,
+        },
+        language: currentLanguage,
+        onProgress: (upd) => {
+          setScanProgressSubtitle(upd.title);
+        },
+      });
+      if (
+        (pageResult.image_quality === 'poor' && (!pageResult.findings || pageResult.findings.length === 0)) ||
+        pageResult.is_raw_scan_without_text
+      ) {
+        throw new Error('Poor quality page');
+      }
+      const mergedUpdated = mergeAddedPagesIntoReport(activeReport, [pageResult]);
+      setActiveReport(mergedUpdated);
+      updateReportInStorage(mergedUpdated);
+      setFailedAppendPages((prev) => prev.filter((p) => p.id !== page.id));
+    } catch {
+      // Keep failed banner intact for retry
     } finally {
       setScanProgressTitle(undefined);
       setScanProgressSubtitle(undefined);
@@ -714,7 +860,23 @@ export default function App() {
   const handleSelectDemoReport = (demo: ReportAnalysis) => {
     setShowDemoSelector(false);
     saveReportToStorage(demo);
+    setCombinedSource(null);
+    setFailedAppendPages([]);
     setActiveReport(demo);
+    setCurrentScreen('dashboard');
+  };
+
+  const handleOpenDemoCombinedReport = () => {
+    setShowDemoSelector(false);
+    setFailedAppendPages([]);
+    setCombinedSource({
+      reports: demoCombinedReportsPreview,
+      groupMeta: {
+        groupName: 'Combined Report Preview',
+        isDemo: true,
+      },
+    });
+    setActiveReport(demoCombinedReportsPreview[0]);
     setCurrentScreen('dashboard');
   };
 
@@ -1052,13 +1214,31 @@ export default function App() {
           />
         )}
 
+        {/* APPEND MORE PAGES TO EXISTING REPORT SCAN SCREEN */}
+        {currentScreen === 'scan_append_pages' && activeReport && (
+          <CameraScanner
+            language={currentLanguage}
+            initialMode="camera"
+            onAnalyze={handleAppendPagesToActiveReport}
+            onCancel={() => setCurrentScreen('dashboard')}
+          />
+        )}
+
         {/* COMBINED HISTORY SCREEN (Reports | Medicines tabs) */}
         {currentScreen === 'history' && (
           <HistoryScreen
             language={currentLanguage}
             initialTab={historyTab}
             onSelectReport={(rep) => {
+              setCombinedSource(null);
+              setFailedAppendPages([]);
               setActiveReport(rep);
+              setCurrentScreen('dashboard');
+            }}
+            onCombineReports={(selectedReps, groupMeta) => {
+              setFailedAppendPages([]);
+              setCombinedSource({ reports: selectedReps, groupMeta });
+              setActiveReport(selectedReps[0] || null);
               setCurrentScreen('dashboard');
             }}
             onSelectMedicine={(med) => {
@@ -1070,14 +1250,57 @@ export default function App() {
           />
         )}
 
-        {/* REPORT DASHBOARD */}
-        {currentScreen === 'dashboard' && activeReport && (
+        {/* REPORT DASHBOARD (Single Report OR Combined Report) */}
+        {currentScreen === 'dashboard' && !isProcessing && (activeReport || combinedData) && (
           <Dashboard
-            report={activeReport}
+            report={activeReport || (combinedData?.merged as ReportAnalysis)}
+            combinedData={combinedData}
             currentLanguage={currentLanguage}
             onLanguageChange={handleLanguageChange}
-            onReportUpdated={(updated) => setActiveReport(updated)}
-            onBackToHome={() => setCurrentScreen('home')}
+            onReportUpdated={(updated) => {
+              setActiveReport(updated);
+              setCombinedSource((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      reports: prev.reports.map((r) => (r.id === updated.id ? updated : r)),
+                    }
+                  : null
+              );
+            }}
+            onCombinedGroupChange={(nextGroup) => {
+              if (!combinedSource) return;
+              if (nextGroup === null) {
+                setCombinedSource(null);
+              } else {
+                setCombinedSource({
+                  ...combinedSource,
+                  groupMeta: {
+                    ...combinedSource.groupMeta,
+                    groupId: nextGroup.groupId,
+                    groupName: nextGroup.groupName,
+                  },
+                });
+              }
+            }}
+            onAddMorePages={() => {
+              triggerLightHaptic();
+              if (!isOnline) {
+                setErrorMessage(t.offlineScanNotice);
+                return;
+              }
+              setCurrentScreen('scan_append_pages');
+            }}
+            failedAppendPages={failedAppendPages}
+            onRetryFailedPage={handleRetryFailedAppendPage}
+            onDismissFailedPage={(pageId) =>
+              setFailedAppendPages((prev) => prev.filter((p) => p.id !== pageId))
+            }
+            onBackToHome={() => {
+              setCombinedSource(null);
+              setFailedAppendPages([]);
+              setCurrentScreen('home');
+            }}
           />
         )}
 
@@ -1177,6 +1400,16 @@ export default function App() {
                   <span className="text-base font-bold text-[var(--color-brand)]">Open</span>
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={handleOpenDemoCombinedReport}
+                className="w-full text-left rounded-[14px] bg-[var(--color-brand-soft)] px-4 py-3.5 hover:bg-[var(--color-brand-soft)]/80 flex items-center justify-between transition"
+              >
+                <span className="font-bold text-base text-[var(--color-brand)]">
+                  DEMO • Combined Report Preview
+                </span>
+                <span className="text-base font-bold text-[var(--color-brand)]">Open</span>
+              </button>
             </div>
             <button
               type="button"

@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { ReportAnalysis } from '../types/report';
+import React, { useState, useEffect, useMemo } from 'react';
+import { CombinedReportData, ReportAnalysis, ReportGroup } from '../types/report';
 import { SupportedLanguage, translations } from '../utils/translations';
 import { speechService } from '../utils/speech';
 import {
   calculateMarkerTrends,
+  deleteReportGroup,
   getStoredReports,
+  renameReportGroup,
+  saveReportGroup,
   saveReportToStorage,
   updateReportInStorage,
 } from '../utils/storage';
+import { buildBodyRegionSummaries } from '../utils/bodyMapper';
+import { buildFullPdfPayload, PdfReportPayload } from '../utils/pdfReportData';
 import { BodyMap } from './BodyMap';
 import { FindingGauge } from './FindingGauge';
+import { ReportExportModal } from './ReportExportModal';
+import { PrintReportSheet } from './PrintReportSheet';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -30,13 +37,30 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  FilePlus2,
+  Layers,
+  RefreshCw,
+  Edit2,
+  FolderMinus,
 } from 'lucide-react';
+
+export interface FailedAppendPage {
+  id: string;
+  pageNumber: number;
+  imageDataUrl: string;
+}
 
 interface DashboardProps {
   report: ReportAnalysis;
+  combinedData?: CombinedReportData | null;
   currentLanguage: SupportedLanguage;
   onLanguageChange: (lang: SupportedLanguage) => void;
   onReportUpdated?: (updated: ReportAnalysis) => void;
+  onCombinedGroupChange?: (nextGroup: { groupId?: string; groupName?: string } | null) => void;
+  onAddMorePages?: () => void;
+  failedAppendPages?: FailedAppendPage[];
+  onRetryFailedPage?: (page: FailedAppendPage) => void;
+  onDismissFailedPage?: (pageId: string) => void;
   onBackToHome: () => void;
 }
 
@@ -51,25 +75,106 @@ type ReportMoreRowId =
 
 export const Dashboard: React.FC<DashboardProps> = ({
   report,
+  combinedData = null,
   currentLanguage,
   onLanguageChange,
   onReportUpdated,
+  onCombinedGroupChange,
+  onAddMorePages,
+  failedAppendPages = [],
+  onRetryFailedPage,
+  onDismissFailedPage,
   onBackToHome,
 }) => {
+  const [selectedScanIndex, setSelectedScanIndex] = useState<'all' | number>('all');
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isSaved, setIsSaved] = useState(() =>
-    getStoredReports().some((r) => r.id === report.id)
-  );
   const [isTranslating, setIsTranslating] = useState(false);
   const [saveToast, setSaveToast] = useState<string | null>(null);
   const [showMore, setShowMore] = useState(false);
   const [openRow, setOpenRow] = useState<ReportMoreRowId | null>(null);
+  const [focusedFindingId, setFocusedFindingId] = useState<string | null>(null);
+
+  // Report Group save / rename UI states
+  const [showSaveGroupInput, setShowSaveGroupInput] = useState(false);
+  const [groupNameInput, setGroupNameInput] = useState('');
+  const [isRenamingGroup, setIsRenamingGroup] = useState(false);
+
+  // Full PDF / Print Export Modal & A4 Print Payload
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [customPrintPayload, setCustomPrintPayload] = useState<PdfReportPayload | null>(null);
+
+  const isCombinedMode = Boolean(combinedData && combinedData.scans.length > 0);
+  const activeViewReport: ReportAnalysis =
+    isCombinedMode && combinedData && selectedScanIndex !== 'all'
+      ? combinedData.scans[selectedScanIndex]?.report || report
+      : combinedData
+      ? combinedData.merged
+      : report;
+
+  const [isSaved, setIsSaved] = useState(() =>
+    getStoredReports().some((r) => r.id === activeViewReport.id)
+  );
 
   const t = translations[currentLanguage];
 
+  const ui = {
+    allCombined:
+      currentLanguage === 'hi'
+        ? 'सभी मिलाकर'
+        : currentLanguage === 'or'
+        ? 'ସବୁ ମିଶାଇ'
+        : 'All Combined',
+    addMorePages:
+      currentLanguage === 'hi'
+        ? 'और पन्ने जोड़ें'
+        : currentLanguage === 'or'
+        ? 'ଆଉ ପୃଷ୍ଠା ଯୋଡନ୍ତୁ'
+        : 'Add more pages',
+    saveAsGroup:
+      currentLanguage === 'hi'
+        ? 'ग्रुप के रूप में सेव करें'
+        : currentLanguage === 'or'
+        ? 'ଗୋଷ୍ଠୀ ଭାବେ ସେଭ୍ କରନ୍ତୁ'
+        : 'Save as report group',
+    groupPlaceholder:
+      currentLanguage === 'hi'
+        ? 'नाम लिखें (जैसे: ब्लड टेस्ट 12 नव.)'
+        : currentLanguage === 'or'
+        ? 'ନାମ ଲେଖନ୍ତୁ (ଯଥା: ବ୍ଲଡ୍ ଟେଷ୍ଟ)'
+        : 'e.g. Blood test 12 Nov',
+    mismatchText:
+      currentLanguage === 'hi'
+        ? 'ये रिपोर्ट अलग-अलग व्यक्ति या तारीख की लग रही हैं। कृपया जांच लें।'
+        : currentLanguage === 'or'
+        ? 'ଏହି ରିପୋର୍ଟଗୁଡ଼ିକ ଅଲଗା ବ୍ୟକ୍ତି କିମ୍ବା ତାରିଖର ପରି ଲାଗୁଛି। ଦୟାକରି ଯାଞ୍ଚ କରନ୍ତୁ।'
+        : 'These reports look like they are from different people or dates. Please check.',
+    otherFindings:
+      currentLanguage === 'hi'
+        ? 'अन्य जांच'
+        : currentLanguage === 'or'
+        ? 'ଅନ୍ୟାନ୍ୟ ପରୀକ୍ଷା'
+        : 'Other findings',
+    groupSavedToast:
+      currentLanguage === 'hi'
+        ? 'रिपोर्ट ग्रुप सेव हो गया!'
+        : currentLanguage === 'or'
+        ? 'ରିପୋର୍ଟ ଗୋଷ୍ଠୀ ସେଭ୍ ହୋଇଗଲା!'
+        : 'Report group saved!',
+  };
+
   useEffect(() => {
-    setIsSaved(getStoredReports().some((r) => r.id === report.id));
-  }, [report.id]);
+    setSelectedScanIndex('all');
+    setShowSaveGroupInput(false);
+    setIsRenamingGroup(false);
+    setGroupNameInput(
+      combinedData?.groupName ||
+        `Report ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`
+    );
+  }, [combinedData?.merged.id, combinedData?.groupName]);
+
+  useEffect(() => {
+    setIsSaved(getStoredReports().some((r) => r.id === activeViewReport.id));
+  }, [activeViewReport.id]);
 
   useEffect(() => {
     return () => {
@@ -77,15 +182,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
     };
   }, []);
 
-  // Automatically fetch translation on-demand if switching language
+  // Automatically fetch translation on-demand if switching language (for single reports or selected individual scans)
   useEffect(() => {
     let cancelled = false;
 
     const needsTranslation = () => {
-      if (report.translations?.[currentLanguage]?.report_type) return false;
-      const baseMatchesHi = report.translations?.hi?.report_type === report.report_type;
-      const baseMatchesOr = report.translations?.or?.report_type === report.report_type;
+      if (activeViewReport.translations?.[currentLanguage]?.report_type) return false;
+      const baseMatchesHi =
+        activeViewReport.translations?.hi?.report_type === activeViewReport.report_type;
+      const baseMatchesOr =
+        activeViewReport.translations?.or?.report_type === activeViewReport.report_type;
       if (currentLanguage === 'en' && !baseMatchesHi && !baseMatchesOr) return false;
+      if (isCombinedMode && selectedScanIndex === 'all') return false;
       return true;
     };
 
@@ -96,7 +204,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         const res = await fetch('/api/translate-report', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ report, targetLanguage: currentLanguage }),
+          body: JSON.stringify({ report: activeViewReport, targetLanguage: currentLanguage }),
         });
         const raw = await res.text();
         const data = JSON.parse(raw);
@@ -110,9 +218,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
           }
 
           const updatedReport: ReportAnalysis = {
-            ...report,
+            ...activeViewReport,
             translations: {
-              ...report.translations,
+              ...activeViewReport.translations,
               [currentLanguage]: {
                 report_type: tr.report_type,
                 severity_reason: tr.severity_reason,
@@ -121,7 +229,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 doctor_questions: tr.doctor_questions,
               },
             },
-            findings: report.findings.map((f) => {
+            findings: activeViewReport.findings.map((f) => {
               const matched = findingMap.get(f.id);
               return {
                 ...f,
@@ -150,28 +258,114 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [currentLanguage, report, onReportUpdated]);
+  }, [currentLanguage, activeViewReport, isCombinedMode, selectedScanIndex, onReportUpdated]);
 
-  const abnormalFindings = report.findings.filter((f) => f.status !== 'normal');
-  const normalFindings = report.findings.filter((f) => f.status === 'normal');
+  const abnormalFindings = activeViewReport.findings.filter((f) => f.status !== 'normal');
+  const normalFindings = activeViewReport.findings.filter((f) => f.status === 'normal');
+
+  const bodySummary = useMemo(
+    () =>
+      buildBodyRegionSummaries(
+        activeViewReport.findings,
+        activeViewReport.report_type,
+        currentLanguage
+      ),
+    [activeViewReport.findings, activeViewReport.report_type, currentLanguage]
+  );
+
+  // Separate mapped abnormal findings from unmapped "Other findings"
+  const mappedAbnormalFindings = abnormalFindings.filter(
+    (f) => bodySummary.mappedRegionIdsForFinding[f.id] !== null
+  );
+  const unmappedAbnormalFindings = abnormalFindings.filter(
+    (f) => bodySummary.mappedRegionIdsForFinding[f.id] === null
+  );
+
   const trends = calculateMarkerTrends(getStoredReports());
 
   const displayReportType =
-    report.translations?.[currentLanguage]?.report_type || report.report_type;
+    activeViewReport.translations?.[currentLanguage]?.report_type || activeViewReport.report_type;
   const displaySeverityReason =
-    report.translations?.[currentLanguage]?.severity_reason || report.severity_reason;
+    activeViewReport.translations?.[currentLanguage]?.severity_reason ||
+    activeViewReport.severity_reason;
   const displaySymptoms =
-    report.translations?.[currentLanguage]?.symptoms_to_watch || report.symptoms_to_watch;
+    activeViewReport.translations?.[currentLanguage]?.symptoms_to_watch ||
+    activeViewReport.symptoms_to_watch;
   const displaySafeSteps =
-    report.translations?.[currentLanguage]?.safe_steps || report.safe_steps;
+    activeViewReport.translations?.[currentLanguage]?.safe_steps || activeViewReport.safe_steps;
   const displayDoctorQuestions =
-    report.translations?.[currentLanguage]?.doctor_questions || report.doctor_questions;
+    activeViewReport.translations?.[currentLanguage]?.doctor_questions ||
+    activeViewReport.doctor_questions;
 
   const handleSaveReport = () => {
-    const success = saveReportToStorage(report);
+    if (isCombinedMode && selectedScanIndex === 'all') {
+      setShowSaveGroupInput(true);
+      return;
+    }
+    const success = saveReportToStorage(activeViewReport);
     setIsSaved(true);
     setSaveToast(success ? t.savedSuccess : t.reportAlreadySaved);
     setTimeout(() => setSaveToast(null), 2500);
+  };
+
+  const handleConfirmSaveGroup = () => {
+    if (!combinedData) return;
+    const cleanName =
+      groupNameInput.trim() ||
+      `Report ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+    const groupId = combinedData.groupId || `grp-${Date.now()}`;
+    // Ensure underlying scans exist in storage so group always resolves cleanly
+    combinedData.scans.forEach((s) => saveReportToStorage(s.report));
+
+    const newGroup: ReportGroup = {
+      id: groupId,
+      name: cleanName,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      reportIds: combinedData.scans.map((s) => s.report.id),
+      isDemo: combinedData.isDemo,
+    };
+    saveReportGroup(newGroup);
+    onCombinedGroupChange?.({ groupId, groupName: cleanName });
+    setShowSaveGroupInput(false);
+    setIsRenamingGroup(false);
+    setSaveToast(ui.groupSavedToast);
+    setTimeout(() => setSaveToast(null), 2500);
+  };
+
+  const handleCommitGroupRename = () => {
+    if (!combinedData?.groupId) return;
+    const cleanName = groupNameInput.trim() || combinedData.groupName || 'Report Group';
+    renameReportGroup(combinedData.groupId, cleanName);
+    onCombinedGroupChange?.({ groupId: combinedData.groupId, groupName: cleanName });
+    setIsRenamingGroup(false);
+    setSaveToast(ui.groupSavedToast);
+    setTimeout(() => setSaveToast(null), 2500);
+  };
+
+  const handleUngroup = () => {
+    if (!combinedData?.groupId) return;
+    deleteReportGroup(combinedData.groupId);
+    onCombinedGroupChange?.(null);
+    onBackToHome();
+  };
+
+  const handleViewFindingFromBodyMap = (findingId: string) => {
+    const isNormal = normalFindings.some((f) => f.id === findingId);
+    if (isNormal) {
+      setShowMore(true);
+      setOpenRow('normal_tests');
+    }
+    setFocusedFindingId(findingId);
+    setTimeout(() => {
+      const el = document.getElementById(`finding-${findingId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+    setTimeout(() => {
+      setFocusedFindingId((prev) => (prev === findingId ? null : prev));
+    }, 2800);
   };
 
   const handleToggleReadAloud = () => {
@@ -182,9 +376,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
 
     const statusText =
-      report.overall_severity === 'green'
+      activeViewReport.overall_severity === 'green'
         ? `${t.statusGreen}. ${displaySeverityReason}`
-        : report.overall_severity === 'yellow'
+        : activeViewReport.overall_severity === 'yellow'
         ? `${t.statusYellow}. ${displaySeverityReason}`
         : `${t.statusRed}. ${displaySeverityReason}`;
 
@@ -204,15 +398,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handlePrintPdf = () => {
-    window.print();
+    setShowExportModal(true);
   };
 
   const handleShareReport = async () => {
     const abnormalLines = abnormalFindings
-      .slice(0, 5)
+      .slice(0, 6)
       .map((f) => {
         const name = f.translations?.[currentLanguage]?.name || f.name;
-        return `- ${name}: ${f.value} ${f.unit || ''} (${f.status.toUpperCase()})`;
+        const src = f.source_label ? ` [${f.source_label}]` : '';
+        return `- ${name}: ${f.value} ${f.unit || ''} (${f.status.toUpperCase()})${src}`;
       })
       .join('\n');
     const summaryText = `${displayReportType}\n${displaySeverityReason}\n${abnormalLines ? `\n${abnormalLines}\n` : ''}\n${t.permanentFooter}\n\n— ${t.shareSignOff}`;
@@ -246,10 +441,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setOpenRow((prev) => (prev === id ? null : id));
   };
 
+  const defaultPrintPayload = useMemo(
+    () =>
+      buildFullPdfPayload(activeViewReport, isCombinedMode && selectedScanIndex === 'all' ? combinedData : null, {
+        language: currentLanguage,
+        includeEnglishBilingual: false,
+        includePatientIdentity: false,
+        includeAllSavedMedicines: true,
+      }),
+    [activeViewReport, isCombinedMode, selectedScanIndex, combinedData, currentLanguage]
+  );
+
+  const effectivePrintPayload = customPrintPayload || defaultPrintPayload;
+
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] pb-16 pt-4 px-4 max-w-xl mx-auto print:p-0 print:max-w-none print:bg-white space-y-6">
-      {/* Top Bar: Back + Translate Button */}
-      <div className="flex items-center justify-between print:hidden">
+    <>
+      <div className="min-h-screen bg-[var(--color-bg)] pb-16 pt-4 px-4 max-w-xl mx-auto print:hidden space-y-5">
+        {/* Top Bar: Back + Add Pages (single report) + Translate */}
+        <div className="flex items-center justify-between gap-2 print:hidden">
         <button
           type="button"
           onClick={() => {
@@ -262,28 +471,81 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <span>{t.backToHome}</span>
         </button>
 
-        <button
-          type="button"
-          disabled={isTranslating}
-          onClick={handleNextLanguage}
-          className="rs-card inline-flex items-center gap-2 px-4 py-2.5 text-base font-bold text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] transition"
-        >
-          {isTranslating ? (
-            <Loader2 className="w-4 h-4 text-[var(--color-brand)] animate-spin" />
-          ) : (
-            <Languages className="w-4 h-4 text-[var(--color-brand)]" />
+        <div className="flex items-center gap-2">
+          {!isCombinedMode && onAddMorePages && (
+            <button
+              type="button"
+              onClick={onAddMorePages}
+              className="rs-card inline-flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-[var(--color-brand)] hover:bg-[var(--color-brand-soft)] transition"
+            >
+              <FilePlus2 className="w-4 h-4 shrink-0" />
+              <span>{ui.addMorePages}</span>
+            </button>
           )}
-          <span>
-            {currentLanguage === 'en'
-              ? 'Translate'
-              : currentLanguage === 'hi'
-              ? 'हिन्दी'
-              : 'ଓଡ଼ିଆ'}
-          </span>
-        </button>
+
+          <button
+            type="button"
+            disabled={isTranslating}
+            onClick={handleNextLanguage}
+            className="rs-card inline-flex items-center gap-2 px-3.5 py-2.5 text-sm font-bold text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] transition"
+          >
+            {isTranslating ? (
+              <Loader2 className="w-4 h-4 text-[var(--color-brand)] animate-spin" />
+            ) : (
+              <Languages className="w-4 h-4 text-[var(--color-brand)]" />
+            )}
+            <span>
+              {currentLanguage === 'en'
+                ? 'Translate'
+                : currentLanguage === 'hi'
+                ? 'हिन्दी'
+                : 'ଓଡ଼ିଆ'}
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* Toast (brand teal, not health normal green) */}
+      {/* Per-page Failed Append Retry Banners (preserves already succeeded pages!) */}
+      {failedAppendPages.length > 0 && (
+        <div className="space-y-2 print:hidden">
+          {failedAppendPages.map((fp) => (
+            <div
+              key={fp.id}
+              className="rounded-[16px] bg-[var(--color-caution-soft)] p-4 shadow-[var(--shadow-card)] flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <AlertTriangle className="w-5 h-5 text-[var(--color-caution)] shrink-0" />
+                <p className="text-sm font-extrabold text-[var(--color-text)]">
+                  Page {fp.pageNumber} failed. Retry only this page.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {onRetryFailedPage && (
+                  <button
+                    type="button"
+                    onClick={() => onRetryFailedPage(fp)}
+                    className="rs-btn-primary px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Retry</span>
+                  </button>
+                )}
+                {onDismissFailedPage && (
+                  <button
+                    type="button"
+                    onClick={() => onDismissFailedPage(fp.id)}
+                    className="text-xs font-bold text-[var(--color-text-secondary)] px-2 py-1"
+                  >
+                    Dismiss
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Toast */}
       {saveToast && (
         <div className="rounded-[16px] bg-[var(--color-brand)] text-white px-4 py-3 text-base font-bold flex items-center justify-center gap-2 shadow-[var(--shadow-card)] print:hidden">
           <Check className="w-5 h-5" />
@@ -291,17 +553,153 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* Report Title */}
-      <h1 className="text-2xl font-extrabold text-[var(--color-text)] leading-tight">
-        {displayReportType}
-      </h1>
+      {/* Combined Scans Switcher Tabs (All Combined | Scan 1 | Scan 2 ...) */}
+      {isCombinedMode && combinedData && (
+        <div className="space-y-3 print:hidden">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              type="button"
+              onClick={() => setSelectedScanIndex('all')}
+              className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-extrabold transition ${
+                selectedScanIndex === 'all'
+                  ? 'bg-[var(--color-brand)] text-white shadow-[var(--shadow-card)]'
+                  : 'rs-card text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)]'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>{ui.allCombined}</span>
+            </button>
+
+            {combinedData.scans.map((scan, idx) => (
+              <button
+                key={scan.report.id}
+                type="button"
+                onClick={() => setSelectedScanIndex(idx)}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
+                  selectedScanIndex === idx
+                    ? 'bg-[var(--color-brand)] text-white shadow-[var(--shadow-card)]'
+                    : 'rs-card text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)]'
+                }`}
+              >
+                {scan.label}
+                {scan.dateLabel ? ` • ${scan.dateLabel}` : ''}
+              </button>
+            ))}
+          </div>
+
+          {/* Mismatch warning (different people / dates across scans) */}
+          {selectedScanIndex === 'all' && combinedData.mismatchWarning && (
+            <div className="rounded-[16px] bg-[var(--color-caution-soft)] p-4 flex items-start gap-3 shadow-[var(--shadow-card)]">
+              <AlertTriangle className="w-5 h-5 text-[var(--color-caution)] shrink-0 mt-0.5" />
+              <p className="text-sm font-bold text-[var(--color-text)] leading-snug">
+                {ui.mismatchText}
+              </p>
+            </div>
+          )}
+
+          {/* Report Group Save / Rename / Ungroup Bar */}
+          {selectedScanIndex === 'all' && (
+            <div className="rs-card p-3.5 space-y-2.5">
+              {!combinedData.groupId && !showSaveGroupInput && (
+                <button
+                  type="button"
+                  onClick={() => setShowSaveGroupInput(true)}
+                  className="w-full flex items-center justify-center gap-2 text-sm font-extrabold text-[var(--color-brand)] py-1"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  <span>{ui.saveAsGroup}</span>
+                </button>
+              )}
+
+              {(showSaveGroupInput || isRenamingGroup) && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={groupNameInput}
+                    onChange={(e) => setGroupNameInput(e.target.value)}
+                    placeholder={ui.groupPlaceholder}
+                    className="flex-1 rounded-[12px] border border-[var(--color-divider)] px-3 py-2 text-sm font-bold text-[var(--color-text)] bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={isRenamingGroup ? handleCommitGroupRename : handleConfirmSaveGroup}
+                    className="rs-btn-primary px-4 py-2 text-sm font-extrabold"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSaveGroupInput(false);
+                      setIsRenamingGroup(false);
+                    }}
+                    className="px-2.5 py-2 text-sm font-bold text-[var(--color-text-secondary)]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {combinedData.groupId && !isRenamingGroup && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-extrabold text-[var(--color-text)] truncate">
+                    {combinedData.groupName}
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGroupNameInput(combinedData.groupName || '');
+                        setIsRenamingGroup(true);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-[10px] bg-[var(--color-bg)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-text)]"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Rename</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleUngroup}
+                      className="inline-flex items-center gap-1 rounded-[10px] bg-[var(--color-bg)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-danger)]"
+                    >
+                      <FolderMinus className="w-3.5 h-3.5" />
+                      <span>Ungroup</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Report Title + DEMO / Page Count Pill */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            {activeViewReport.isDemo && (
+              <span className="rounded-full bg-[var(--color-brand)] text-white px-2.5 py-0.5 text-xs font-extrabold">
+                DEMO
+              </span>
+            )}
+            {activeViewReport.pages_count && activeViewReport.pages_count > 1 && (
+              <span className="rounded-full bg-[var(--color-surface)] px-2.5 py-0.5 text-xs font-bold text-[var(--color-text-secondary)] shadow-[var(--shadow-card)]">
+                {activeViewReport.pages_count} pages
+              </span>
+            )}
+          </div>
+          <h1 className="text-2xl font-extrabold text-[var(--color-text)] leading-tight">
+            {displayReportType}
+          </h1>
+        </div>
+      </div>
 
       {/* 1. BIG TRAFFIC LIGHT + ONE LINE WHY */}
       <div
         className={`rs-card p-5 flex items-center gap-4 ${
-          report.overall_severity === 'green'
+          activeViewReport.overall_severity === 'green'
             ? 'bg-[var(--color-normal-soft)]'
-            : report.overall_severity === 'yellow'
+            : activeViewReport.overall_severity === 'yellow'
             ? 'bg-[var(--color-caution-soft)]'
             : 'bg-[var(--color-danger-soft)]'
         }`}
@@ -309,21 +707,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex flex-col items-center justify-between bg-[var(--color-surface)] p-2 rounded-[14px] shadow-[var(--shadow-card)] gap-2 shrink-0">
           <div
             className={`w-5 h-5 rounded-full ${
-              report.overall_severity === 'red'
+              activeViewReport.overall_severity === 'red'
                 ? 'bg-[var(--color-danger)]'
                 : 'bg-[var(--color-danger)]/20'
             }`}
           />
           <div
             className={`w-5 h-5 rounded-full ${
-              report.overall_severity === 'yellow'
+              activeViewReport.overall_severity === 'yellow'
                 ? 'bg-[var(--color-caution)]'
                 : 'bg-[var(--color-caution)]/20'
             }`}
           />
           <div
             className={`w-5 h-5 rounded-full ${
-              report.overall_severity === 'green'
+              activeViewReport.overall_severity === 'green'
                 ? 'bg-[var(--color-normal)]'
                 : 'bg-[var(--color-normal)]/20'
             }`}
@@ -332,17 +730,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5">
-            {report.overall_severity === 'green' ? (
+            {activeViewReport.overall_severity === 'green' ? (
               <CheckCircle2 className="w-6 h-6 text-[var(--color-normal)] shrink-0" />
-            ) : report.overall_severity === 'yellow' ? (
+            ) : activeViewReport.overall_severity === 'yellow' ? (
               <AlertTriangle className="w-6 h-6 text-[var(--color-caution)] shrink-0" />
             ) : (
               <AlertOctagon className="w-6 h-6 text-[var(--color-danger)] shrink-0" />
             )}
             <h2 className="text-xl font-extrabold text-[var(--color-text)] leading-none">
-              {report.overall_severity === 'green'
+              {activeViewReport.overall_severity === 'green'
                 ? t.statusGreen
-                : report.overall_severity === 'yellow'
+                : activeViewReport.overall_severity === 'yellow'
                 ? t.statusYellow
                 : t.statusRed}
             </h2>
@@ -354,7 +752,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* 2. EMERGENCY BANNER (ONLY WHEN SEVERITY IS RED) */}
-      {report.overall_severity === 'red' && (
+      {activeViewReport.overall_severity === 'red' && (
         <div className="rounded-[16px] bg-[var(--color-danger)] text-white p-5 shadow-[var(--shadow-card)] space-y-3">
           <div className="flex items-center gap-3">
             <AlertOctagon className="w-6 h-6 shrink-0" />
@@ -379,24 +777,47 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* 3. BODY MAP WITH HIGHLIGHTED AREA */}
+      {/* 3. BETTER BODY VISUALIZATION (Deterministic table + tap interaction) */}
       <BodyMap
-        affectedRegions={report.body_regions_affected}
-        findings={report.findings}
-        overallSeverity={report.overall_severity}
+        affectedRegions={activeViewReport.body_regions_affected}
+        findings={activeViewReport.findings}
+        overallSeverity={activeViewReport.overall_severity}
+        reportType={activeViewReport.report_type}
         language={currentLanguage}
+        onViewFinding={handleViewFindingFromBodyMap}
       />
 
-      {/* 4. ABNORMAL FINDINGS (Value + Simple Bar) */}
-      {abnormalFindings.length > 0 && (
+      {/* 4. ABNORMAL FINDINGS (Mapped first, then unmapped under "Other findings") */}
+      {mappedAbnormalFindings.length > 0 && (
         <div className="space-y-3">
-          {abnormalFindings.map((finding) => (
-            <FindingGauge key={finding.id} finding={finding} language={currentLanguage} />
+          {mappedAbnormalFindings.map((finding) => (
+            <FindingGauge
+              key={finding.id}
+              finding={finding}
+              language={currentLanguage}
+              isFocused={focusedFindingId === finding.id}
+            />
           ))}
         </div>
       )}
 
-      {/* TWO ROUND BUTTONS (Read aloud & Save) + ONE MORE DETAILS BUTTON */}
+      {unmappedAbnormalFindings.length > 0 && (
+        <div className="space-y-2.5">
+          <h3 className="text-sm font-extrabold text-[var(--color-text-secondary)] px-1">
+            {ui.otherFindings}
+          </h3>
+          {unmappedAbnormalFindings.map((finding) => (
+            <FindingGauge
+              key={finding.id}
+              finding={finding}
+              language={currentLanguage}
+              isFocused={focusedFindingId === finding.id}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* TWO ROUND BUTTONS (Read aloud & Save) + MORE DETAILS BUTTON */}
       <div className="space-y-5 pt-1 print:hidden">
         <div className="flex items-center justify-center gap-12">
           {speechService.isAvailable() && (
@@ -427,15 +848,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
           >
             <span
               className={`w-16 h-16 rounded-full flex items-center justify-center shadow-[var(--shadow-card)] transition ${
-                isSaved
+                isSaved || (isCombinedMode && Boolean(combinedData?.groupId))
                   ? 'bg-[var(--color-brand)] text-white'
                   : 'bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)]'
               }`}
             >
-              {isSaved ? <Check className="w-7 h-7" /> : <Bookmark className="w-7 h-7" />}
+              {isSaved || (isCombinedMode && Boolean(combinedData?.groupId)) ? (
+                <Check className="w-7 h-7" />
+              ) : (
+                <Bookmark className="w-7 h-7" />
+              )}
             </span>
             <span className="text-base font-bold text-[var(--color-text)]">
-              {isSaved ? 'Saved' : 'Save'}
+              {isCombinedMode && selectedScanIndex === 'all'
+                ? combinedData?.groupId
+                  ? 'Saved'
+                  : 'Save group'
+                : isSaved
+                ? 'Saved'
+                : 'Save'}
             </span>
           </button>
         </div>
@@ -456,7 +887,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </button>
       </div>
 
-      {/* MORE DETAILS (Collapsed rows: symptoms, steps, questions for doctor, trend chart, etc.) */}
+      {/* MORE DETAILS (Collapsed rows) */}
       {showMore && (
         <div className="rs-card divide-y divide-[var(--color-divider)] overflow-hidden print:hidden">
           {normalFindings.length > 0 && (
@@ -478,7 +909,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
               {openRow === 'normal_tests' && (
                 <div className="px-5 pb-4 space-y-2.5">
                   {normalFindings.map((finding) => (
-                    <FindingGauge key={finding.id} finding={finding} language={currentLanguage} />
+                    <FindingGauge
+                      key={finding.id}
+                      finding={finding}
+                      language={currentLanguage}
+                      isFocused={focusedFindingId === finding.id}
+                    />
                   ))}
                 </div>
               )}
@@ -504,7 +940,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   {abnormalFindings.map((f) => (
                     <p key={f.id}>
                       <span className="font-bold">
-                        {f.translations?.[currentLanguage]?.name || f.name}:{' '}
+                        {f.translations?.[currentLanguage]?.name || f.name}
+                        {f.source_label ? ` (${f.source_label})` : ''}:{' '}
                       </span>
                       {f.translations?.[currentLanguage]?.short_explanation || f.short_explanation}
                     </p>
@@ -553,9 +990,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </button>
             {openRow === 'urgency' && (
               <div className="px-5 pb-4 text-base font-bold text-[var(--color-text)]">
-                {report.urgency === 'today'
+                {activeViewReport.urgency === 'today'
                   ? t.urgencyToday
-                  : report.urgency === 'soon'
+                  : activeViewReport.urgency === 'soon'
                   ? t.urgencySoon
                   : t.urgencyRoutine}
               </div>
@@ -708,10 +1145,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* Tiny Footer */}
+      {/* Permanent Footer */}
       <p className="text-center text-sm font-medium text-[var(--color-text-secondary)] pt-2">
         {t.permanentFooter}
       </p>
     </div>
+
+    {/* Dedicated Full-Report A4 Print View (used by window.print() / Print button) */}
+    <PrintReportSheet payload={effectivePrintPayload} />
+
+    {/* Export / Print Modal (Language choice, bilingual toggle, name privacy toggle, Preview, Download PDF, Print, Share) */}
+    {showExportModal && (
+      <ReportExportModal
+        report={activeViewReport}
+        combinedData={isCombinedMode && selectedScanIndex === 'all' ? combinedData : null}
+        initialLanguage={currentLanguage}
+        onPrintPayloadReady={(p) => setCustomPrintPayload(p)}
+        onClose={() => setShowExportModal(false)}
+      />
+    )}
+    </>
   );
 };

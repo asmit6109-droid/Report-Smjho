@@ -1,4 +1,4 @@
-import { ReportAnalysis, UserProfile, MarkerTrend } from '../types/report';
+import { ReportAnalysis, ReportGroup, UserProfile, MarkerTrend } from '../types/report';
 import {
   MedicineAnalysis,
   PrescriptionRecord,
@@ -8,6 +8,7 @@ import {
 
 const PROFILE_KEY = 'reportsamjho_user_profile';
 const REPORTS_KEY = 'reportsamjho_saved_reports';
+const REPORT_GROUPS_KEY = 'reportsamjho_report_groups';
 const MEDICINES_KEY = 'reportsamjho_saved_medicines';
 const PRESCRIPTIONS_KEY = 'reportsamjho_saved_prescriptions';
 const HEALTH_PROFILE_KEY = 'reportsamjho_health_profile';
@@ -96,11 +97,57 @@ export function clearAllLocalData(): void {
   try {
     localStorage.removeItem(PROFILE_KEY);
     localStorage.removeItem(REPORTS_KEY);
+    localStorage.removeItem(REPORT_GROUPS_KEY);
     localStorage.removeItem(MEDICINES_KEY);
     localStorage.removeItem(PRESCRIPTIONS_KEY);
     localStorage.removeItem(HEALTH_PROFILE_KEY);
   } catch (err) {
     console.error('Failed to clear local data', err);
+  }
+}
+
+export function getStoredReportGroups(): ReportGroup[] {
+  try {
+    const raw = localStorage.getItem(REPORT_GROUPS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.error('Failed to load report groups', err);
+  }
+  return [];
+}
+
+export function saveReportGroup(group: ReportGroup): void {
+  try {
+    const existing = getStoredReportGroups().filter((g) => g.id !== group.id);
+    localStorage.setItem(REPORT_GROUPS_KEY, JSON.stringify([group, ...existing]));
+  } catch (err) {
+    console.error('Failed to save report group', err);
+  }
+}
+
+export function renameReportGroup(groupId: string, name: string): void {
+  try {
+    const existing = getStoredReportGroups();
+    const updated = existing.map((g) =>
+      g.id === groupId
+        ? { ...g, name: name.trim() || g.name, updated_at: new Date().toISOString() }
+        : g
+    );
+    localStorage.setItem(REPORT_GROUPS_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to rename report group', err);
+  }
+}
+
+export function deleteReportGroup(groupId: string): void {
+  try {
+    const existing = getStoredReportGroups().filter((g) => g.id !== groupId);
+    localStorage.setItem(REPORT_GROUPS_KEY, JSON.stringify(existing));
+  } catch (err) {
+    console.error('Failed to delete report group', err);
   }
 }
 

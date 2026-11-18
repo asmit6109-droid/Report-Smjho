@@ -11,6 +11,10 @@ interface HistoryScreenProps {
   language: SupportedLanguage;
   initialTab?: 'reports' | 'medicines';
   onSelectReport: (report: ReportAnalysis) => void;
+  onCombineReports: (
+    reports: ReportAnalysis[],
+    groupMeta?: { groupId?: string; groupName?: string; isDemo?: boolean }
+  ) => void;
   onSelectMedicine: (med: MedicineAnalysis) => void;
   onBackToHome: () => void;
 }
@@ -19,6 +23,7 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({
   language,
   initialTab = 'reports',
   onSelectReport,
+  onCombineReports,
   onSelectMedicine,
   onBackToHome,
 }) => {
@@ -77,7 +82,11 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({
 
       {/* Tab Content */}
       {activeTab === 'reports' ? (
-        <PastReports language={language} onSelectReport={onSelectReport} />
+        <PastReports
+          language={language}
+          onSelectReport={onSelectReport}
+          onCombineReports={onCombineReports}
+        />
       ) : (
         <MyMedicines language={language} onSelectMedicine={onSelectMedicine} />
       )}

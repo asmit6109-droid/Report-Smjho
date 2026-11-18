@@ -442,4 +442,164 @@ export const demoReports: ReportAnalysis[] = [
       },
     },
   },
+  {
+    id: 'demo-thyroid-liver-vitd-04',
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
+    report_type: 'Thyroid, Liver & Vitamin Check',
+    patient_age: 48,
+    patient_gender: 'male',
+    overall_severity: 'yellow',
+    severity_reason: 'TSH, ALT (liver), and Vitamin D are outside normal limits and need a doctor check.',
+    urgency: 'soon',
+    isDemo: true,
+    body_regions_affected: ['thyroid', 'abdomen_liver', 'bones_joints', 'kidney'],
+    findings: [
+      {
+        id: 'f-tlv-1',
+        name: 'TSH (Thyroid Stimulating Hormone)',
+        value: '7.4',
+        unit: 'mIU/L',
+        reference_range: '0.4 - 4.2 mIU/L',
+        range_source: 'lab',
+        status: 'high',
+        body_region: 'thyroid',
+        short_explanation: 'TSH is mildly above normal, meaning the thyroid may be working slowly.',
+        translations: {
+          hi: {
+            name: 'TSH (थायरॉइड हार्मोन)',
+            short_explanation: 'TSH थोड़ा बढ़ा हुआ है, जो धीमे थायरॉइड का संकेत हो सकता है।',
+          },
+          or: {
+            name: 'TSH (ଥାଇରଏଡ୍ ହରମୋନ୍)',
+            short_explanation: 'TSH ସାମାନ୍ୟ ଅଧିକ ଅଛି, ଯାହା ଧୀର ଥାଇରଏଡ୍ ସୂଚାଏ।',
+          },
+        },
+      },
+      {
+        id: 'f-tlv-2',
+        name: 'ALT (SGPT)',
+        value: '68',
+        unit: 'U/L',
+        reference_range: '7 - 45 U/L',
+        range_source: 'lab',
+        status: 'high',
+        body_region: 'abdomen_liver',
+        short_explanation: 'This liver enzyme is slightly elevated and should be reviewed by a doctor.',
+        translations: {
+          hi: {
+            name: 'ALT (SGPT / लिवर जांच)',
+            short_explanation: 'यह लिवर एंजाइम सामान्य से थोड़ा अधिक है।',
+          },
+          or: {
+            name: 'ALT (SGPT / ଲିଭର ପରୀକ୍ଷା)',
+            short_explanation: 'ଏହି ଲିଭର ଏନଜାଇମ୍ ସାମାନ୍ୟ ଅଧିକ ଅଛି।',
+          },
+        },
+      },
+      {
+        id: 'f-tlv-3',
+        name: 'Vitamin D (25-OH)',
+        value: '14',
+        unit: 'ng/mL',
+        reference_range: '30 - 100 ng/mL',
+        range_source: 'lab',
+        status: 'low',
+        body_region: 'bones_joints',
+        short_explanation: 'Vitamin D is low, which relates to general bone and muscle strength.',
+        translations: {
+          hi: {
+            name: 'विटामिन D',
+            short_explanation: 'विटामिन D कम है, जो शरीर की हड्डियों और मांसपेशियों की ताकत से जुड़ा है।',
+          },
+          or: {
+            name: 'ଭିଟାମିନ୍ D',
+            short_explanation: 'ଭିଟାମିନ୍ D କମ୍ ଅଛି, ଯାହା ହାଡ଼ ଏବଂ ମାଂସପେଶୀ ଶକ୍ତି ସହିତ ଜଡ଼ିତ।',
+          },
+        },
+      },
+      {
+        id: 'f-tlv-4',
+        name: 'LDL Cholesterol',
+        value: '142',
+        unit: 'mg/dL',
+        reference_range: 'Below 100 mg/dL',
+        range_source: 'lab',
+        status: 'high',
+        body_region: 'heart',
+        short_explanation: 'LDL blood fat is higher than ideal for heart health.',
+        translations: {
+          hi: {
+            name: 'LDL कोलेस्ट्रॉल',
+            short_explanation: 'खून में यह चर्बी सामान्य से थोड़ी अधिक है।',
+          },
+          or: {
+            name: 'LDL କୋଲେଷ୍ଟ୍ରଲ',
+            short_explanation: 'ରକ୍ତରେ LDL ଚର୍ବି ସାମାନ୍ୟ ଅଧିକ ଅଛି।',
+          },
+        },
+      },
+    ],
+    symptoms_to_watch: [
+      'Unusual tiredness, weight gain, or feeling very cold',
+      'Body ache or muscle weakness',
+      'Right-side upper belly discomfort or yellowing eyes',
+    ],
+    safe_steps: [
+      'Get 15 minutes of gentle morning sunlight if advised by your doctor',
+      'Limit fried food and alcohol to keep your liver healthy',
+      'Share all medicines you take with your doctor in 2 to 3 days',
+    ],
+    doctor_questions: [
+      'Do I need thyroid or Vitamin D supplements?',
+      'Could any current medicine be raising my ALT (SGPT)?',
+      'When should I repeat TSH and liver tests?',
+    ],
+    image_quality: 'good',
+    translations: {
+      hi: {
+        report_type: 'थायरॉइड, लिवर और विटामिन जांच',
+        severity_reason: 'TSH, ALT (लिवर) और विटामिन D सामान्य सीमा से बाहर हैं — डॉक्टर से सलाह लें।',
+        symptoms_to_watch: [
+          'अधिक थकान, वजन बढ़ना या ज्यादा ठंड लगना',
+          'शरीर या मांसपेशियों में दर्द',
+          'पेट के दाहिने ऊपरी हिस्से में भारीपन या आंखों में पीलापन',
+        ],
+        safe_steps: [
+          'सुबह की हल्की धूप में थोड़ा समय बिताएं',
+          'तला-भुना खाना और शराब से परहेज रखें',
+          '2 से 3 दिनों में डॉक्टर को अपनी सभी दवाइयों के साथ रिपोर्ट दिखाएं',
+        ],
+        doctor_questions: [
+          'क्या मुझे थायरॉइड या विटामिन D की दवा चाहिए?',
+          'क्या मेरी किसी दवा से ALT (लिवर) बढ़ा हो सकता है?',
+          'दोबारा जांच कब करानी चाहिए?',
+        ],
+      },
+      or: {
+        report_type: 'ଥାଇରଏଡ୍, ଲିଭର ଏବଂ ଭିଟାମିନ୍ ପରୀକ୍ଷା',
+        severity_reason: 'TSH, ALT (ଲିଭର) ଏବଂ ଭିଟାମିନ୍ D ସାଧାରଣ ସୀମା ବାହାରେ ଅଛି।',
+        symptoms_to_watch: [
+          'ଅଧିକ ଥକାପଣ, ଓଜନ ବଢ଼ିବା କିମ୍ବା ଅଧିକ ଥଣ୍ଡା ଲାଗିବା',
+          'ଦେହ କିମ୍ବା ମାଂସପେଶୀରେ ଯନ୍ତ୍ରଣା',
+          'ପେଟର ଡାହାଣ ଉପର ଭାଗରେ ଅସ୍ୱସ୍ତି',
+        ],
+        safe_steps: [
+          'ସକାଳର ହାଲୁକା ଖରାରେ କିଛି ସମୟ ବସନ୍ତୁ',
+          'ତେଲ ମସଲା ଖାଦ୍ୟରୁ ଦୂରେଇ ରୁହନ୍ତୁ',
+          '୨ ରୁ ୩ ଦିନ ମଧ୍ୟରେ ଡାକ୍ତରଙ୍କୁ ଦେଖାନ୍ତୁ',
+        ],
+        doctor_questions: [
+          'ମୋତେ ଥାଇରଏଡ୍ କିମ୍ବା ଭିଟାମିନ୍ D ଔଷଧ ଦରକାର କି?',
+          'କୌଣସି ଔଷଧ ଯୋଗୁଁ ALT ବଢ଼ିପାରେ କି?',
+          'ପୁଣି କେବେ ଏହି ପରୀକ୍ଷା କରିବି?',
+        ],
+      },
+    },
+  },
 ];
+
+export const demoCombinedReportsPreview: ReportAnalysis[] = [
+  demoReports[0],
+  demoReports[3],
+];
+
