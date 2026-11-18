@@ -16,7 +16,8 @@ import {
   saveHealthProfile,
 } from './utils/storage';
 import { compressImage } from './utils/imageQuality';
-import { isPdfFile, renderPdfToJpegPages } from './utils/pdfUtils';
+import { isPdfFile, MAX_SCAN_PAGES, renderPdfToJpegPages } from './utils/pdfUtils';
+import { getClientDeviceId, submitScanJobWithPolling } from './utils/uploadJob';
 import { demoReports } from './utils/demoData';
 import { demoMedicines } from './utils/demoMedicineData';
 import { triggerLightHaptic } from './utils/haptics';
@@ -75,6 +76,8 @@ export default function App() {
   const [showDemoSelector, setShowDemoSelector] = useState<boolean>(false);
   const [showDemoMedicineSelector, setShowDemoMedicineSelector] = useState<boolean>(false);
   const [prescriptionProgressText, setPrescriptionProgressText] = useState<string>('');
+  const [scanProgressTitle, setScanProgressTitle] = useState<string | undefined>(undefined);
+  const [scanProgressSubtitle, setScanProgressSubtitle] = useState<string | undefined>(undefined);
 
   // Hidden direct gallery file inputs for 1-tap upload under each Home button
   const reportFileRef = useRef<HTMLInputElement | null>(null);
@@ -158,12 +161,38 @@ export default function App() {
     setCurrentScreen('prescription_scan');
   };
 
-  const processSelectedFiles = async (files: FileList): Promise<string[]> => {
+  const maxPagesErrorText =
+    currentLanguage === 'hi'
+      ? `एक बार में अधिकतम ${MAX_SCAN_PAGES} पेज ही अपलोड कर सकते हैं। कृपया ${MAX_SCAN_PAGES} या कम पेज चुनें।`
+      : currentLanguage === 'or'
+      ? `ଥରକେ ସର୍ବାଧିକ ${MAX_SCAN_PAGES} ପୃଷ୍ଠା ଅପଲୋଡ୍ କରିପାରିବେ। ଦୟାକରି ${MAX_SCAN_PAGES} କିମ୍ବା କମ୍ ପୃଷ୍ଠା ବାଛନ୍ତୁ।`
+      : `Maximum ${MAX_SCAN_PAGES} pages allowed per scan. Please choose up to ${MAX_SCAN_PAGES} pages.`;
+
+  const processSelectedFiles = async (
+    files: FileList
+  ): Promise<{ pages: string[]; exceededLimit: boolean }> => {
+    const fileArr = Array.from(files);
+    if (fileArr.length > MAX_SCAN_PAGES) {
+      return { pages: [], exceededLimit: true };
+    }
+
     const pages: string[] = [];
-    for (const file of Array.from(files)) {
+    let exceededLimit = false;
+
+    for (const file of fileArr) {
+      const remaining = MAX_SCAN_PAGES - pages.length;
+      if (remaining <= 0) {
+        exceededLimit = true;
+        break;
+      }
+
       if (isPdfFile(file)) {
-        const pdfPages = await renderPdfToJpegPages(file, 6);
-        pages.push(...pdfPages);
+        const pdfResult = await renderPdfToJpegPages(file, remaining, 1500, 0.7);
+        if (pdfResult.truncated) {
+          exceededLimit = true;
+          break;
+        }
+        pages.push(...pdfResult.pages);
       } else {
         const dataUrl = await new Promise<string>((resolve) => {
           const reader = new FileReader();
@@ -171,13 +200,12 @@ export default function App() {
           reader.readAsDataURL(file);
         });
         if (dataUrl) {
-          const compressed = await compressImage(dataUrl, 960, 0.7);
+          const compressed = await compressImage(dataUrl, 1500, 0.7);
           pages.push(compressed);
         }
       }
-      if (pages.length >= 6) break;
     }
-    return pages.slice(0, 6);
+    return { pages: pages.slice(0, MAX_SCAN_PAGES), exceededLimit };
   };
 
   const handleDirectGalleryUpload = async (
@@ -191,8 +219,12 @@ export default function App() {
       return;
     }
     try {
-      const images = await processSelectedFiles(e.target.files);
+      const { pages: images, exceededLimit } = await processSelectedFiles(e.target.files);
       e.target.value = '';
+      if (exceededLimit) {
+        setErrorMessage(maxPagesErrorText);
+        return;
+      }
       if (images.length === 0) {
         setErrorMessage('Could not open selected file.');
         return;
@@ -238,74 +270,74 @@ export default function App() {
   };
 
   const formatNetworkError = (err: unknown, fallbackText: string) => {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (
-      msg.includes('503') ||
-      msg.includes('high demand') ||
-      msg.includes('UNAVAILABLE') ||
-      msg.includes('Timeout') ||
-      msg.includes('abort') ||
-      msg.includes('JSON') ||
-      msg.includes('<')
-    ) {
+    const msg = err instanceof Error ? err.message : String(err || '');
+    const lower = msg.toLowerCase();
+    // Never show raw technical errors (stack traces, SDK text, HTML, status codes)
+    const looksTechnical =
+      !msg ||
+      msg.length > 180 ||
+      lower.includes('error:') ||
+      lower.includes('typeerror') ||
+      lower.includes('syntaxerror') ||
+      lower.includes('failed to fetch') ||
+      lower.includes('unexpected token') ||
+      lower.includes('503') ||
+      lower.includes('500') ||
+      lower.includes('unavailable') ||
+      lower.includes('timeout') ||
+      lower.includes('abort') ||
+      lower.includes('json') ||
+      msg.includes('<');
+
+    if (looksTechnical) {
       return currentLanguage === 'hi'
-        ? 'एआई सेवा पर अभी बहुत अधिक लोड है। कृपया "दोबारा प्रयास करें" दबाएं।'
+        ? 'अभी सेवा व्यस्त है। कृपया "दोबारा प्रयास करें" दबाएं।'
         : currentLanguage === 'or'
-        ? 'ଏଆଇ ସେବାରେ ଅତ୍ୟଧିକ ଚାପ ରହିଛି। ଦୟାକରି "ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ" ଚିପନ୍ତୁ।'
-        : 'AI service is busy. Please tap "Try Again".';
+        ? 'ସେବା ଏବେ ବ୍ୟସ୍ତ ଅଛି। ଦୟାକରି "ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ" ଚିପନ୍ତୁ।'
+        : fallbackText || 'Service is busy right now. Please tap "Try Again".';
     }
-    return msg || fallbackText;
+    return msg;
   };
 
-  // Report Analysis
+  // Report Analysis (Async Upload + 2s Job Polling)
   const handleAnalyzeImages = async (images: string[]) => {
+    if (images.length > MAX_SCAN_PAGES) {
+      setErrorMessage(maxPagesErrorText);
+      return;
+    }
     setPendingImages(images);
     setPendingMedIdentifyRetry(null);
     setPendingMedVerifyRetry(null);
     setPendingPrescriptionImages(null);
     setShowManualMedOption(false);
     setProcessingMode('report');
+    setScanProgressTitle(undefined);
+    setScanProgressSubtitle(undefined);
     setCurrentScreen('home');
     setIsProcessing(true);
     setErrorMessage(null);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 75000);
-
-      const response = await fetch('/api/analyze-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
+      const report = await submitScanJobWithPolling<ReportAnalysis>({
+        endpoint: '/api/jobs/scan-report',
+        payload: {
           images,
           age: profile.age,
           gender: profile.gender,
           language: currentLanguage,
-        }),
+        },
+        language: currentLanguage,
+        onProgress: (upd) => {
+          setScanProgressTitle(upd.title);
+          setScanProgressSubtitle(upd.subtitle);
+        },
       });
-
-      clearTimeout(timeoutId);
-      const rawText = await response.text();
-      let data: any = null;
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        throw new Error('The reading service took too long to respond. Please tap "Try Again".');
-      }
-
-      if (!response.ok || !data.success || !data.report) {
-        throw new Error(data?.error || 'Unable to analyze the report image.');
-      }
-
-      const report: ReportAnalysis = data.report;
 
       if (
         (report.image_quality === 'poor' && (!report.findings || report.findings.length === 0)) ||
         report.is_raw_scan_without_text
       ) {
         setErrorMessage(report.quality_notes || t.retakePhoto);
-        setIsProcessing(false);
         return;
       }
 
@@ -315,14 +347,29 @@ export default function App() {
       setCurrentScreen('dashboard');
     } catch (err: unknown) {
       console.error('Report analysis error:', err);
-      setErrorMessage(formatNetworkError(err, 'Unable to analyze the report.'));
+      setErrorMessage(
+        formatNetworkError(
+          err,
+          currentLanguage === 'hi'
+            ? 'रिपोर्ट पढ़ी नहीं जा सकी। कृपया "दोबारा प्रयास करें" दबाएं।'
+            : currentLanguage === 'or'
+            ? 'ରିପୋର୍ଟ ପଢ଼ିହେଲା ନାହିଁ। ଦୟାକରି "ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ" ଚିପନ୍ତୁ।'
+            : 'Could not read the report. Please tap "Try Again".'
+        )
+      );
     } finally {
+      setScanProgressTitle(undefined);
+      setScanProgressSubtitle(undefined);
       setIsProcessing(false);
     }
   };
 
-  // MEDICINE STEP 1: IDENTIFY PACK
+  // MEDICINE STEP 1: IDENTIFY PACK (Async Upload + 2s Job Polling)
   const handleIdentifyMedicine = async (images: string[]) => {
+    if (images.length > MAX_SCAN_PAGES) {
+      setErrorMessage(maxPagesErrorText);
+      return;
+    }
     setPendingMedicineImages(images);
     setPendingMedIdentifyRetry(images);
     setPendingImages(null);
@@ -330,38 +377,25 @@ export default function App() {
     setPendingPrescriptionImages(null);
     setShowManualMedOption(false);
     setProcessingMode('medicine_identify');
+    setScanProgressTitle(undefined);
+    setScanProgressSubtitle(undefined);
     setCurrentScreen('home');
     setIsProcessing(true);
     setErrorMessage(null);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 75000);
-
-      const response = await fetch('/api/medicine/identify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
+      const s1 = await submitScanJobWithPolling<MedicineStep1Result>({
+        endpoint: '/api/jobs/medicine-identify',
+        payload: {
           images,
           language: currentLanguage,
-        }),
+        },
+        language: currentLanguage,
+        onProgress: (upd) => {
+          setScanProgressTitle(upd.title);
+          setScanProgressSubtitle(upd.subtitle);
+        },
       });
-
-      clearTimeout(timeoutId);
-      const rawText = await response.text();
-      let data: any = null;
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        throw new Error('The reading service took too long to respond. Please tap "Try Again".');
-      }
-
-      if (!response.ok || !data.success || !data.step1) {
-        throw new Error(data?.error || 'Could not identify medicine pack.');
-      }
-
-      const s1: MedicineStep1Result = data.step1;
 
       if (s1.is_loose_tablet_only) {
         setPendingMedIdentifyRetry(null);
@@ -394,8 +428,11 @@ export default function App() {
     } catch (err: unknown) {
       console.error('Medicine Step 1 identify error:', err);
       setShowManualMedOption(true);
-      setErrorMessage(formatNetworkError(err, 'Could not read medicine pack.'));
+      setErrorMessage(formatNetworkError(err, 'Could not read medicine pack. Please tap "Try Again".'));
       setIsProcessing(false);
+    } finally {
+      setScanProgressTitle(undefined);
+      setScanProgressSubtitle(undefined);
     }
   };
 
@@ -412,6 +449,8 @@ export default function App() {
     setPendingPrescriptionImages(null);
     setShowManualMedOption(false);
     setProcessingMode('medicine_verify');
+    setScanProgressTitle(undefined);
+    setScanProgressSubtitle(undefined);
     setCurrentScreen('home');
     setIsProcessing(true);
     setErrorMessage(null);
@@ -419,11 +458,14 @@ export default function App() {
     try {
       const hp = getHealthProfile();
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 75000);
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
 
       const response = await fetch('/api/medicine/verify-and-explain', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Id': getClientDeviceId(),
+        },
         signal: controller.signal,
         body: JSON.stringify({
           step1: confirmedStep1,
@@ -444,7 +486,7 @@ export default function App() {
       try {
         data = JSON.parse(rawText);
       } catch {
-        throw new Error('The verification service took too long. Please tap "Try Again".');
+        throw new Error('Service is busy right now. Please tap "Try Again".');
       }
 
       if (!response.ok || !data.success || !data.medicine) {
@@ -463,56 +505,53 @@ export default function App() {
       setCurrentScreen('medicine_result');
     } catch (err: unknown) {
       console.error('Medicine Step 2+3 error:', err);
-      setErrorMessage(formatNetworkError(err, 'Could not verify medicine.'));
+      setErrorMessage(formatNetworkError(err, 'Could not verify medicine. Please tap "Try Again".'));
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Prescription Draft Extraction
+  // Prescription Draft Extraction (Async Upload + 2s Job Polling)
   const handleAnalyzePrescription = async (images: string[]) => {
+    if (images.length > MAX_SCAN_PAGES) {
+      setErrorMessage(maxPagesErrorText);
+      return;
+    }
     setPendingPrescriptionImages(images);
     setPendingImages(null);
     setPendingMedIdentifyRetry(null);
     setPendingMedVerifyRetry(null);
     setShowManualMedOption(false);
     setProcessingMode('prescription');
+    setScanProgressTitle(undefined);
+    setScanProgressSubtitle(undefined);
     setCurrentScreen('home');
     setIsProcessing(true);
     setErrorMessage(null);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 75000);
-
-      const response = await fetch('/api/analyze-prescription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
+      const draft = await submitScanJobWithPolling<{
+        doctor_name?: string | null;
+        date?: string | null;
+        image_quality?: string;
+        quality_notes?: string;
+        lines: PrescriptionLineItem[];
+      }>({
+        endpoint: '/api/jobs/prescription-read',
+        payload: {
           images,
           language: currentLanguage,
-        }),
+        },
+        language: currentLanguage,
+        onProgress: (upd) => {
+          setScanProgressTitle(upd.title);
+          setScanProgressSubtitle(upd.subtitle);
+        },
       });
 
-      clearTimeout(timeoutId);
-      const rawText = await response.text();
-      let data: any = null;
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        throw new Error('The reading service took too long to respond. Please tap "Try Again".');
-      }
-
-      if (!response.ok || !data.success || !data.prescriptionDraft) {
-        throw new Error(data?.error || 'Could not read prescription.');
-      }
-
-      const draft = data.prescriptionDraft;
       if (draft.image_quality === 'poor' && (!draft.lines || draft.lines.length === 0)) {
         setPendingPrescriptionImages(null);
         setErrorMessage(draft.quality_notes || 'Photo not clear. Please retake.');
-        setIsProcessing(false);
         return;
       }
 
@@ -521,8 +560,10 @@ export default function App() {
       setCurrentScreen('prescription_verify');
     } catch (err: unknown) {
       console.error('Prescription analysis error:', err);
-      setErrorMessage(formatNetworkError(err, 'Could not read prescription.'));
+      setErrorMessage(formatNetworkError(err, 'Could not read prescription. Please tap "Try Again".'));
     } finally {
+      setScanProgressTitle(undefined);
+      setScanProgressSubtitle(undefined);
       setIsProcessing(false);
     }
   };
@@ -547,10 +588,13 @@ export default function App() {
 
       if (payload.lines.length <= 1) {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 75000);
+        const timeoutId = setTimeout(() => controller.abort(), 90000);
         const response = await fetch('/api/explain-prescription', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Device-Id': getClientDeviceId(),
+          },
           signal: controller.signal,
           body: JSON.stringify({
             ...payload,
@@ -584,10 +628,13 @@ export default function App() {
         setPrescriptionProgressText(`${i + 1} / ${payload.lines.length}: ${line.name}`);
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        const timeoutId = setTimeout(() => controller.abort(), 75000);
         const lineRes = await fetch('/api/explain-prescription-line', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Device-Id': getClientDeviceId(),
+          },
           signal: controller.signal,
           body: JSON.stringify({
             line,
@@ -609,10 +656,10 @@ export default function App() {
         try {
           lineData = JSON.parse(lineRaw);
         } catch {
-          throw new Error(`Timed out checking ${line.name}. Please try again.`);
+          throw new Error('Could not check this medicine right now. Please try again.');
         }
         if (!lineRes.ok || !lineData.success || !lineData.medicine) {
-          throw new Error(lineData?.error || `Could not check ${line.name}.`);
+          throw new Error(lineData?.error || 'Could not check this medicine right now.');
         }
         explainedMeds.push(lineData.medicine);
       }
@@ -621,7 +668,10 @@ export default function App() {
       try {
         const sumRes = await fetch('/api/explain-prescription-summary', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Device-Id': getClientDeviceId(),
+          },
           body: JSON.stringify({
             medicines: explainedMeds,
             userProblem: payload.userProblem,
@@ -842,15 +892,16 @@ export default function App() {
           <ProcessingScreen
             language={currentLanguage}
             customTitle={
-              processingMode === 'medicine_identify'
+              scanProgressTitle ||
+              (processingMode === 'medicine_identify'
                 ? mt.identifyingStep
                 : processingMode === 'medicine_verify'
                 ? mt.verifyingStep
                 : processingMode === 'prescription'
                 ? mt.readingPrescription
-                : undefined
+                : undefined)
             }
-            customSubtitle={prescriptionProgressText || undefined}
+            customSubtitle={scanProgressSubtitle || prescriptionProgressText || undefined}
           />
         )}
 

@@ -63,9 +63,9 @@ export const ProblemContextScreen: React.FC<ProblemContextScreenProps> = ({
       const files = Array.from(e.target.files).slice(0, 3 - docImages.length);
       for (const file of files) {
         if (isPdfFile(file)) {
-          const pdfPages = await renderPdfToJpegPages(file, 3 - docImages.length);
-          if (pdfPages.length > 0) {
-            setDocImages((prev) => [...prev, ...pdfPages].slice(0, 3));
+          const pdfResult = await renderPdfToJpegPages(file, 3 - docImages.length, 1500, 0.7);
+          if (pdfResult.pages.length > 0) {
+            setDocImages((prev) => [...prev, ...pdfResult.pages].slice(0, 3));
           }
           continue;
         }
@@ -75,7 +75,7 @@ export const ProblemContextScreen: React.FC<ProblemContextScreenProps> = ({
           reader.readAsDataURL(file);
         });
         if (dataUrl) {
-          const compressed = await compressImage(dataUrl, 960, 0.7);
+          const compressed = await compressImage(dataUrl, 1500, 0.7);
           setDocImages((prev) => [...prev, compressed]);
         }
       }

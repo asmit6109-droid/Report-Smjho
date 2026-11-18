@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { SupportedLanguage, translations } from '../utils/translations';
 import { analyzeImageQuality, compressImage, ImageQualityResult } from '../utils/imageQuality';
-import { isPdfFile, renderPdfToJpegPages } from '../utils/pdfUtils';
+import { isPdfFile, MAX_SCAN_PAGES, renderPdfToJpegPages } from '../utils/pdfUtils';
 import { triggerLightHaptic } from '../utils/haptics';
 import { Camera, Image as ImageIcon, X, AlertTriangle, Plus, Check, ArrowLeft, Loader2 } from 'lucide-react';
 
@@ -27,9 +27,16 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [pages, setPages] = useState<string[]>([]);
   const [lastQualityCheck, setLastQualityCheck] = useState<ImageQualityResult | null>(null);
+  const [pageLimitNotice, setPageLimitNotice] = useState<string | null>(null);
   const [isProcessingCapture, setIsProcessingCapture] = useState<boolean>(false);
 
   const t = translations[language];
+  const maxPageMsg =
+    language === 'hi'
+      ? `एक बार में अधिकतम ${MAX_SCAN_PAGES} पेज ही स्कैन हो सकते हैं।`
+      : language === 'or'
+      ? `ଥରକେ ସର୍ବାଧିକ ${MAX_SCAN_PAGES} ପୃଷ୍ଠା ସ୍କାନ୍ କରିପାରିବେ।`
+      : `Maximum ${MAX_SCAN_PAGES} pages per scan.`;
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -82,16 +89,22 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
   const handleProcessImage = async (dataUrl: string) => {
     setIsProcessingCapture(true);
     try {
-      const compressed = await compressImage(dataUrl, 960, 0.7);
+      const compressed = await compressImage(dataUrl, 1500, 0.7);
       const quality = await analyzeImageQuality(compressed);
 
       if (!quality.isAcceptable) {
         setLastQualityCheck(quality);
-        setPages((prev) => [...prev, compressed]);
       } else {
         setLastQualityCheck(null);
-        setPages((prev) => [...prev, compressed]);
       }
+
+      setPages((prev) => {
+        if (prev.length >= MAX_SCAN_PAGES) {
+          setPageLimitNotice(maxPageMsg);
+          return prev;
+        }
+        return [...prev, compressed];
+      });
     } catch (err) {
       console.error('Failed to process image capture', err);
     } finally {
@@ -101,6 +114,10 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
 
   const takePhoto = async () => {
     triggerLightHaptic();
+    if (pages.length >= MAX_SCAN_PAGES) {
+      setPageLimitNotice(maxPageMsg);
+      return;
+    }
     if (!videoRef.current) return;
     const video = videoRef.current;
     const canvas = document.createElement('canvas');
@@ -118,15 +135,29 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
     if (!e.target.files || e.target.files.length === 0) return;
     const files = Array.from(e.target.files);
     setIsProcessingCapture(true);
+    setPageLimitNotice(null);
 
     try {
+      let currentCount = pages.length;
+      let hitLimit = false;
+
       for (const file of files) {
+        if (currentCount >= MAX_SCAN_PAGES) {
+          hitLimit = true;
+          break;
+        }
+
         if (isPdfFile(file)) {
           try {
-            const pdfPages = await renderPdfToJpegPages(file, 6);
-            if (pdfPages.length > 0) {
+            const remaining = MAX_SCAN_PAGES - currentCount;
+            const pdfResult = await renderPdfToJpegPages(file, remaining, 1500, 0.7);
+            if (pdfResult.truncated) {
+              hitLimit = true;
+            }
+            if (pdfResult.pages.length > 0) {
               setLastQualityCheck(null);
-              setPages((prev) => [...prev, ...pdfPages].slice(0, 6));
+              currentCount += pdfResult.pages.length;
+              setPages((prev) => [...prev, ...pdfResult.pages].slice(0, MAX_SCAN_PAGES));
             }
           } catch {
             setLastQualityCheck({
@@ -146,11 +177,16 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
           reader.onload = async (event) => {
             if (event.target?.result) {
               await handleProcessImage(event.target.result as string);
+              currentCount++;
             }
             resolve();
           };
           reader.readAsDataURL(file);
         });
+      }
+
+      if (hitLimit) {
+        setPageLimitNotice(maxPageMsg);
       }
     } finally {
       setIsProcessingCapture(false);
@@ -159,6 +195,7 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
   };
 
   const removePage = (index: number) => {
+    setPageLimitNotice(null);
     setPages((prev) => prev.filter((_, i) => i !== index));
     if (pages.length <= 1) {
       setLastQualityCheck(null);
@@ -236,6 +273,24 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
           </div>
         )}
 
+        {/* 5-Page Limit Warning Banner */}
+        {pageLimitNotice && (
+          <div className="absolute top-18 left-4 right-4 z-20 rounded-[16px] bg-[var(--color-caution-soft)] p-3.5 text-[var(--color-text)] shadow-[var(--shadow-card)] flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-[var(--color-caution)] shrink-0" />
+              <p className="text-base font-bold">{pageLimitNotice}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPageLimitNotice(null)}
+              aria-label="Dismiss"
+              className="p-1 text-[var(--color-text-secondary)]"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
         {/* Blurry / Dark Photo Quality Banner */}
         {lastQualityCheck && (
           <div className="absolute top-18 left-4 right-4 z-20 rounded-[16px] bg-[var(--color-caution-soft)] p-4 text-[var(--color-text)] shadow-[var(--shadow-card)]">
@@ -274,6 +329,9 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
       {/* Minimal Captured Pages Strip (only shown after 1+ capture) */}
       {pages.length > 0 && (
         <div className="bg-[var(--color-text)] px-4 py-2.5 flex items-center gap-2.5 overflow-x-auto">
+          <span className="shrink-0 text-sm font-bold text-white/80 pr-1">
+            {pages.length}/{MAX_SCAN_PAGES}
+          </span>
           {pages.map((imgUrl, idx) => (
             <div key={idx} className="relative shrink-0">
               <img

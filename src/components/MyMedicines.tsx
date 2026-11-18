@@ -82,9 +82,14 @@ export const MyMedicines: React.FC<MyMedicinesProps> = ({
         }),
       });
       const raw = await res.text();
-      const data = JSON.parse(raw);
-      if (!res.ok || !data.success) {
-        throw new Error(data?.error || 'Could not check right now.');
+      let data: any = null;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        data = null;
+      }
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || 'Could not check right now. Please try again.');
       }
       setInteractionResult({
         checked: true,
@@ -92,11 +97,16 @@ export const MyMedicines: React.FC<MyMedicinesProps> = ({
         warnings: data.warnings || [],
       });
     } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      const safeMsg =
+        msg && !msg.includes('fetch') && !msg.includes('JSON') && msg.length < 140
+          ? msg
+          : 'Could not check right now. Please try again.';
       setInteractionResult({
         checked: true,
         has_warnings: false,
         warnings: [],
-        error: err instanceof Error ? err.message : 'Please try again.',
+        error: safeMsg,
       });
     } finally {
       setIsCheckingInteractions(false);

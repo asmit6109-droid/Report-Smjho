@@ -124,51 +124,71 @@ export async function analyzeImageQuality(imageSource: string | HTMLImageElement
 }
 
 /**
- * Resizes and compresses an image to JPEG format under maxDimension (default 1080px)
+ * Resizes and compresses an image to JPEG format with max width 1500px and ~0.7 quality.
  */
-export async function compressImage(dataUrlOrBlob: string | Blob, maxDimension = 1080, quality = 0.76): Promise<string> {
+export async function compressImage(
+  dataUrlOrBlob: string | Blob,
+  maxWidth = 1500,
+  quality = 0.7
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
+    let createdObjectUrl: string | null = null;
+
+    const cleanupUrl = () => {
+      if (createdObjectUrl) {
+        URL.revokeObjectURL(createdObjectUrl);
+        createdObjectUrl = null;
+      }
+    };
 
     const loadHandler = () => {
-      let width = img.naturalWidth;
-      let height = img.naturalHeight;
+      try {
+        let width = img.naturalWidth;
+        let height = img.naturalHeight;
 
-      if (width > maxDimension || height > maxDimension) {
-        if (width > height) {
-          height = Math.round((height * maxDimension) / width);
-          width = maxDimension;
-        } else {
-          width = Math.round((width * maxDimension) / height);
-          height = maxDimension;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
         }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          cleanupUrl();
+          return resolve(typeof dataUrlOrBlob === 'string' ? dataUrlOrBlob : '');
+        }
+
+        // Draw white background in case of transparent PNG
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        canvas.width = 0;
+        canvas.height = 0;
+        cleanupUrl();
+        resolve(compressedDataUrl);
+      } catch (err) {
+        cleanupUrl();
+        reject(err);
       }
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        return resolve(typeof dataUrlOrBlob === 'string' ? dataUrlOrBlob : '');
-      }
-
-      // Draw white background in case of transparent PNG
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, width, height);
-
-      ctx.drawImage(img, 0, 0, width, height);
-      const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-      resolve(compressedDataUrl);
     };
 
     img.onload = loadHandler;
-    img.onerror = (e) => reject(e);
+    img.onerror = (e) => {
+      cleanupUrl();
+      reject(e);
+    };
 
     if (typeof dataUrlOrBlob === 'string') {
       img.src = dataUrlOrBlob;
     } else {
-      img.src = URL.createObjectURL(dataUrlOrBlob);
+      createdObjectUrl = URL.createObjectURL(dataUrlOrBlob);
+      img.src = createdObjectUrl;
     }
   });
 }

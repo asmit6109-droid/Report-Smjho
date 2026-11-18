@@ -1,44 +1,145 @@
 import express, { Request, Response } from 'express';
 import http from 'http';
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
+import { classifyErrorType, logJobEvent } from './server/logger.js';
+import {
+  checkAndIncrementRateLimit,
+  getStoreMode,
+  storeGetJson,
+  storeSetJson,
+} from './server/store.js';
+import {
+  getQueueStats,
+  runQueuedAiTask,
+  withExponentialBackoff,
+} from './server/queue.js';
+import {
+  createScanJob,
+  getScanJob,
+  mergeMedicineStep1Results,
+  mergeMultiPageReports,
+  mergePrescriptionDrafts,
+  runParallelPagePipeline,
+} from './server/jobs.js';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const MAX_SCAN_PAGES = 5;
+const MEDICINE_CACHE_TTL_SEC = 24 * 60 * 60; // 24 hours
+const TRANSLATION_CACHE_TTL_SEC = 6 * 60 * 60; // 6 hours
+const l1MedicineCache = new Map<string, { value: any; expiresAt: number }>();
+
 const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-// Increase JSON body limit for multi-page base64 compressed images
-app.use(express.json({ limit: '35mb' }));
+// Sensible request size limit for up to 5 compressed JPEGs (<= ~5MB total)
+app.use(express.json({ limit: '20mb' }));
 
-// Simple in-memory rate limiting map
-const rateLimitWindowMs = 60 * 1000; // 1 minute
-const maxRequestsPerWindow = 20;
-const ipRequestHistory = new Map<string, number[]>();
+// Global per-request server timeout guard (excluding long-lived SSE/static)
+app.use('/api', (req, res, next) => {
+  res.setTimeout(85000, () => {
+    if (!res.headersSent) {
+      logJobEvent('warn', {
+        step: 'http_request_timeout',
+        status: 'timeout',
+        details: req.path,
+      });
+      res.status(503).json({
+        success: false,
+        error: 'The service took too long to respond. Please try again.',
+        isRetryable: true,
+      });
+    }
+  });
+  next();
+});
 
-const rateLimiter = (req: Request, res: Response, next: () => void) => {
-  const ip = req.ip || req.socket.remoteAddress || 'unknown';
-  const now = Date.now();
-  const timestamps = (ipRequestHistory.get(ip) || []).filter((time) => now - time < rateLimitWindowMs);
+function getClientBucketId(req: Request): { ip: string; deviceId: string } {
+  const ip = (req.ip || req.socket.remoteAddress || 'unknown').replace(/^::ffff:/, '');
+  const rawDevice = String(req.headers['x-device-id'] || '')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .slice(0, 64);
+  return { ip, deviceId: rawDevice || 'anon' };
+}
 
-  if (timestamps.length >= maxRequestsPerWindow) {
+// Per-IP + per-device rate limiter (protects AI endpoints from overload)
+const rateLimiter = async (req: Request, res: Response, next: () => void) => {
+  const { ip, deviceId } = getClientBucketId(req);
+  const ipCheck = await checkAndIncrementRateLimit(`rl:ip:${ip}`, 60, 40);
+  const devCheck =
+    deviceId !== 'anon'
+      ? await checkAndIncrementRateLimit(`rl:dev:${ip}:${deviceId}`, 60, 20)
+      : { allowed: true, count: 0 };
+
+  if (!ipCheck.allowed || !devCheck.allowed) {
+    logJobEvent('warn', {
+      step: 'rate_limit_blocked',
+      status: 'rate_limited',
+      errorType: 'rate_limit_429',
+      details: req.path,
+    });
     res.status(429).json({
       success: false,
-      error: 'Rate limit reached. Please wait a minute before analyzing another report.',
+      error: 'Too many requests right now. Please wait a minute and try again.',
+      isRetryable: true,
     });
     return;
   }
 
-  timestamps.push(now);
-  ipRequestHistory.set(ip, timestamps);
   next();
 };
+
+// Dedicated tighter limiter for heavy multi-page scan job creation (polling GET /api/jobs/:id is separate)
+const scanRateLimiter = async (req: Request, res: Response, next: () => void) => {
+  const { ip, deviceId } = getClientBucketId(req);
+  const ipCheck = await checkAndIncrementRateLimit(`rl:scan:ip:${ip}`, 60, 15);
+  const devCheck =
+    deviceId !== 'anon'
+      ? await checkAndIncrementRateLimit(`rl:scan:dev:${ip}:${deviceId}`, 60, 10)
+      : { allowed: true, count: 0 };
+
+  if (!ipCheck.allowed || !devCheck.allowed) {
+    logJobEvent('warn', {
+      step: 'scan_rate_limit_blocked',
+      status: 'rate_limited',
+      errorType: 'rate_limit_429',
+      details: req.path,
+    });
+    res.status(429).json({
+      success: false,
+      error: 'Too many scans in a short time. Please wait a minute before scanning again.',
+      isRetryable: true,
+    });
+    return;
+  }
+
+  next();
+};
+
+// Simple Health Check Endpoint
+app.get('/api/health', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    ok: true,
+    status: 'healthy',
+    uptimeSec: Math.round(process.uptime()),
+    storeMode: getStoreMode(),
+    geminiConfigured: Boolean(ai),
+    queue: getQueueStats(),
+    cache: {
+      medicineMemoryEntries: l1MedicineCache.size,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Initialize Gemini Client
 const apiKey = process.env.GEMINI_API_KEY;
@@ -60,7 +161,7 @@ const CANDIDATE_MODELS = ['gemini-3.1-flash-lite', 'gemini-4-hydrogen'];
 async function callGeminiWithFallback(
   contents: unknown,
   baseConfig: Record<string, unknown>,
-  timeoutPerModelMs = 36000
+  timeoutPerModelMs = 32000
 ): Promise<string> {
   if (!ai) {
     throw new Error('Gemini API key is not configured.');
@@ -73,6 +174,7 @@ async function callGeminiWithFallback(
     const modelTimeoutMs =
       i === 0 ? timeoutPerModelMs : Math.min(timeoutPerModelMs, 24000);
 
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
     try {
       const modelConfig: Record<string, unknown> = { ...baseConfig };
       if (modelName === 'gemini-3.1-flash-lite') {
@@ -81,9 +183,12 @@ async function callGeminiWithFallback(
         modelConfig.thinkingConfig = { thinkingLevel: ThinkingLevel.LOW };
       }
 
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout calling ${modelName}`)), modelTimeoutMs)
-      );
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(
+          () => reject(new Error(`Timeout calling ${modelName}`)),
+          modelTimeoutMs
+        );
+      });
 
       const response = await Promise.race([
         ai.models.generateContent({
@@ -97,68 +202,57 @@ async function callGeminiWithFallback(
       if (response && response.text) {
         return response.text;
       }
+      throw new Error(`Empty response from ${modelName}`);
     } catch (err: unknown) {
       lastError = err;
-      const errMsg = err instanceof Error ? err.message : String(err);
-      console.info(`Fallback from ${modelName} (${errMsg})`);
+      logJobEvent('warn', {
+        step: `gemini_model_fallback_${modelName}`,
+        status: 'fallback',
+        errorType: classifyErrorType(err),
+      });
       continue;
+    } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle);
     }
   }
 
   throw lastError || new Error('All AI models failed to respond.');
 }
 
-// API endpoint to analyze report images (fast single-language output; other languages translated on demand)
-app.post('/api/analyze-report', rateLimiter, async (req: Request, res: Response) => {
-  try {
-    const { images, age, gender, language } = req.body;
+function clearImageArray(arr: unknown) {
+  if (!Array.isArray(arr)) return;
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = '';
+  }
+  arr.length = 0;
+}
 
-    if (!images || !Array.isArray(images) || images.length === 0) {
-      res.status(400).json({ success: false, error: 'At least one report image is required.' });
-      return;
-    }
+async function analyzeSingleReportPage(params: {
+  imageBase64: string;
+  pageNumber: number;
+  totalPages: number;
+  age?: number | null;
+  gender?: string | null;
+  langCode: 'en' | 'hi' | 'or';
+}) {
+  const { imageBase64, pageNumber, totalPages, age, gender, langCode } = params;
+  const targetLanguageName =
+    langCode === 'hi'
+      ? 'simple Hindi (हिन्दी)'
+      : langCode === 'or'
+      ? 'simple Odia (ଓଡ଼ିଆ)'
+      : 'very simple Class 6 English';
 
-    if (!ai) {
-      res.status(500).json({
-        success: false,
-        error: 'Gemini API key is not configured. Please check the Secrets panel.',
-      });
-      return;
-    }
-
-    const langCode: 'en' | 'hi' | 'or' =
-      language === 'hi' || language === 'or' ? language : 'en';
-
-    const targetLanguageName =
-      langCode === 'hi' ? 'simple Hindi (हिन्दी)' : langCode === 'or' ? 'simple Odia (ଓଡ଼ିଆ)' : 'very simple Class 6 English';
-
-    // Convert base64 images into Gemini inline parts
-    const inlineParts = images.slice(0, 6).map((imgBase64: string) => {
-      const match = imgBase64.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-      let mimeType = 'image/jpeg';
-      let data = imgBase64;
-
-      if (match) {
-        mimeType = match[1];
-        data = match[2];
-      }
-
-      return {
-        inlineData: {
-          mimeType,
-          data,
-        },
-      };
-    });
-
-    const userProfileContext = `
+  const inlineParts = toInlineParts([imageBase64], 1);
+  const userProfileContext = `
 Patient Context provided by user:
 - Age: ${age ? `${age} years old` : 'Not specified'}
 - Gender: ${gender ? gender : 'Not specified'}
 - Output Language: ${targetLanguageName}
+- Page: ${pageNumber} of ${totalPages}
 `;
 
-    const systemInstruction = `
+  const systemInstruction = `
 You are ReportSamjho, a medical report explainer for patients in India.
 
 STRICT RULES:
@@ -184,155 +278,297 @@ STRICT RULES:
    - 3-4 short simple questions to ask the doctor.
 `;
 
-    const promptText = `
-Read the attached medical report page(s) carefully.
+  const promptText = `
+Read medical report page ${pageNumber} of ${totalPages} carefully.
 ${userProfileContext}
 Extract the tests, compare with printed reference ranges (or Indian standard ranges), and return concise structured JSON in ${targetLanguageName}.
 `;
 
-    const contents = {
-      parts: [...inlineParts, { text: promptText }],
-    };
-
-    const schemaConfig = {
-      systemInstruction,
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          report_type: { type: Type.STRING },
-          patient_age: { type: Type.INTEGER },
-          patient_gender: { type: Type.STRING },
-          overall_severity: { type: Type.STRING },
-          severity_reason: { type: Type.STRING },
-          urgency: { type: Type.STRING },
-          body_regions_affected: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-          },
-          findings: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                id: { type: Type.STRING },
-                name: { type: Type.STRING },
-                value: { type: Type.STRING },
-                unit: { type: Type.STRING },
-                reference_range: { type: Type.STRING },
-                range_source: { type: Type.STRING },
-                status: { type: Type.STRING },
-                body_region: { type: Type.STRING },
-                short_explanation: { type: Type.STRING },
-              },
-              required: ['id', 'name', 'value', 'range_source', 'status', 'body_region', 'short_explanation'],
-            },
-          },
-          symptoms_to_watch: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-          },
-          safe_steps: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-          },
-          doctor_questions: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-          },
-          image_quality: { type: Type.STRING },
-          quality_notes: { type: Type.STRING },
-          is_raw_scan_without_text: { type: Type.BOOLEAN },
+  const schemaConfig = {
+    systemInstruction,
+    responseMimeType: 'application/json',
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        report_type: { type: Type.STRING },
+        patient_age: { type: Type.INTEGER },
+        patient_gender: { type: Type.STRING },
+        overall_severity: { type: Type.STRING },
+        severity_reason: { type: Type.STRING },
+        urgency: { type: Type.STRING },
+        body_regions_affected: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING },
         },
-        required: [
-          'report_type',
-          'overall_severity',
-          'severity_reason',
-          'urgency',
-          'body_regions_affected',
-          'findings',
-          'symptoms_to_watch',
-          'safe_steps',
-          'doctor_questions',
-          'image_quality',
-        ],
+        findings: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING },
+              name: { type: Type.STRING },
+              value: { type: Type.STRING },
+              unit: { type: Type.STRING },
+              reference_range: { type: Type.STRING },
+              range_source: { type: Type.STRING },
+              status: { type: Type.STRING },
+              body_region: { type: Type.STRING },
+              short_explanation: { type: Type.STRING },
+            },
+            required: ['id', 'name', 'value', 'range_source', 'status', 'body_region', 'short_explanation'],
+          },
+        },
+        symptoms_to_watch: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING },
+        },
+        safe_steps: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING },
+        },
+        doctor_questions: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING },
+        },
+        image_quality: { type: Type.STRING },
+        quality_notes: { type: Type.STRING },
+        is_raw_scan_without_text: { type: Type.BOOLEAN },
+      },
+      required: [
+        'report_type',
+        'overall_severity',
+        'severity_reason',
+        'urgency',
+        'body_regions_affected',
+        'findings',
+        'symptoms_to_watch',
+        'safe_steps',
+        'doctor_questions',
+        'image_quality',
+      ],
+    },
+  };
+
+  const responseText = await callGeminiWithFallback(
+    { parts: [...inlineParts, { text: promptText }] },
+    schemaConfig,
+    32000
+  );
+  const parsedData = JSON.parse(responseText);
+
+  parsedData.id = 'rep-' + Date.now();
+  parsedData.created_at = new Date().toISOString();
+
+  if (!['green', 'yellow', 'red'].includes(parsedData.overall_severity)) {
+    parsedData.overall_severity = 'yellow';
+  }
+  if (!['routine', 'soon', 'today'].includes(parsedData.urgency)) {
+    parsedData.urgency = parsedData.overall_severity === 'red' ? 'today' : 'soon';
+  }
+  if (Array.isArray(parsedData.findings)) {
+    parsedData.findings = parsedData.findings.map((f: any, idx: number) => ({
+      ...f,
+      id: f.id || `f-${idx + 1}`,
+    }));
+  }
+
+  if (langCode === 'hi' || langCode === 'or') {
+    parsedData.translations = {
+      [langCode]: {
+        report_type: parsedData.report_type,
+        severity_reason: parsedData.severity_reason,
+        symptoms_to_watch: parsedData.symptoms_to_watch,
+        safe_steps: parsedData.safe_steps,
+        doctor_questions: parsedData.doctor_questions,
       },
     };
-
-    const responseText = await callGeminiWithFallback(contents, schemaConfig, 38000);
-    const parsedData = JSON.parse(responseText);
-
-    // Validate and sanitize data
-    parsedData.id = 'rep-' + Date.now();
-    parsedData.created_at = new Date().toISOString();
-
-    if (!['green', 'yellow', 'red'].includes(parsedData.overall_severity)) {
-      parsedData.overall_severity = 'yellow';
-    }
-
-    if (!['routine', 'soon', 'today'].includes(parsedData.urgency)) {
-      parsedData.urgency = parsedData.overall_severity === 'red' ? 'today' : 'soon';
-    }
-
     if (Array.isArray(parsedData.findings)) {
-      parsedData.findings = parsedData.findings.map((f: any, idx: number) => ({
+      parsedData.findings = parsedData.findings.map((f: any) => ({
         ...f,
-        id: f.id || `f-${idx + 1}`,
+        translations: {
+          [langCode]: {
+            name: f.name,
+            short_explanation: f.short_explanation,
+          },
+        },
       }));
     }
+  }
 
-    // Store initial language snapshot in translations if user started in hi/or
-    if (langCode === 'hi' || langCode === 'or') {
-      parsedData.translations = {
-        [langCode]: {
-          report_type: parsedData.report_type,
-          severity_reason: parsedData.severity_reason,
-          symptoms_to_watch: parsedData.symptoms_to_watch,
-          safe_steps: parsedData.safe_steps,
-          doctor_questions: parsedData.doctor_questions,
-        },
-      };
-      if (Array.isArray(parsedData.findings)) {
-        parsedData.findings = parsedData.findings.map((f: any) => ({
-          ...f,
-          translations: {
-            [langCode]: {
-              name: f.name,
-              short_explanation: f.short_explanation,
-            },
-          },
-        }));
-      }
+  return parsedData;
+}
+
+// Background Async Job Endpoints (Upload -> immediate jobId -> 2s polling)
+app.post('/api/jobs/scan-report', scanRateLimiter, async (req: Request, res: Response) => {
+  const imagesRaw = req.body?.images;
+  try {
+    const { age, gender, language } = req.body || {};
+
+    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
+      res.status(400).json({ success: false, error: 'At least one report photo is required.' });
+      return;
+    }
+    if (imagesRaw.length > MAX_SCAN_PAGES) {
+      res.status(400).json({
+        success: false,
+        error: `Maximum ${MAX_SCAN_PAGES} pages allowed per scan.`,
+      });
+      return;
+    }
+    if (!ai) {
+      res.status(503).json({
+        success: false,
+        error: 'Service is temporarily unavailable. Please try again later.',
+      });
+      return;
     }
 
-    res.json({
-      success: true,
-      report: parsedData,
+    const langCode: 'en' | 'hi' | 'or' =
+      language === 'hi' || language === 'or' ? language : 'en';
+
+    const payloadContainer = { images: imagesRaw.slice(0, MAX_SCAN_PAGES) as string[] };
+    req.body.images = [];
+
+    const job = await createScanJob({
+      type: 'scan_report',
+      language: langCode,
+      totalPages: payloadContainer.images.length,
     });
-  } catch (error: unknown) {
-    const errMsg = error instanceof Error ? error.message : String(error || 'Unknown error');
-    console.error('Error analyzing report:', errMsg);
 
-    const isDemandError =
-      errMsg.includes('503') ||
-      errMsg.includes('high demand') ||
-      errMsg.includes('UNAVAILABLE') ||
-      errMsg.includes('RESOURCE_EXHAUSTED') ||
-      errMsg.includes('Timeout');
+    // Launch background pipeline without awaiting HTTP response
+    void runParallelPagePipeline({
+      job,
+      payloadContainer,
+      processSinglePage: (imgBase64, idx, total) =>
+        analyzeSingleReportPage({
+          imageBase64: imgBase64,
+          pageNumber: idx + 1,
+          totalPages: total,
+          age,
+          gender,
+          langCode,
+        }),
+      mergeResults: (pages) => mergeMultiPageReports(pages, langCode),
+    });
 
-    const userFriendlyMessage = isDemandError
-      ? 'The AI reading service is currently experiencing temporary high demand. Please tap "Try Again" in a few seconds.'
-      : 'Could not read the report. Please ensure the photos are clear and try again.';
-
+    res.status(202).json({
+      success: true,
+      jobId: job.id,
+      status: job.status,
+      queuePosition: job.queuePosition,
+      progressText: job.progressText,
+    });
+  } catch (err) {
+    clearImageArray(imagesRaw);
+    logJobEvent('error', {
+      step: 'create_scan_report_job',
+      status: 'failed',
+      errorType: classifyErrorType(err),
+    });
     res.status(503).json({
       success: false,
-      error: userFriendlyMessage,
+      error: 'Could not start scan right now. Please try again.',
       isRetryable: true,
     });
   }
 });
 
-// Fast on-demand translation endpoint when user taps "Translate" on Dashboard
+app.get('/api/jobs/:jobId', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const job = await getScanJob(String(req.params.jobId || ''));
+  if (!job) {
+    res.status(404).json({
+      success: false,
+      error: 'Scan job expired or was not found. Please try again.',
+      isRetryable: true,
+    });
+    return;
+  }
+  res.json({
+    success: true,
+    job: {
+      id: job.id,
+      type: job.type,
+      status: job.status,
+      totalPages: job.totalPages,
+      completedPages: job.completedPages,
+      queuePosition: job.queuePosition,
+      progressText: job.progressText,
+      result: job.status === 'completed' ? job.result : undefined,
+      error: job.status === 'failed' ? job.error : undefined,
+      isRetryable: job.status === 'failed' ? Boolean(job.isRetryable) : undefined,
+    },
+  });
+});
+
+// Synchronous backwards-compatible endpoint (now backed by concurrency queue + backoff + parallel pages)
+app.post('/api/analyze-report', scanRateLimiter, async (req: Request, res: Response) => {
+  const imagesRaw = req.body?.images;
+  try {
+    const { age, gender, language } = req.body || {};
+
+    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
+      res.status(400).json({ success: false, error: 'At least one report image is required.' });
+      return;
+    }
+    if (imagesRaw.length > MAX_SCAN_PAGES) {
+      res.status(400).json({
+        success: false,
+        error: `Maximum ${MAX_SCAN_PAGES} pages allowed per scan.`,
+      });
+      return;
+    }
+    if (!ai) {
+      res.status(503).json({
+        success: false,
+        error: 'Service is temporarily unavailable. Please try again.',
+      });
+      return;
+    }
+
+    const langCode: 'en' | 'hi' | 'or' =
+      language === 'hi' || language === 'or' ? language : 'en';
+    const pages = imagesRaw.slice(0, MAX_SCAN_PAGES) as string[];
+
+    const pageResults = await Promise.all(
+      pages.map((img, idx) =>
+        runQueuedAiTask(() =>
+          withExponentialBackoff(
+            () =>
+              analyzeSingleReportPage({
+                imageBase64: img,
+                pageNumber: idx + 1,
+                totalPages: pages.length,
+                age,
+                gender,
+                langCode,
+              }),
+            { jobType: 'sync_report', step: `page_${idx + 1}` }
+          )
+        )
+      )
+    );
+
+    const report = mergeMultiPageReports(pageResults, langCode);
+    res.json({ success: true, report });
+  } catch (error: unknown) {
+    logJobEvent('error', {
+      jobType: 'sync_report',
+      step: 'analyze_report_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
+    res.status(503).json({
+      success: false,
+      error: 'Service is busy right now. Please tap "Try Again".',
+      isRetryable: true,
+    });
+  } finally {
+    clearImageArray(imagesRaw);
+  }
+});
+
+// Fast on-demand translation endpoint with identical lookup caching & backoff
 app.post('/api/translate-report', rateLimiter, async (req: Request, res: Response) => {
   try {
     const { report, targetLanguage } = req.body;
@@ -343,7 +579,7 @@ app.post('/api/translate-report', rateLimiter, async (req: Request, res: Respons
     }
 
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
@@ -362,6 +598,20 @@ app.post('/api/translate-report', rateLimiter, async (req: Request, res: Respons
         short_explanation: f.short_explanation,
       })),
     };
+
+    const cacheHash = crypto
+      .createHash('sha256')
+      .update(`${targetLanguage}:${JSON.stringify(payloadToTranslate)}`)
+      .digest('hex')
+      .slice(0, 24);
+    const cacheKey = `transcache:rep:${cacheHash}`;
+
+    const cached = await storeGetJson<any>(cacheKey);
+    if (cached) {
+      logJobEvent('info', { step: 'translate_report_cache', cacheHit: true, status: 'ok' });
+      res.json({ success: true, translation: cached });
+      return;
+    }
 
     const translateConfig = {
       systemInstruction: `Translate this medical report explanation JSON into ${langLabel}. Keep sentences short, simple, and natural for patients. Never diagnose or prescribe. Return strictly matching JSON.`,
@@ -391,18 +641,29 @@ app.post('/api/translate-report', rateLimiter, async (req: Request, res: Respons
       },
     };
 
-    const text = await callGeminiWithFallback(JSON.stringify(payloadToTranslate), translateConfig, 22000);
+    const text = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () => callGeminiWithFallback(JSON.stringify(payloadToTranslate), translateConfig, 22000),
+        { jobType: 'translate_report', step: 'translate_report' }
+      )
+    );
     const translated = JSON.parse(text);
+    await storeSetJson(cacheKey, translated, TRANSLATION_CACHE_TTL_SEC);
 
     res.json({
       success: true,
       translation: translated,
     });
   } catch (error: unknown) {
-    console.error('Error translating report:', error);
+    logJobEvent('error', {
+      step: 'translate_report_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
       error: 'Translation is temporarily busy. Please try again.',
+      isRetryable: true,
     });
   }
 });
@@ -664,6 +925,30 @@ async function verifySaltInDatabase(saltInput: string | null | undefined, brandI
     };
   }
 
+  const normalizedSlug = targetRaw.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 80);
+  const cacheKey = `medcache:v1:${normalizedSlug}`;
+
+  const memCached = l1MedicineCache.get(cacheKey);
+  if (memCached && memCached.expiresAt > Date.now()) {
+    logJobEvent('info', { step: 'medicine_db_lookup', cacheHit: true, status: 'ok' });
+    return memCached.value;
+  }
+
+  const kvCached = await storeGetJson<any>(cacheKey);
+  if (kvCached) {
+    if (l1MedicineCache.size >= 400) {
+      const oldestKey = l1MedicineCache.keys().next().value;
+      if (oldestKey) l1MedicineCache.delete(oldestKey);
+    }
+    l1MedicineCache.set(cacheKey, {
+      value: kvCached,
+      expiresAt: Date.now() + 15 * 60 * 1000,
+    });
+    logJobEvent('info', { step: 'medicine_db_lookup', cacheHit: true, status: 'ok' });
+    return kvCached;
+  }
+
+  const startedAt = Date.now();
   const tokens = cleanSaltTokens(targetRaw);
   const primaryToken = tokens[0] || targetRaw;
   const normalizedList = await Promise.all(tokens.slice(0, 2).map(normalizeSaltViaRxNorm));
@@ -678,48 +963,66 @@ async function verifySaltInDatabase(saltInput: string | null | undefined, brandI
     label = await queryOpenFdaBySalt(normalizedList[0] || primaryToken);
   }
 
-  if (!label) {
-    return {
-      verified: false,
-      database_name: 'openFDA + RxNorm',
-      normalized_salt: normalizedList[0] || targetRaw,
-      uses: null,
-      warnings: null,
-      side_effects: null,
-      interactions: null,
-      precautions: null,
-      dosage_administration: null,
-      storage: null,
-      pregnancy_lactation: null,
-      pediatric_geriatric: null,
-    };
-  }
+  const result = !label
+    ? {
+        verified: false,
+        database_name: 'openFDA + RxNorm',
+        normalized_salt: normalizedList[0] || targetRaw,
+        uses: null,
+        warnings: null,
+        side_effects: null,
+        interactions: null,
+        precautions: null,
+        dosage_administration: null,
+        storage: null,
+        pregnancy_lactation: null,
+        pediatric_geriatric: null,
+      }
+    : {
+        verified: true,
+        database_name: 'openFDA + RxNorm',
+        normalized_salt:
+          truncateFdaText(label.openfda?.generic_name?.[0], 140) ||
+          normalizedList.join(' + ') ||
+          targetRaw,
+        uses: truncateFdaText(label.indications_and_usage || label.purpose),
+        warnings: truncateFdaText(
+          label.boxed_warning || label.warnings_and_cautions || label.warnings
+        ),
+        side_effects: truncateFdaText(label.adverse_reactions),
+        interactions: truncateFdaText(label.drug_interactions),
+        precautions: truncateFdaText(label.precautions || label.do_not_use || label.ask_doctor),
+        dosage_administration: truncateFdaText(label.dosage_and_administration, 650),
+        storage: truncateFdaText(label.storage_and_handling, 400),
+        pregnancy_lactation: truncateFdaText(
+          label.pregnancy || label.pregnancy_or_breast_feeding || label.nursing_mothers,
+          450
+        ),
+        pediatric_geriatric: truncateFdaText(
+          [label.pediatric_use, label.geriatric_use].filter(Boolean).join(' '),
+          450
+        ),
+      };
 
-  return {
-    verified: true,
-    database_name: 'openFDA + RxNorm',
-    normalized_salt:
-      truncateFdaText(label.openfda?.generic_name?.[0], 140) ||
-      normalizedList.join(' + ') ||
-      targetRaw,
-    uses: truncateFdaText(label.indications_and_usage || label.purpose),
-    warnings: truncateFdaText(
-      label.boxed_warning || label.warnings_and_cautions || label.warnings
-    ),
-    side_effects: truncateFdaText(label.adverse_reactions),
-    interactions: truncateFdaText(label.drug_interactions),
-    precautions: truncateFdaText(label.precautions || label.do_not_use || label.ask_doctor),
-    dosage_administration: truncateFdaText(label.dosage_and_administration, 650),
-    storage: truncateFdaText(label.storage_and_handling, 400),
-    pregnancy_lactation: truncateFdaText(
-      label.pregnancy || label.pregnancy_or_breast_feeding || label.nursing_mothers,
-      450
-    ),
-    pediatric_geriatric: truncateFdaText(
-      [label.pediatric_use, label.geriatric_use].filter(Boolean).join(' '),
-      450
-    ),
-  };
+  const ttlSec = result.verified ? MEDICINE_CACHE_TTL_SEC : 2 * 60 * 60;
+  if (l1MedicineCache.size >= 400) {
+    const oldestKey = l1MedicineCache.keys().next().value;
+    if (oldestKey) l1MedicineCache.delete(oldestKey);
+  }
+  l1MedicineCache.set(cacheKey, {
+    value: result,
+    expiresAt: Date.now() + ttlSec * 1000,
+  });
+  await storeSetJson(cacheKey, result, ttlSec);
+
+  logJobEvent('info', {
+    step: 'medicine_db_lookup',
+    cacheHit: false,
+    durationMs: Date.now() - startedAt,
+    status: result.verified ? 'verified' : 'not_found',
+  });
+
+  return result;
 }
 
 // =========================================================================
@@ -1000,39 +1303,124 @@ ${extraDocParts.length > 0 ? '- Attached prescription/report photo(s) below for 
   return analysis;
 }
 
-// Endpoint: Step 1 Only (Identify Pack + Confidence)
-app.post('/api/medicine/identify', rateLimiter, async (req: Request, res: Response) => {
+// Async Job Endpoint: Medicine Pack Identification (supports multi-photo front/back in parallel)
+app.post('/api/jobs/medicine-identify', scanRateLimiter, async (req: Request, res: Response) => {
+  const imagesRaw = req.body?.images;
   try {
-    const { images, language } = req.body;
-    if (!images || !Array.isArray(images) || images.length === 0) {
+    const { language } = req.body || {};
+    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
       res.status(400).json({ success: false, error: 'At least one medicine photo is required.' });
       return;
     }
+    if (imagesRaw.length > MAX_SCAN_PAGES) {
+      res.status(400).json({
+        success: false,
+        error: `Maximum ${MAX_SCAN_PAGES} photos allowed per scan.`,
+      });
+      return;
+    }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
     const { langCode } = getLangDetails(language);
-    const step1 = await identifyMedicineFromImages(images, langCode);
-    res.json({ success: true, step1 });
-  } catch (error) {
-    console.error('Step 1 identify error:', error);
+    const payloadContainer = { images: imagesRaw.slice(0, MAX_SCAN_PAGES) as string[] };
+    req.body.images = [];
+
+    const job = await createScanJob({
+      type: 'medicine_identify',
+      language: langCode,
+      totalPages: payloadContainer.images.length,
+    });
+
+    void runParallelPagePipeline({
+      job,
+      payloadContainer,
+      processSinglePage: (imgBase64) => identifyMedicineFromImages([imgBase64], langCode),
+      mergeResults: (results) => mergeMedicineStep1Results(results),
+    });
+
+    res.status(202).json({
+      success: true,
+      jobId: job.id,
+      status: job.status,
+      queuePosition: job.queuePosition,
+      progressText: job.progressText,
+    });
+  } catch (err) {
+    clearImageArray(imagesRaw);
+    logJobEvent('error', {
+      step: 'create_medicine_identify_job',
+      status: 'failed',
+      errorType: classifyErrorType(err),
+    });
     res.status(503).json({
       success: false,
-      error: 'The AI reading service is currently experiencing high demand. Please tap "Try Again".',
+      error: 'Could not start medicine scan right now. Please try again.',
       isRetryable: true,
     });
   }
 });
 
-// Endpoint: Step 2 (openFDA+RxNorm Verify) + Step 3 (Grounded Explain)
+// Endpoint: Step 1 Only (Synchronous fallback with queue + backoff)
+app.post('/api/medicine/identify', scanRateLimiter, async (req: Request, res: Response) => {
+  const imagesRaw = req.body?.images;
+  try {
+    const { language } = req.body;
+    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
+      res.status(400).json({ success: false, error: 'At least one medicine photo is required.' });
+      return;
+    }
+    if (imagesRaw.length > MAX_SCAN_PAGES) {
+      res.status(400).json({
+        success: false,
+        error: `Maximum ${MAX_SCAN_PAGES} photos allowed per scan.`,
+      });
+      return;
+    }
+    if (!ai) {
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
+      return;
+    }
+
+    const { langCode } = getLangDetails(language);
+    const photos = imagesRaw.slice(0, MAX_SCAN_PAGES) as string[];
+    const perPhoto = await Promise.all(
+      photos.map((img, idx) =>
+        runQueuedAiTask(() =>
+          withExponentialBackoff(
+            () => identifyMedicineFromImages([img], langCode),
+            { jobType: 'sync_medicine_identify', step: `photo_${idx + 1}` }
+          )
+        )
+      )
+    );
+    const step1 = mergeMedicineStep1Results(perPhoto);
+    res.json({ success: true, step1 });
+  } catch (error) {
+    logJobEvent('error', {
+      step: 'medicine_identify_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
+    res.status(503).json({
+      success: false,
+      error: 'Service is busy right now. Please tap "Try Again".',
+      isRetryable: true,
+    });
+  } finally {
+    clearImageArray(imagesRaw);
+  }
+});
+
+// Endpoint: Step 2 (cached openFDA+RxNorm Verify) + Step 3 (Queued Grounded Explain)
 app.post('/api/medicine/verify-and-explain', rateLimiter, async (req: Request, res: Response) => {
+  const docImagesRaw = req.body?.docImages;
   try {
     const {
       step1,
       problem,
-      docImages,
       language,
       age,
       gender,
@@ -1046,52 +1434,78 @@ app.post('/api/medicine/verify-and-explain', rateLimiter, async (req: Request, r
       return;
     }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
     const { langCode } = getLangDetails(language);
     const lookupKey = step1.medicine.salt || step1.medicine.brand;
     const verifiedFacts = await verifySaltInDatabase(lookupKey, step1.medicine.brand);
-    const medicine = await explainVerifiedMedicineData({
-      step1,
-      verifiedFacts,
-      problem,
-      docImages,
-      langCode,
-      age,
-      gender,
-      allergies,
-      conditions,
-      isPregnant,
-    });
+    const medicine = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          explainVerifiedMedicineData({
+            step1,
+            verifiedFacts,
+            problem,
+            docImages: Array.isArray(docImagesRaw) ? docImagesRaw.slice(0, 3) : undefined,
+            langCode,
+            age,
+            gender,
+            allergies,
+            conditions,
+            isPregnant,
+          }),
+        { jobType: 'medicine_verify_explain', step: 'verify_and_explain' }
+      )
+    );
 
     res.json({ success: true, medicine });
   } catch (error) {
-    console.error('Step 2+3 verify-explain error:', error);
+    logJobEvent('error', {
+      step: 'medicine_verify_explain_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
-      error: 'The AI reading service is currently experiencing high demand. Please tap "Try Again".',
+      error: 'Service is busy right now. Please tap "Try Again".',
       isRetryable: true,
     });
+  } finally {
+    clearImageArray(docImagesRaw);
   }
 });
 
 // Unified 3-step endpoint (backwards-compatible)
-app.post('/api/analyze-medicine', rateLimiter, async (req: Request, res: Response) => {
+app.post('/api/analyze-medicine', scanRateLimiter, async (req: Request, res: Response) => {
+  const imagesRaw = req.body?.images;
+  const docImagesRaw = req.body?.docImages;
   try {
-    const { images, problem, docImages, language, age, gender, allergies, conditions, isPregnant } = req.body;
-    if (!images || !Array.isArray(images) || images.length === 0) {
+    const { problem, language, age, gender, allergies, conditions, isPregnant } = req.body;
+    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
       res.status(400).json({ success: false, error: 'At least one medicine photo is required.' });
       return;
     }
+    if (imagesRaw.length > MAX_SCAN_PAGES) {
+      res.status(400).json({
+        success: false,
+        error: `Maximum ${MAX_SCAN_PAGES} photos allowed per scan.`,
+      });
+      return;
+    }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
     const { langCode } = getLangDetails(language);
-    const step1 = await identifyMedicineFromImages(images, langCode);
+    const step1 = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () => identifyMedicineFromImages(imagesRaw.slice(0, MAX_SCAN_PAGES), langCode),
+        { jobType: 'unified_medicine', step: 'step1_identify' }
+      )
+    );
     if (step1.is_loose_tablet_only || (step1.image_quality === 'poor' && !step1.medicine?.brand)) {
       res.json({
         success: true,
@@ -1112,27 +1526,43 @@ app.post('/api/analyze-medicine', rateLimiter, async (req: Request, res: Respons
       return;
     }
 
-    const verifiedFacts = await verifySaltInDatabase(step1.medicine.salt || step1.medicine.brand, step1.medicine.brand);
-    const medicine = await explainVerifiedMedicineData({
-      step1,
-      verifiedFacts,
-      problem,
-      docImages,
-      langCode,
-      age,
-      gender,
-      allergies,
-      conditions,
-      isPregnant,
-    });
+    const verifiedFacts = await verifySaltInDatabase(
+      step1.medicine.salt || step1.medicine.brand,
+      step1.medicine.brand
+    );
+    const medicine = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          explainVerifiedMedicineData({
+            step1,
+            verifiedFacts,
+            problem,
+            docImages: Array.isArray(docImagesRaw) ? docImagesRaw.slice(0, 3) : undefined,
+            langCode,
+            age,
+            gender,
+            allergies,
+            conditions,
+            isPregnant,
+          }),
+        { jobType: 'unified_medicine', step: 'step3_explain' }
+      )
+    );
     res.json({ success: true, medicine });
   } catch (error) {
-    console.error('Error analyzing medicine:', error);
+    logJobEvent('error', {
+      step: 'analyze_medicine_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
-      error: 'The AI reading service is currently experiencing high demand. Please tap "Try Again".',
+      error: 'Service is busy right now. Please tap "Try Again".',
       isRetryable: true,
     });
+  } finally {
+    clearImageArray(imagesRaw);
+    clearImageArray(docImagesRaw);
   }
 });
 
@@ -1145,14 +1575,13 @@ app.post('/api/medicine-chat', rateLimiter, async (req: Request, res: Response) 
       return;
     }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
     const { langCode, targetLanguageName } = getLangDetails(language);
     const phrases = getLocalizedPhrases(langCode);
 
-    // Block unsafe dosage / stop-start / diagnosis requests early
     const qLower = String(question).toLowerCase();
     const unsafeKeywords = [
       'how many mg',
@@ -1188,22 +1617,33 @@ User health profile: ${JSON.stringify(healthProfile || {})}
 User question: ${question}
 `;
 
-    const answer = await callGeminiWithFallback(
-      prompt,
-      { systemInstruction, responseMimeType: 'text/plain' },
-      12000
+    const answer = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          callGeminiWithFallback(
+            prompt,
+            { systemInstruction, responseMimeType: 'text/plain' },
+            14000
+          ),
+        { jobType: 'medicine_chat', step: 'medicine_chat' }
+      )
     );
     res.json({ success: true, answer: answer.trim() });
   } catch (error) {
-    console.error('Error in medicine chat:', error);
+    logJobEvent('error', {
+      step: 'medicine_chat_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
       error: 'Could not answer right now. Please ask your pharmacist or doctor.',
+      isRetryable: true,
     });
   }
 });
 
-// Fast On-Demand Translation for Medicine Result
+// Fast On-Demand Translation for Medicine Result (cached by payload hash)
 app.post('/api/translate-medicine', rateLimiter, async (req: Request, res: Response) => {
   try {
     const { medicineAnalysis, targetLanguage } = req.body;
@@ -1213,7 +1653,7 @@ app.post('/api/translate-medicine', rateLimiter, async (req: Request, res: Respo
       return;
     }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
@@ -1234,6 +1674,19 @@ app.post('/api/translate-medicine', rateLimiter, async (req: Request, res: Respo
       dos_donts: medicineAnalysis.dos_donts || [],
       allergy_condition_warning: medicineAnalysis.allergy_condition_warning || '',
     };
+
+    const cacheHash = crypto
+      .createHash('sha256')
+      .update(`${targetLanguage}:${JSON.stringify(payload)}`)
+      .digest('hex')
+      .slice(0, 24);
+    const cacheKey = `transcache:med:${cacheHash}`;
+    const cached = await storeGetJson<any>(cacheKey);
+    if (cached) {
+      logJobEvent('info', { step: 'translate_medicine_cache', cacheHit: true, status: 'ok' });
+      res.json({ success: true, translation: cached });
+      return;
+    }
 
     const config = {
       systemInstruction: `Translate this medicine explanation JSON into ${targetLanguageName}. Keep every line very short (max 10 words), simple words, explain medical terms in brackets. Never invent dosages. Return strict JSON.`,
@@ -1273,14 +1726,25 @@ app.post('/api/translate-medicine', rateLimiter, async (req: Request, res: Respo
       },
     };
 
-    const text = await callGeminiWithFallback(JSON.stringify(payload), config, 22000);
+    const text = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () => callGeminiWithFallback(JSON.stringify(payload), config, 22000),
+        { jobType: 'translate_medicine', step: 'translate_medicine' }
+      )
+    );
     const translation = JSON.parse(text);
+    await storeSetJson(cacheKey, translation, TRANSLATION_CACHE_TTL_SEC);
     res.json({ success: true, translation });
   } catch (error) {
-    console.error('Error translating medicine:', error);
+    logJobEvent('error', {
+      step: 'translate_medicine_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
       error: 'Translation is temporarily busy. Please try again.',
+      isRetryable: true,
     });
   }
 });
@@ -1294,7 +1758,7 @@ app.post('/api/medicine-report-link', rateLimiter, async (req: Request, res: Res
       return;
     }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
@@ -1351,43 +1815,44 @@ Explain clearly and safely.
       },
     };
 
-    const text = await callGeminiWithFallback(prompt, config, 15000);
+    const text = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () => callGeminiWithFallback(prompt, config, 16000),
+        { jobType: 'medicine_report_link', step: 'medicine_report_link' }
+      )
+    );
     const connection = JSON.parse(text);
     res.json({ success: true, connection });
   } catch (error) {
-    console.error('Error linking medicine to report:', error);
+    logJobEvent('error', {
+      step: 'medicine_report_link_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
       error: 'Could not connect medicine and report right now. Please try again.',
+      isRetryable: true,
     });
   }
 });
 
-// Analyze Doctor's Prescription (Handwritten / Printed lines extraction)
-app.post('/api/analyze-prescription', rateLimiter, async (req: Request, res: Response) => {
-  try {
-    const { images, language } = req.body;
-    if (!images || !Array.isArray(images) || images.length === 0) {
-      res.status(400).json({ success: false, error: 'Prescription photo is required.' });
-      return;
-    }
-    if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
-      return;
-    }
+async function analyzeSinglePrescriptionPage(
+  imageBase64: string,
+  langCode: 'en' | 'hi' | 'or'
+) {
+  const { targetLanguageName } = getLangDetails(langCode);
+  const parts = toInlineParts([imageBase64], 1);
 
-    const { langCode, targetLanguageName } = getLangDetails(language);
-    const parts = toInlineParts(images, 4);
-
-    const systemInstruction = `
+  const systemInstruction = `
 You read Indian doctor prescriptions carefully. Output text notes in ${targetLanguageName}.
 1. If photo is completely dark, blurry, or not a prescription, set image_quality = 'poor' and quality_notes = "${
-      langCode === 'hi'
-        ? 'फोटो साफ नहीं है। कृपया दोबारा साफ फोटो लें।'
-        : langCode === 'or'
-        ? 'ଫଟୋ ସ୍ପଷ୍ଟ ନୁହେଁ। ଦୟାକରି ପୁଣି ଫଟୋ ନିଅନ୍ତୁ।'
-        : 'Photo not clear. Please retake.'
-    }".
+    langCode === 'hi'
+      ? 'फोटो साफ नहीं है। कृपया दोबारा साफ फोटो लें।'
+      : langCode === 'or'
+      ? 'ଫଟୋ ସ୍ପଷ୍ଟ ନୁହେଁ। ଦୟାକରି ପୁଣି ଫଟୋ ନିଅନ୍ତୁ।'
+      : 'Photo not clear. Please retake.'
+  }".
 2. Extract each medicine line written on the prescription:
    - name: medicine name & strength as written (do not invent if illegible; give closest reading).
    - instructions: dosage/timing ONLY as written on the prescription (e.g. "1 tab after food night", "BD x 5 days" -> "Morning and night after food"). If illegible, say "As written - check with pharmacist".
@@ -1396,58 +1861,161 @@ You read Indian doctor prescriptions carefully. Output text notes in ${targetLan
    - needs_check: true if confidence is 'low' or 'medium'.
 `;
 
-    const config = {
-      systemInstruction,
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          doctor_name: { type: Type.STRING, nullable: true },
-          date: { type: Type.STRING, nullable: true },
-          image_quality: { type: Type.STRING },
-          quality_notes: { type: Type.STRING },
-          lines: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                id: { type: Type.STRING },
-                name: { type: Type.STRING },
-                instructions: { type: Type.STRING },
-                duration: { type: Type.STRING },
-                confidence: { type: Type.STRING },
-                needs_check: { type: Type.BOOLEAN },
-              },
-              required: ['id', 'name', 'instructions', 'duration', 'confidence', 'needs_check'],
+  const config = {
+    systemInstruction,
+    responseMimeType: 'application/json',
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        doctor_name: { type: Type.STRING, nullable: true },
+        date: { type: Type.STRING, nullable: true },
+        image_quality: { type: Type.STRING },
+        quality_notes: { type: Type.STRING },
+        lines: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING },
+              name: { type: Type.STRING },
+              instructions: { type: Type.STRING },
+              duration: { type: Type.STRING },
+              confidence: { type: Type.STRING },
+              needs_check: { type: Type.BOOLEAN },
             },
+            required: ['id', 'name', 'instructions', 'duration', 'confidence', 'needs_check'],
           },
         },
-        required: ['image_quality', 'lines'],
       },
-    };
+      required: ['image_quality', 'lines'],
+    },
+  };
 
-    const text = await callGeminiWithFallback(
-      { parts: [...parts, { text: 'Extract all medicine lines from this prescription.' }] },
-      config,
-      36000
-    );
-    const parsed = JSON.parse(text);
-    if (Array.isArray(parsed.lines)) {
-      parsed.lines = parsed.lines.map((l: any, idx: number) => ({
-        ...l,
-        id: l.id || `rx-line-${idx + 1}`,
-        needs_check: l.needs_check || l.confidence === 'low' || l.confidence === 'medium',
-      }));
+  const text = await callGeminiWithFallback(
+    { parts: [...parts, { text: 'Extract all medicine lines from this prescription.' }] },
+    config,
+    32000
+  );
+  const parsed = JSON.parse(text);
+  if (Array.isArray(parsed.lines)) {
+    parsed.lines = parsed.lines.map((l: any, idx: number) => ({
+      ...l,
+      id: l.id || `rx-line-${idx + 1}`,
+      needs_check: l.needs_check || l.confidence === 'low' || l.confidence === 'medium',
+    }));
+  }
+  return parsed;
+}
+
+// Async Job Endpoint: Prescription OCR across up to 5 pages in parallel
+app.post('/api/jobs/prescription-read', scanRateLimiter, async (req: Request, res: Response) => {
+  const imagesRaw = req.body?.images;
+  try {
+    const { language } = req.body || {};
+    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
+      res.status(400).json({ success: false, error: 'Prescription photo is required.' });
+      return;
+    }
+    if (imagesRaw.length > MAX_SCAN_PAGES) {
+      res.status(400).json({
+        success: false,
+        error: `Maximum ${MAX_SCAN_PAGES} pages allowed per scan.`,
+      });
+      return;
+    }
+    if (!ai) {
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
+      return;
     }
 
+    const { langCode } = getLangDetails(language);
+    const payloadContainer = { images: imagesRaw.slice(0, MAX_SCAN_PAGES) as string[] };
+    req.body.images = [];
+
+    const job = await createScanJob({
+      type: 'prescription_read',
+      language: langCode,
+      totalPages: payloadContainer.images.length,
+    });
+
+    void runParallelPagePipeline({
+      job,
+      payloadContainer,
+      processSinglePage: (imgBase64) => analyzeSinglePrescriptionPage(imgBase64, langCode),
+      mergeResults: (drafts) => mergePrescriptionDrafts(drafts),
+    });
+
+    res.status(202).json({
+      success: true,
+      jobId: job.id,
+      status: job.status,
+      queuePosition: job.queuePosition,
+      progressText: job.progressText,
+    });
+  } catch (err) {
+    clearImageArray(imagesRaw);
+    logJobEvent('error', {
+      step: 'create_prescription_job',
+      status: 'failed',
+      errorType: classifyErrorType(err),
+    });
+    res.status(503).json({
+      success: false,
+      error: 'Could not start prescription scan right now. Please try again.',
+      isRetryable: true,
+    });
+  }
+});
+
+// Analyze Doctor's Prescription (Synchronous fallback backed by parallel page queue)
+app.post('/api/analyze-prescription', scanRateLimiter, async (req: Request, res: Response) => {
+  const imagesRaw = req.body?.images;
+  try {
+    const { language } = req.body;
+    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
+      res.status(400).json({ success: false, error: 'Prescription photo is required.' });
+      return;
+    }
+    if (imagesRaw.length > MAX_SCAN_PAGES) {
+      res.status(400).json({
+        success: false,
+        error: `Maximum ${MAX_SCAN_PAGES} pages allowed per scan.`,
+      });
+      return;
+    }
+    if (!ai) {
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
+      return;
+    }
+
+    const { langCode } = getLangDetails(language);
+    const pages = imagesRaw.slice(0, MAX_SCAN_PAGES) as string[];
+    const pageDrafts = await Promise.all(
+      pages.map((img, idx) =>
+        runQueuedAiTask(() =>
+          withExponentialBackoff(
+            () => analyzeSinglePrescriptionPage(img, langCode),
+            { jobType: 'sync_prescription', step: `page_${idx + 1}` }
+          )
+        )
+      )
+    );
+
+    const parsed = mergePrescriptionDrafts(pageDrafts);
     res.json({ success: true, prescriptionDraft: parsed });
   } catch (error) {
-    console.error('Error analyzing prescription:', error);
+    logJobEvent('error', {
+      step: 'analyze_prescription_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
       error: 'Could not read prescription right now. Please tap "Try Again".',
       isRetryable: true,
     });
+  } finally {
+    clearImageArray(imagesRaw);
   }
 });
 
@@ -1480,35 +2048,41 @@ app.post('/api/explain-prescription', rateLimiter, async (req: Request, res: Res
     const phrases = getLocalizedPhrases(langCode);
 
     // Step 1b: Identify likely active salt for each prescription line name (text-only lookup helper)
-    const saltLookupResText = await callGeminiWithFallback(
-      `For these Indian medicine prescription lines, return ONLY the generic salt name (e.g. "Augmentin 625" -> "Amoxicillin + Clavulanic Acid", "Pan 40" -> "Pantoprazole") plus access_level ('otc'|'ask_doctor'|'prescription_only') and risk_flags (['steroid','strong_antibiotic','sleeping_anxiety','painkiller_steroid_mix']). If unknown salt, set salt = null.\nLines: ${JSON.stringify(lines)}`,
-      {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            items: {
-              type: Type.ARRAY,
-              items: {
+    const saltLookupResText = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          callGeminiWithFallback(
+            `For these Indian medicine prescription lines, return ONLY the generic salt name (e.g. "Augmentin 625" -> "Amoxicillin + Clavulanic Acid", "Pan 40" -> "Pantoprazole") plus access_level ('otc'|'ask_doctor'|'prescription_only') and risk_flags (['steroid','strong_antibiotic','sleeping_anxiety','painkiller_steroid_mix']). If unknown salt, set salt = null.\nLines: ${JSON.stringify(lines)}`,
+            {
+              responseMimeType: 'application/json',
+              responseSchema: {
                 type: Type.OBJECT,
                 properties: {
-                  brand: { type: Type.STRING },
-                  salt: { type: Type.STRING, nullable: true },
-                  access_level: { type: Type.STRING },
-                  risk_flags: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  items: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        brand: { type: Type.STRING },
+                        salt: { type: Type.STRING, nullable: true },
+                        access_level: { type: Type.STRING },
+                        risk_flags: { type: Type.ARRAY, items: { type: Type.STRING } },
+                      },
+                      required: ['brand', 'access_level', 'risk_flags'],
+                    },
+                  },
                 },
-                required: ['brand', 'access_level', 'risk_flags'],
+                required: ['items'],
               },
             },
-          },
-          required: ['items'],
-        },
-      },
-      12000
+            14000
+          ),
+        { jobType: 'explain_prescription', step: 'salt_lookup' }
+      )
     );
     const saltMapItems: any[] = JSON.parse(saltLookupResText).items || [];
 
-    // Step 2: Verify each salt in openFDA + RxNorm in parallel
+    // Step 2: Verify each salt in openFDA + RxNorm in parallel (cached)
     const verifiedList = await Promise.all(
       lines.map((line: any, idx: number) => {
         const mapped = saltMapItems[idx] || {};
@@ -1605,7 +2179,12 @@ ${JSON.stringify(combinedInput)}
       },
     };
 
-    const text = await callGeminiWithFallback(prompt, config, 36000);
+    const text = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () => callGeminiWithFallback(prompt, config, 32000),
+        { jobType: 'explain_prescription', step: 'explain_combined' }
+      )
+    );
     const parsed = JSON.parse(text);
     const rxId = 'rx-' + Date.now();
     const nowIso = new Date().toISOString();
@@ -1712,7 +2291,11 @@ ${JSON.stringify(combinedInput)}
 
     res.json({ success: true, prescription: prescriptionRecord });
   } catch (error) {
-    console.error('Error explaining prescription:', error);
+    logJobEvent('error', {
+      step: 'explain_prescription_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
       error: 'Could not explain prescription right now. Please try again.',
@@ -1743,7 +2326,7 @@ app.post('/api/explain-prescription-line', rateLimiter, async (req: Request, res
       return;
     }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
@@ -1751,22 +2334,28 @@ app.post('/api/explain-prescription-line', rateLimiter, async (req: Request, res
     const phrases = getLocalizedPhrases(langCode);
 
     // Quick text lookup for likely generic salt of the Indian prescription brand
-    const mapText = await callGeminiWithFallback(
-      `For this Indian medicine prescription line, return ONLY generic salt name (e.g. "Augmentin 625" -> "Amoxicillin + Clavulanic Acid", "Pan 40" -> "Pantoprazole"), access_level ('otc'|'ask_doctor'|'prescription_only'), and risk_flags (['steroid','strong_antibiotic','sleeping_anxiety','painkiller_steroid_mix']). If unknown salt, set salt = null.\nLine: ${JSON.stringify(line)}`,
-      {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            brand: { type: Type.STRING },
-            salt: { type: Type.STRING, nullable: true },
-            access_level: { type: Type.STRING },
-            risk_flags: { type: Type.ARRAY, items: { type: Type.STRING } },
-          },
-          required: ['brand', 'access_level', 'risk_flags'],
-        },
-      },
-      18000
+    const mapText = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          callGeminiWithFallback(
+            `For this Indian medicine prescription line, return ONLY generic salt name (e.g. "Augmentin 625" -> "Amoxicillin + Clavulanic Acid", "Pan 40" -> "Pantoprazole"), access_level ('otc'|'ask_doctor'|'prescription_only'), and risk_flags (['steroid','strong_antibiotic','sleeping_anxiety','painkiller_steroid_mix']). If unknown salt, set salt = null.\nLine: ${JSON.stringify(line)}`,
+            {
+              responseMimeType: 'application/json',
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  brand: { type: Type.STRING },
+                  salt: { type: Type.STRING, nullable: true },
+                  access_level: { type: Type.STRING },
+                  risk_flags: { type: Type.ARRAY, items: { type: Type.STRING } },
+                },
+                required: ['brand', 'access_level', 'risk_flags'],
+              },
+            },
+            16000
+          ),
+        { jobType: 'explain_prescription_line', step: 'salt_lookup' }
+      )
     );
     const mapped = JSON.parse(mapText);
 
@@ -1795,17 +2384,23 @@ app.post('/api/explain-prescription-line', rateLimiter, async (req: Request, res
     };
 
     const verifiedFacts = await verifySaltInDatabase(mapped.salt || line.name, line.name);
-    const medObj = await explainVerifiedMedicineData({
-      step1: step1Obj,
-      verifiedFacts,
-      problem: userProblem,
-      langCode,
-      age,
-      gender,
-      allergies,
-      conditions,
-      isPregnant,
-    });
+    const medObj = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          explainVerifiedMedicineData({
+            step1: step1Obj,
+            verifiedFacts,
+            problem: userProblem,
+            langCode,
+            age,
+            gender,
+            allergies,
+            conditions,
+            isPregnant,
+          }),
+        { jobType: 'explain_prescription_line', step: 'explain_line' }
+      )
+    );
 
     medObj.id = `${rxId || 'rx-' + Date.now()}-med-${line.id || Date.now()}`;
     medObj.how_to_take_as_printed =
@@ -1823,7 +2418,11 @@ app.post('/api/explain-prescription-line', rateLimiter, async (req: Request, res
 
     res.json({ success: true, medicine: medObj });
   } catch (error) {
-    console.error('Error explaining prescription line:', error);
+    logJobEvent('error', {
+      step: 'explain_prescription_line_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
       error: 'Could not check this prescription medicine right now.',
@@ -1841,7 +2440,7 @@ app.post('/api/explain-prescription-summary', rateLimiter, async (req: Request, 
       return;
     }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
@@ -1879,17 +2478,28 @@ app.post('/api/explain-prescription-summary', rateLimiter, async (req: Request, 
       },
     };
 
-    const text = await callGeminiWithFallback(
-      `User Problem: ${userProblem || 'None'}\nLinked Report: ${reportSummary ? JSON.stringify(reportSummary) : 'None'}\nMedicines: ${JSON.stringify(summaryInput)}`,
-      config,
-      22000
+    const text = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          callGeminiWithFallback(
+            `User Problem: ${userProblem || 'None'}\nLinked Report: ${reportSummary ? JSON.stringify(reportSummary) : 'None'}\nMedicines: ${JSON.stringify(summaryInput)}`,
+            config,
+            20000
+          ),
+        { jobType: 'explain_prescription_summary', step: 'summary' }
+      )
     );
     res.json({ success: true, why_this_prescription: JSON.parse(text) });
   } catch (error) {
-    console.error('Error creating prescription summary:', error);
+    logJobEvent('error', {
+      step: 'explain_prescription_summary_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
       error: 'Could not summarize prescription right now.',
+      isRetryable: true,
     });
   }
 });
@@ -1903,13 +2513,12 @@ app.post('/api/check-medicine-interactions', rateLimiter, async (req: Request, r
       return;
     }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
     const { targetLanguageName } = getLangDetails(language);
 
-    // Fetch openFDA interaction sections for saved medicines if not already supplied
     const verifiedPairs = await Promise.all(
       medicines.slice(0, 6).map(async (m: any) => {
         if (m.verified_interactions) {
@@ -1958,18 +2567,29 @@ RULES:
       },
     };
 
-    const text = await callGeminiWithFallback(
-      `Verified data for saved medicines: ${JSON.stringify(verifiedPairs)}`,
-      config,
-      14000
+    const text = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          callGeminiWithFallback(
+            `Verified data for saved medicines: ${JSON.stringify(verifiedPairs)}`,
+            config,
+            14000
+          ),
+        { jobType: 'check_interactions', step: 'check_interactions' }
+      )
     );
     const result = JSON.parse(text);
     res.json({ success: true, ...result });
   } catch (error) {
-    console.error('Error checking medicine interactions:', error);
+    logJobEvent('error', {
+      step: 'check_medicine_interactions_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
     res.status(503).json({
       success: false,
       error: 'Could not check medicine interactions right now.',
+      isRetryable: true,
     });
   }
 });
@@ -1977,6 +2597,11 @@ RULES:
 // Mount Vite or static server
 async function startServer() {
   const httpServer = http.createServer(app);
+
+  // Sensible HTTP server timeouts for Autoscale / reverse proxy reliability
+  httpServer.requestTimeout = 90000;
+  httpServer.headersTimeout = 30000;
+  httpServer.keepAliveTimeout = 65000;
 
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));
@@ -1998,7 +2623,11 @@ async function startServer() {
   }
 
   httpServer.listen(PORT, '0.0.0.0', () => {
-    console.log(`ReportSamjho server running on http://0.0.0.0:${PORT}`);
+    logJobEvent('info', {
+      step: 'server_started',
+      status: 'listening',
+      details: `http://0.0.0.0:${PORT} storeMode=${getStoreMode()}`,
+    });
   });
 }
 

@@ -293,9 +293,14 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
         }),
       });
       const raw = await res.text();
-      const data = JSON.parse(raw);
-      if (!res.ok || !data.success || !data.connection) {
-        throw new Error(data?.error || 'Could not check right now.');
+      let data: any = null;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        data = null;
+      }
+      if (!res.ok || !data?.success || !data?.connection) {
+        throw new Error(data?.error || 'Could not check right now. Please try again.');
       }
 
       const connection: MedicineReportConnection = data.connection;
@@ -310,7 +315,12 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
       }
       onMedicineUpdated?.(updated);
     } catch (err: unknown) {
-      setLinkError(err instanceof Error ? err.message : 'Please try again.');
+      const msg = err instanceof Error ? err.message : '';
+      const safeMsg =
+        msg && !msg.includes('fetch') && !msg.includes('JSON') && msg.length < 140
+          ? msg
+          : 'Could not check right now. Please try again.';
+      setLinkError(safeMsg);
     } finally {
       setIsLinking(false);
     }
