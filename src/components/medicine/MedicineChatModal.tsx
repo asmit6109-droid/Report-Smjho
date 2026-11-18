@@ -89,17 +89,17 @@ export const MedicineChatModal: React.FC<MedicineChatModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 backdrop-blur-xs">
-      <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl border border-slate-200 flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[var(--color-text)]/50 p-0 sm:p-4 backdrop-blur-xs">
+      <div className="w-full max-w-lg rounded-t-[16px] sm:rounded-[16px] bg-[var(--color-surface)] shadow-[var(--shadow-card)] flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-divider)]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[12px] bg-[var(--color-brand-soft)] text-[var(--color-brand)] flex items-center justify-center">
               <MessageCircleQuestion className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-slate-900">{mt.chatTitle}</h3>
-              <p className="text-[11px] font-medium text-slate-500">
+              <h3 className="text-lg font-extrabold text-[var(--color-text)]">{mt.chatTitle}</h3>
+              <p className="text-sm font-semibold text-[var(--color-text-secondary)]">
                 {medicine.medicine.brand}
               </p>
             </div>
@@ -107,30 +107,33 @@ export const MedicineChatModal: React.FC<MedicineChatModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close"
+            className="p-2 rounded-[12px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Verified boundary notice */}
-        <div className="bg-teal-50/70 border-b border-teal-100 px-4 py-2 flex items-center gap-2 text-[11px] font-bold text-teal-900">
-          <ShieldCheck className="w-4 h-4 text-teal-700 shrink-0" />
+        <div className="bg-[var(--color-brand-soft)] px-4 py-2.5 flex items-center gap-2 text-sm font-bold text-[var(--color-brand)]">
+          <ShieldCheck className="w-4 h-4 shrink-0" />
           <span>{mt.chatSubtitle}</span>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[220px]">
           {messages.length === 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-500">Tap a quick question:</p>
+            <div className="space-y-3">
+              <p className="text-base font-bold text-[var(--color-text-secondary)]">
+                Tap a quick question:
+              </p>
               <div className="flex flex-wrap gap-2">
                 {quickQuestions.map((qq, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleSend(qq)}
-                    className="rounded-2xl border border-teal-200 bg-teal-50/60 px-3 py-2 text-xs font-bold text-teal-900 hover:bg-teal-100 text-left transition"
+                    className="rounded-[14px] bg-[var(--color-brand-soft)] px-4 py-2.5 text-base font-bold text-[var(--color-brand)] hover:bg-[var(--color-divider)] text-left transition"
                   >
                     {qq}
                   </button>
@@ -145,10 +148,10 @@ export const MedicineChatModal: React.FC<MedicineChatModalProps> = ({
               className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs font-semibold leading-relaxed ${
+                className={`max-w-[85%] rounded-[16px] px-4 py-3 text-base font-semibold leading-relaxed ${
                   m.role === 'user'
-                    ? 'bg-teal-700 text-white'
-                    : 'bg-slate-100 text-slate-900 border border-slate-200'
+                    ? 'bg-[var(--color-brand)] text-white'
+                    : 'bg-[var(--color-bg)] text-[var(--color-text)]'
                 }`}
               >
                 {m.text}
@@ -157,8 +160,8 @@ export const MedicineChatModal: React.FC<MedicineChatModalProps> = ({
           ))}
 
           {isSending && (
-            <div className="flex items-center gap-2 text-xs font-bold text-teal-700">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <div className="flex items-center gap-2 text-base font-bold text-[var(--color-brand)]">
+              <Loader2 className="w-5 h-5 animate-spin" />
               <span>Checking verified details...</span>
             </div>
           )}
@@ -170,21 +173,21 @@ export const MedicineChatModal: React.FC<MedicineChatModalProps> = ({
             e.preventDefault();
             handleSend();
           }}
-          className="p-3 border-t border-slate-200 flex items-center gap-2"
+          className="p-3.5 border-t border-[var(--color-divider)] flex items-center gap-2"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={mt.chatPlaceholder}
-            className="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 focus:border-teal-600 focus:bg-white focus:outline-none"
+            className="flex-1 rounded-[14px] bg-[var(--color-bg)] px-4 py-3 text-base text-[var(--color-text)] focus:outline-2 focus:outline-[var(--color-brand)]"
           />
           <button
             type="submit"
             disabled={!input.trim() || isSending}
-            className="rounded-2xl bg-teal-700 px-4 py-2.5 text-xs font-extrabold text-white hover:bg-teal-800 disabled:opacity-50 inline-flex items-center gap-1"
+            className="rs-btn-primary px-4 py-3 text-base font-extrabold disabled:opacity-50 inline-flex items-center gap-1.5"
           >
-            <Send className="w-3.5 h-3.5" />
+            <Send className="w-4 h-4" />
             <span>{mt.chatSend}</span>
           </button>
         </form>

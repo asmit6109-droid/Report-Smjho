@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ReportAnalysis, UserProfile } from './types/report';
 import {
   MedicineAnalysis,
@@ -11,68 +11,57 @@ import { medicineTranslations } from './utils/medicineTranslations';
 import {
   getStoredProfile,
   saveStoredProfile,
-  getStoredReports,
   saveReportToStorage,
-  getStoredMedicines,
   getHealthProfile,
   saveHealthProfile,
 } from './utils/storage';
+import { compressImage } from './utils/imageQuality';
+import { isPdfFile, renderPdfToJpegPages } from './utils/pdfUtils';
 import { demoReports } from './utils/demoData';
 import { demoMedicines } from './utils/demoMedicineData';
+import { triggerLightHaptic } from './utils/haptics';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { CameraScanner } from './components/CameraScanner';
 import { ProcessingScreen } from './components/ProcessingScreen';
 import { Dashboard } from './components/Dashboard';
-import { PastReports } from './components/PastReports';
-import { PWAInstallButton } from './components/PWAInstallButton';
-import { ProblemContextScreen } from './components/ProblemContextScreen';
+import { HistoryScreen } from './components/HistoryScreen';
+import { SettingsModal } from './components/SettingsModal';
 import { MedicineResultScreen } from './components/MedicineResultScreen';
 import {
   PrescriptionVerifyScreen,
   PrescriptionResultsScreen,
 } from './components/PrescriptionScannerFlow';
-import { MyMedicines } from './components/MyMedicines';
 import { MedicineConfirmScreen } from './components/medicine/MedicineConfirmScreen';
 import { HealthProfileModal } from './components/HealthProfileModal';
 import {
   Camera,
-  Image as ImageIcon,
   History,
-  FileText,
+  Settings,
   WifiOff,
   AlertCircle,
-  ShieldCheck,
   HeartPulse,
-  Languages,
   RefreshCw,
-  Pill,
-  ClipboardList,
-  FolderHeart,
-  ChevronRight,
   Edit3,
-  Home,
-  User,
-  X,
+  Upload,
 } from 'lucide-react';
 
 type ScreenName =
   | 'home'
   | 'scan'
   | 'dashboard'
-  | 'past_reports'
+  | 'history'
   | 'medicine_scan'
   | 'medicine_confirm'
-  | 'medicine_problem'
   | 'medicine_result'
   | 'prescription_scan'
   | 'prescription_verify'
-  | 'prescription_results'
-  | 'my_medicines';
+  | 'prescription_results';
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(getStoredProfile());
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('home');
+  const [historyTab, setHistoryTab] = useState<'reports' | 'medicines'>('reports');
   const [scanInitialMode, setScanInitialMode] = useState<'camera' | 'gallery'>('camera');
   const [activeReport, setActiveReport] = useState<ReportAnalysis | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -81,13 +70,15 @@ export default function App() {
   >('report');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showManualMedOption, setShowManualMedOption] = useState<boolean>(false);
+  const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
   const [showDemoSelector, setShowDemoSelector] = useState<boolean>(false);
   const [showDemoMedicineSelector, setShowDemoMedicineSelector] = useState<boolean>(false);
-  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
-  const [scanChoiceTarget, setScanChoiceTarget] = useState<
-    'report' | 'medicine' | 'prescription' | null
-  >(null);
   const [prescriptionProgressText, setPrescriptionProgressText] = useState<string>('');
+
+  // Hidden direct gallery file inputs for 1-tap upload under each Home button
+  const reportFileRef = useRef<HTMLInputElement | null>(null);
+  const medicineFileRef = useRef<HTMLInputElement | null>(null);
 
   // Medicine 3-step pipeline states
   const [pendingMedicineImages, setPendingMedicineImages] = useState<string[]>([]);
@@ -95,7 +86,7 @@ export default function App() {
   const [isManualConfirmMode, setIsManualConfirmMode] = useState<boolean>(false);
   const [activeMedicine, setActiveMedicine] = useState<MedicineAnalysis | null>(null);
   const [medicineReturnScreen, setMedicineReturnScreen] = useState<
-    'home' | 'my_medicines' | 'prescription_results'
+    'home' | 'history' | 'prescription_results'
   >('home');
 
   const [pendingMedIdentifyRetry, setPendingMedIdentifyRetry] = useState<string[] | null>(null);
@@ -113,6 +104,7 @@ export default function App() {
     lines: PrescriptionLineItem[];
   } | null>(null);
   const [activePrescription, setActivePrescription] = useState<PrescriptionRecord | null>(null);
+  const [pendingImages, setPendingImages] = useState<string[] | null>(null);
 
   const isOnline = useOnlineStatus();
   const currentLanguage: SupportedLanguage = profile.language || 'en';
@@ -131,6 +123,7 @@ export default function App() {
   };
 
   const handleOpenScanner = () => {
+    triggerLightHaptic();
     if (!isOnline) {
       setErrorMessage(t.offlineScanNotice);
       return;
@@ -141,18 +134,8 @@ export default function App() {
     setCurrentScreen('scan');
   };
 
-  const handleOpenGallery = () => {
-    if (!isOnline) {
-      setErrorMessage(t.offlineScanNotice);
-      return;
-    }
-    setErrorMessage(null);
-    setShowManualMedOption(false);
-    setScanInitialMode('gallery');
-    setCurrentScreen('scan');
-  };
-
   const handleOpenMedicineScanner = (mode: 'camera' | 'gallery' = 'camera') => {
+    triggerLightHaptic();
     if (!isOnline) {
       setErrorMessage(t.offlineScanNotice);
       return;
@@ -164,6 +147,7 @@ export default function App() {
   };
 
   const handleOpenPrescriptionScanner = (mode: 'camera' | 'gallery' = 'camera') => {
+    triggerLightHaptic();
     if (!isOnline) {
       setErrorMessage(t.offlineScanNotice);
       return;
@@ -174,24 +158,53 @@ export default function App() {
     setCurrentScreen('prescription_scan');
   };
 
-  const handleOpenScanChoice = (target: 'report' | 'medicine' | 'prescription') => {
-    if (!isOnline) {
-      setErrorMessage(t.offlineScanNotice);
-      return;
+  const processSelectedFiles = async (files: FileList): Promise<string[]> => {
+    const pages: string[] = [];
+    for (const file of Array.from(files)) {
+      if (isPdfFile(file)) {
+        const pdfPages = await renderPdfToJpegPages(file, 6);
+        pages.push(...pdfPages);
+      } else {
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve((ev.target?.result as string) || '');
+          reader.readAsDataURL(file);
+        });
+        if (dataUrl) {
+          const compressed = await compressImage(dataUrl, 960, 0.7);
+          pages.push(compressed);
+        }
+      }
+      if (pages.length >= 6) break;
     }
-    setScanChoiceTarget(target);
+    return pages.slice(0, 6);
   };
 
-  const handleLaunchChosenScan = (mode: 'camera' | 'gallery') => {
-    const target = scanChoiceTarget;
-    setScanChoiceTarget(null);
-    if (target === 'report') {
-      if (mode === 'camera') handleOpenScanner();
-      else handleOpenGallery();
-    } else if (target === 'medicine') {
-      handleOpenMedicineScanner(mode);
-    } else if (target === 'prescription') {
-      handleOpenPrescriptionScanner(mode);
+  const handleDirectGalleryUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    target: 'report' | 'medicine'
+  ) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    if (!isOnline) {
+      setErrorMessage(t.offlineScanNotice);
+      e.target.value = '';
+      return;
+    }
+    try {
+      const images = await processSelectedFiles(e.target.files);
+      e.target.value = '';
+      if (images.length === 0) {
+        setErrorMessage('Could not open selected file.');
+        return;
+      }
+      if (target === 'report') {
+        await handleAnalyzeImages(images);
+      } else {
+        await handleIdentifyMedicine(images);
+      }
+    } catch {
+      setErrorMessage('Could not read file. Try a clear photo.');
+      e.target.value = '';
     }
   };
 
@@ -224,8 +237,6 @@ export default function App() {
     setCurrentScreen('medicine_confirm');
   };
 
-  const [pendingImages, setPendingImages] = useState<string[] | null>(null);
-
   const formatNetworkError = (err: unknown, fallbackText: string) => {
     const msg = err instanceof Error ? err.message : String(err);
     if (
@@ -238,10 +249,10 @@ export default function App() {
       msg.includes('<')
     ) {
       return currentLanguage === 'hi'
-        ? 'एआई सेवा पर अभी बहुत अधिक लोड है। कृपया नीचे "दोबारा प्रयास करें" दबाएं।'
+        ? 'एआई सेवा पर अभी बहुत अधिक लोड है। कृपया "दोबारा प्रयास करें" दबाएं।'
         : currentLanguage === 'or'
         ? 'ଏଆଇ ସେବାରେ ଅତ୍ୟଧିକ ଚାପ ରହିଛି। ଦୟାକରି "ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ" ଚିପନ୍ତୁ।'
-        : 'The AI reading service is currently experiencing high demand. Please tap "Try Again" below.';
+        : 'AI service is busy. Please tap "Try Again".';
     }
     return msg || fallbackText;
   };
@@ -293,10 +304,7 @@ export default function App() {
         (report.image_quality === 'poor' && (!report.findings || report.findings.length === 0)) ||
         report.is_raw_scan_without_text
       ) {
-        setErrorMessage(
-          report.quality_notes ||
-            'The photo was not clear or appears to be a raw scan image without written report text. Please retake or upload the doctor’s printed report.'
-        );
+        setErrorMessage(report.quality_notes || t.retakePhoto);
         setIsProcessing(false);
         return;
       }
@@ -375,17 +383,18 @@ export default function App() {
       setStep1Result(s1);
       setIsManualConfirmMode(false);
 
-      // If confidence is not High or salt is missing, show "Is this your medicine?" confirmation/edit screen
-      if (s1.confidence !== 'high' || !s1.medicine.salt) {
-        setCurrentScreen('medicine_confirm');
+      // Skip "I have this problem" screen by default.
+      // High confidence goes straight to verify + result; Medium/Low asks "Is this correct?"
+      if (s1.confidence === 'high') {
+        await handleVerifyAndExplainMedicine(s1, '', [], images);
       } else {
-        setCurrentScreen('medicine_problem');
+        setIsProcessing(false);
+        setCurrentScreen('medicine_confirm');
       }
     } catch (err: unknown) {
       console.error('Medicine Step 1 identify error:', err);
       setShowManualMedOption(true);
       setErrorMessage(formatNetworkError(err, 'Could not read medicine pack.'));
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -394,7 +403,8 @@ export default function App() {
   const handleVerifyAndExplainMedicine = async (
     confirmedStep1: MedicineStep1Result,
     problem: string,
-    docImages: string[]
+    docImages: string[],
+    overrideImages?: string[]
   ) => {
     setPendingMedVerifyRetry({ step1: confirmedStep1, problem, docImages });
     setPendingImages(null);
@@ -441,9 +451,10 @@ export default function App() {
         throw new Error(data?.error || 'Could not verify medicine.');
       }
 
+      const thumbs = overrideImages || pendingMedicineImages;
       const med: MedicineAnalysis = {
         ...data.medicine,
-        pack_thumbnail: pendingMedicineImages[0] || undefined,
+        pack_thumbnail: thumbs[0] || undefined,
       };
 
       setPendingMedVerifyRetry(null);
@@ -516,7 +527,7 @@ export default function App() {
     }
   };
 
-  // Prescription Confirm -> Incremental 3-Step Explain per line (never times out on long prescriptions)
+  // Prescription Confirm -> Incremental 3-Step Explain per line
   const handleExplainPrescription = async (payload: {
     lines: PrescriptionLineItem[];
     doctor_name: string;
@@ -534,7 +545,6 @@ export default function App() {
       const rxId = 'rx-' + Date.now();
       const nowIso = new Date().toISOString();
 
-      // For 1 line, single call is already fast; for 2+ lines, process incrementally with progress
       if (payload.lines.length <= 1) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 75000);
@@ -571,13 +581,7 @@ export default function App() {
       const explainedMeds: MedicineAnalysis[] = [];
       for (let i = 0; i < payload.lines.length; i++) {
         const line = payload.lines[i];
-        setPrescriptionProgressText(
-          currentLanguage === 'hi'
-            ? `दवा ${i + 1} / ${payload.lines.length}: ${line.name}`
-            : currentLanguage === 'or'
-            ? `ଔଷଧ ${i + 1} / ${payload.lines.length}: ${line.name}`
-            : `Checking medicine ${i + 1} of ${payload.lines.length}: ${line.name}`
-        );
+        setPrescriptionProgressText(`${i + 1} / ${payload.lines.length}: ${line.name}`);
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -613,14 +617,6 @@ export default function App() {
         explainedMeds.push(lineData.medicine);
       }
 
-      setPrescriptionProgressText(
-        currentLanguage === 'hi'
-          ? 'सभी दवाओं का सारांश बन रहा है...'
-          : currentLanguage === 'or'
-          ? 'ସମସ୍ତ ଔଷଧର ସାରାଂଶ ପ୍ରସ୍ତୁତ ହେଉଛି...'
-          : 'Building combined prescription summary...'
-      );
-
       let whySummary: any = undefined;
       try {
         const sumRes = await fetch('/api/explain-prescription-summary', {
@@ -638,7 +634,7 @@ export default function App() {
           whySummary = sumData.why_this_prescription;
         }
       } catch {
-        // Optional combined summary fails gracefully without losing verified per-medicine results
+        // Optional summary fails gracefully
       }
 
       const rxRecord: PrescriptionRecord = {
@@ -674,14 +670,10 @@ export default function App() {
 
   const handleSelectDemoMedicine = (demo: MedicineAnalysis) => {
     setShowDemoMedicineSelector(false);
-    // View demo clearly labeled with is_demo: true without overwriting real scan behavior
     setActiveMedicine(demo);
     setMedicineReturnScreen('home');
     setCurrentScreen('medicine_result');
   };
-
-  const savedReports = getStoredReports();
-  const savedMedicines = getStoredMedicines();
 
   const hasRetryAction =
     Boolean(pendingImages && pendingImages.length > 0) ||
@@ -705,8 +697,29 @@ export default function App() {
     }
   };
 
+  const scanReportLabel =
+    currentLanguage === 'hi'
+      ? 'रिपोर्ट स्कैन करें'
+      : currentLanguage === 'or'
+      ? 'ରିପୋର୍ଟ ସ୍କାନ୍ କରନ୍ତୁ'
+      : 'Scan Report';
+
+  const scanMedicineLabel =
+    currentLanguage === 'hi'
+      ? 'दवा स्कैन करें'
+      : currentLanguage === 'or'
+      ? 'ଔଷଧ ସ୍କାନ୍ କରନ୍ତୁ'
+      : 'Scan Medicine';
+
+  const uploadLinkLabel =
+    currentLanguage === 'hi'
+      ? 'गैलरी या PDF चुनें'
+      : currentLanguage === 'or'
+      ? 'ଗ୍ୟାଲେରୀ ବା PDF ବାଛନ୍ତୁ'
+      : 'Upload photo or PDF';
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between selection:bg-teal-200">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] flex flex-col justify-between selection:bg-[var(--color-brand-soft)]">
       {/* Disclaimer on first launch */}
       {!profile.disclaimerAccepted && (
         <DisclaimerModal
@@ -715,93 +728,76 @@ export default function App() {
         />
       )}
 
-      {/* Offline banner notification */}
+      {/* Offline banner notification (neutral dark slate, never health-status color) */}
       {!isOnline && (
-        <div className="bg-amber-500 text-slate-950 px-4 py-2 text-xs font-bold flex items-center justify-center gap-2 shadow-xs">
-          <WifiOff className="w-4 h-4 shrink-0" />
-          <span>{t.offlineTitle} — {t.offlineDesc}</span>
+        <div className="bg-[var(--color-text)] text-white px-4 py-2.5 text-base font-bold flex items-center justify-center gap-2">
+          <WifiOff className="w-5 h-5 shrink-0" />
+          <span>{t.offlineTitle}</span>
         </div>
       )}
 
-      {/* Main Header Bar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 shadow-xs">
+      {/* Minimal Header: App Title + History Icon + Settings Icon */}
+      <header className="sticky top-0 z-30 bg-[var(--color-bg)]/95 backdrop-blur-xs px-4 py-3.5 print:hidden">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <button
             type="button"
             onClick={() => setCurrentScreen('home')}
-            className="flex items-center gap-2.5 text-left group"
+            className="flex items-center gap-3 text-left min-h-[44px]"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition">
+            <div className="w-10 h-10 rounded-[12px] bg-[var(--color-brand)] text-white flex items-center justify-center shadow-[var(--shadow-card)]">
               <HeartPulse className="w-5 h-5" />
             </div>
-            <div>
-              <span className="font-black text-slate-900 text-base leading-none block">
-                {t.appName}
-              </span>
-              <span className="text-[10px] text-teal-700 font-bold tracking-tight">
-                Simple Medical Report & Medicine
-              </span>
-            </div>
+            <span className="font-extrabold text-[var(--color-text)] text-xl tracking-tight">
+              {t.appName}
+            </span>
           </button>
 
-          <div className="flex items-center gap-1.5">
-            <PWAInstallButton language={currentLanguage} />
-            <button
-              type="button"
-              onClick={() => setShowProfileModal(true)}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition active:scale-95"
-              title="My Health Profile"
-            >
-              <User className="w-3.5 h-3.5 text-teal-700" />
-              <span className="hidden sm:inline">
-                {profile.age ? `${profile.age}y` : 'Profile'}
-              </span>
-            </button>
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => {
-                const nextLang: SupportedLanguage =
-                  currentLanguage === 'en' ? 'hi' : currentLanguage === 'hi' ? 'or' : 'en';
-                handleLanguageChange(nextLang);
+                setHistoryTab('reports');
+                setCurrentScreen('history');
               }}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition active:scale-95"
-              title="Change Language"
+              aria-label="History"
+              title="History"
+              className="w-11 h-11 rounded-[14px] bg-[var(--color-surface)] text-[var(--color-text)] shadow-[var(--shadow-card)] flex items-center justify-center hover:bg-[var(--color-surface-subtle)] transition"
             >
-              <Languages className="w-3.5 h-3.5 text-teal-700" />
-              <span>
-                {currentLanguage === 'en'
-                  ? 'English'
-                  : currentLanguage === 'hi'
-                  ? 'हिन्दी'
-                  : 'ଓଡ଼ିଆ'}
-              </span>
+              <History className="w-5 h-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowSettingsModal(true)}
+              aria-label="Settings"
+              title="Settings"
+              className="w-11 h-11 rounded-[14px] bg-[var(--color-surface)] text-[var(--color-text)] shadow-[var(--shadow-card)] flex items-center justify-center hover:bg-[var(--color-surface-subtle)] transition"
+            >
+              <Settings className="w-5 h-5" />
             </button>
           </div>
         </div>
       </header>
 
       {/* Body Views */}
-      <main className="flex-1">
-        {/* Error notification alert */}
+      <main className="flex-1 flex flex-col">
+        {/* Error alert */}
         {errorMessage && (
-          <div className="max-w-xl mx-auto px-4 mt-4">
-            <div className="rounded-2xl bg-rose-50 border border-rose-200 p-4 shadow-sm flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h4 className="text-xs font-bold text-rose-900">
-                  {currentLanguage === 'hi' ? 'सूचना' : currentLanguage === 'or' ? 'ସୂଚନା' : 'Notice'}
-                </h4>
-                <p className="text-xs text-rose-700 font-medium mt-1 leading-relaxed">
+          <div className="max-w-xl w-full mx-auto px-4 mt-4">
+            <div className="rounded-[16px] bg-[var(--color-danger-soft)] shadow-[var(--shadow-card)] p-5 flex items-start gap-3.5">
+              <AlertCircle className="w-6 h-6 text-[var(--color-danger)] shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-3">
+                <p className="text-base text-[var(--color-danger)] font-bold leading-snug">
                   {errorMessage}
                 </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2.5">
                   {hasRetryAction && (
                     <button
                       type="button"
                       onClick={handleRetry}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-teal-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-teal-800 transition active:scale-95"
+                      className="rs-btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-base font-bold"
                     >
-                      <RefreshCw className="w-3.5 h-3.5" />
+                      <RefreshCw className="w-4 h-4" />
                       <span>
                         {currentLanguage === 'hi'
                           ? 'दोबारा प्रयास करें'
@@ -815,9 +811,9 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleStartManualMedicineEntry}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-800 transition"
+                      className="inline-flex items-center gap-2 rounded-[16px] bg-[var(--color-surface)] text-[var(--color-brand)] shadow-[var(--shadow-card)] px-4 py-2.5 text-base font-bold hover:bg-[var(--color-brand-soft)] transition"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-4 h-4" />
                       <span>{mt.manualEntryBtn}</span>
                     </button>
                   )}
@@ -831,9 +827,9 @@ export default function App() {
                       setPendingMedVerifyRetry(null);
                       setPendingPrescriptionImages(null);
                     }}
-                    className="text-xs font-bold text-slate-600 hover:text-slate-900 px-2 py-1 rounded-lg"
+                    className="text-base font-bold text-[var(--color-text-secondary)] px-3 py-2"
                   >
-                    {currentLanguage === 'hi' ? 'हटाएं' : currentLanguage === 'or' ? 'ବନ୍ଦ କରନ୍ତୁ' : 'Dismiss'}
+                    Dismiss
                   </button>
                 </div>
               </div>
@@ -858,163 +854,95 @@ export default function App() {
           />
         )}
 
-        {/* HOME SCREEN (Simplified 3-Card Layout + Native Language Pills) */}
+        {/* HOME SCREEN: ONE SMALL FRIENDLY FLAT ILLUSTRATION + 2 BIG BUTTONS + SMALL GALLERY LINKS */}
         {currentScreen === 'home' && !isProcessing && (
-          <div className="max-w-xl mx-auto px-4 pt-5 pb-24 flex flex-col items-center text-center">
-            {/* Clear Native-Script Language Bar */}
-            <div className="inline-flex items-center gap-1 rounded-2xl bg-white p-1 border border-slate-200 shadow-xs mb-4">
-              {(
-                [
-                  { code: 'en', label: 'English' },
-                  { code: 'hi', label: 'हिन्दी' },
-                  { code: 'or', label: 'ଓଡ଼ିଆ' },
-                ] as const
-              ).map((item) => (
-                <button
-                  key={item.code}
-                  type="button"
-                  onClick={() => handleLanguageChange(item.code)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${
-                    currentLanguage === item.code
-                      ? 'bg-teal-700 text-white shadow-xs'
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
+          <div className="flex-1 max-w-md w-full mx-auto px-6 py-8 flex flex-col justify-center gap-7">
+            {/* One small friendly flat illustration (home screen only, no gradients) */}
+            <div className="flex justify-center" aria-hidden="true">
+              <svg
+                viewBox="0 0 220 120"
+                className="w-44 h-auto"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect x="20" y="14" width="180" height="92" rx="24" fill="#E6F3F2" />
+                {/* Report sheet */}
+                <rect x="48" y="24" width="68" height="80" rx="12" fill="#FFFFFF" />
+                <rect x="60" y="38" width="28" height="6" rx="3" fill="#0F766E" />
+                <rect x="60" y="52" width="44" height="5" rx="2.5" fill="#DCEBEB" />
+                <rect x="60" y="64" width="38" height="5" rx="2.5" fill="#DCEBEB" />
+                <rect x="60" y="76" width="44" height="5" rx="2.5" fill="#DCEBEB" />
+                {/* Medicine pack */}
+                <rect x="122" y="40" width="50" height="60" rx="12" fill="#0F766E" />
+                <rect x="134" y="54" width="26" height="10" rx="5" fill="#FFFFFF" />
+                <circle cx="139" cy="78" r="5" fill="#FFFFFF" />
+                <circle cx="155" cy="78" r="5" fill="#FFFFFF" />
+                <circle cx="139" cy="91" r="5" fill="#FFFFFF" />
+                <circle cx="155" cy="91" r="5" fill="#FFFFFF" />
+              </svg>
             </div>
 
-            <div className="mb-5">
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
-                {t.tagline}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-sm mx-auto font-medium">
-                {mt.scanMedicineHint}
-              </p>
-            </div>
-
-            {/* 3 Clear Primary Visual Cards */}
-            <div className="w-full max-w-sm space-y-3 text-left">
+            {/* Button 1: Scan Report */}
+            <div className="flex flex-col items-center gap-3">
               <button
                 type="button"
-                onClick={() => handleOpenScanChoice('report')}
-                className="w-full rounded-3xl bg-teal-700 text-white p-4 shadow-md shadow-teal-700/20 hover:bg-teal-800 transition active:scale-98 flex items-center gap-4"
+                onClick={handleOpenScanner}
+                className="rs-btn-primary w-full py-6 px-6 shadow-[var(--shadow-card)] flex items-center justify-center gap-4"
               >
-                <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-                  <Camera className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-base font-black block leading-tight">
-                    {t.scanCameraBtn}
-                  </span>
-                  <span className="text-xs text-teal-100 font-medium block mt-0.5">
-                    Blood, X-ray, Lab Photo or PDF
-                  </span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-teal-200 shrink-0" />
+                <Camera className="w-8 h-8 shrink-0" />
+                <span className="text-xl font-extrabold tracking-tight">{scanReportLabel}</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleOpenScanChoice('medicine')}
-                className="w-full rounded-3xl bg-indigo-700 text-white p-4 shadow-md shadow-indigo-700/20 hover:bg-indigo-800 transition active:scale-98 flex items-center gap-4"
+                onClick={() => reportFileRef.current?.click()}
+                className="inline-flex items-center gap-2 text-base font-bold text-[var(--color-brand)] hover:underline py-1.5 px-3"
               >
-                <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-                  <Pill className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-base font-black block leading-tight">
-                    {mt.scanMedicineBtn}
-                  </span>
-                  <span className="text-xs text-indigo-100 font-medium block mt-0.5">
-                    {mt.scanMedicineHint}
-                  </span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-indigo-200 shrink-0" />
+                <Upload className="w-4 h-4" />
+                <span>{uploadLinkLabel}</span>
+              </button>
+            </div>
+
+            {/* Button 2: Scan Medicine */}
+            <div className="flex flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleOpenMedicineScanner('camera')}
+                className="rs-card w-full py-6 px-6 text-[var(--color-text)] hover:bg-[var(--color-brand-soft)] active:scale-[0.99] transition flex items-center justify-center gap-4"
+              >
+                <span className="w-11 h-11 rounded-[12px] bg-[var(--color-brand-soft)] text-[var(--color-brand)] flex items-center justify-center shrink-0">
+                  <Camera className="w-7 h-7" />
+                </span>
+                <span className="text-xl font-extrabold tracking-tight">{scanMedicineLabel}</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleOpenScanChoice('prescription')}
-                className="w-full rounded-3xl bg-white border-2 border-slate-200 text-slate-900 p-4 shadow-xs hover:border-teal-500 hover:bg-teal-50/30 transition active:scale-98 flex items-center gap-4"
+                onClick={() => medicineFileRef.current?.click()}
+                className="inline-flex items-center gap-2 text-base font-bold text-[var(--color-brand)] hover:underline py-1.5 px-3"
               >
-                <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
-                  <ClipboardList className="w-7 h-7" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-base font-black block leading-tight">
-                    {mt.scanPrescriptionBtn}
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium block mt-0.5">
-                    Doctor&apos;s written slip or PDF
-                  </span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
+                <Upload className="w-4 h-4" />
+                <span>{uploadLinkLabel}</span>
               </button>
-
-              {/* Compact Try Demo Row */}
-              <div className="grid grid-cols-2 gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowDemoSelector(true)}
-                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-teal-300 bg-teal-50/70 py-2.5 px-3 text-xs font-bold text-teal-800 hover:bg-teal-100 transition active:scale-98"
-                >
-                  <FileText className="w-4 h-4 text-teal-600 shrink-0" />
-                  <span className="truncate">{t.demoReportBtn}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowDemoMedicineSelector(true)}
-                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-indigo-300 bg-indigo-50/70 py-2.5 px-3 text-xs font-bold text-indigo-800 hover:bg-indigo-100 transition active:scale-98"
-                >
-                  <Pill className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span className="truncate">{mt.tryDemoMedicineBtn}</span>
-                </button>
-              </div>
             </div>
 
-            {/* Recently Scanned Medicines Row */}
-            {savedMedicines.length > 0 && (
-              <div className="w-full max-w-sm mt-6 text-left">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2 px-1">
-                  {mt.recentMedicinesTitle}
-                </h3>
-                <div className="flex gap-2.5 overflow-x-auto pb-1">
-                  {savedMedicines.slice(0, 4).map((med) => (
-                    <button
-                      key={med.id}
-                      type="button"
-                      onClick={() => {
-                        setActiveMedicine(med);
-                        setMedicineReturnScreen('home');
-                        setCurrentScreen('medicine_result');
-                      }}
-                      className="shrink-0 w-44 rounded-2xl bg-white border border-slate-200 p-3 text-left shadow-xs hover:border-indigo-400 transition flex items-center justify-between gap-2"
-                    >
-                      <div className="min-w-0">
-                        <span className="text-xs font-bold text-slate-900 truncate block">
-                          {med.medicine.brand}
-                        </span>
-                        <span className="text-[10px] font-medium text-slate-500 truncate block">
-                          {med.medicine.salt || 'Pack saved'}
-                        </span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Privacy note */}
-            <div className="mt-6 p-3.5 rounded-2xl bg-slate-100/80 border border-slate-200/80 max-w-sm text-left flex items-start gap-2.5">
-              <ShieldCheck className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                {t.privacyNote}
-              </p>
-            </div>
+            {/* Hidden File Inputs for direct Gallery / PDF upload */}
+            <input
+              ref={reportFileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              multiple
+              className="hidden"
+              onChange={(e) => handleDirectGalleryUpload(e, 'report')}
+            />
+            <input
+              ref={medicineFileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              multiple
+              className="hidden"
+              onChange={(e) => handleDirectGalleryUpload(e, 'medicine')}
+            />
           </div>
         )}
 
@@ -1028,28 +956,26 @@ export default function App() {
           />
         )}
 
-        {/* MEDICINE STEP 1: SCAN STRIP / BOX */}
+        {/* MEDICINE SCAN SCREEN */}
         {currentScreen === 'medicine_scan' && (
           <CameraScanner
             language={currentLanguage}
             initialMode={scanInitialMode}
-            scannerHint="Align medicine strip or box inside frame"
             onAnalyze={handleIdentifyMedicine}
             onCancel={() => setCurrentScreen('home')}
           />
         )}
 
-        {/* MEDICINE CONFIRMATION / CORRECTION SCREEN */}
+        {/* MEDICINE CONFIRMATION (Only shown when Medium/Low confidence or manual entry) */}
         {currentScreen === 'medicine_confirm' && step1Result && (
           <MedicineConfirmScreen
             language={currentLanguage}
             step1Result={step1Result}
             packThumbnail={pendingMedicineImages[0]}
             isManualMode={isManualConfirmMode}
-            onConfirm={(confirmed) => {
-              setStep1Result(confirmed);
-              setCurrentScreen('medicine_problem');
-            }}
+            onConfirm={(confirmed) =>
+              handleVerifyAndExplainMedicine(confirmed, '', [], pendingMedicineImages)
+            }
             onRetake={() => {
               if (isManualConfirmMode) {
                 setCurrentScreen('home');
@@ -1057,18 +983,6 @@ export default function App() {
                 setCurrentScreen('medicine_scan');
               }
             }}
-          />
-        )}
-
-        {/* MEDICINE PROBLEM CONTEXT SCREEN */}
-        {currentScreen === 'medicine_problem' && step1Result && (
-          <ProblemContextScreen
-            language={currentLanguage}
-            photoCount={pendingMedicineImages.length}
-            onSubmit={(problem, docImages) =>
-              handleVerifyAndExplainMedicine(step1Result, problem, docImages)
-            }
-            onBack={() => setCurrentScreen('medicine_confirm')}
           />
         )}
 
@@ -1087,48 +1001,18 @@ export default function App() {
           />
         )}
 
-        {/* PRESCRIPTION FLOW: SCAN */}
-        {currentScreen === 'prescription_scan' && (
-          <CameraScanner
+        {/* COMBINED HISTORY SCREEN (Reports | Medicines tabs) */}
+        {currentScreen === 'history' && (
+          <HistoryScreen
             language={currentLanguage}
-            initialMode={scanInitialMode}
-            scannerHint="Align doctor's prescription inside frame"
-            onAnalyze={handleAnalyzePrescription}
-            onCancel={() => setCurrentScreen('home')}
-          />
-        )}
-
-        {/* PRESCRIPTION FLOW: VERIFY LINES */}
-        {currentScreen === 'prescription_verify' && prescriptionDraft && (
-          <PrescriptionVerifyScreen
-            language={currentLanguage}
-            draft={prescriptionDraft}
-            onConfirm={handleExplainPrescription}
-            onBack={() => setCurrentScreen('home')}
-          />
-        )}
-
-        {/* PRESCRIPTION FLOW: EXPLAINED SUMMARY */}
-        {currentScreen === 'prescription_results' && activePrescription && (
-          <PrescriptionResultsScreen
-            language={currentLanguage}
-            prescription={activePrescription}
-            onSelectMedicine={(med) => {
-              setActiveMedicine(med);
-              setMedicineReturnScreen('prescription_results');
-              setCurrentScreen('medicine_result');
+            initialTab={historyTab}
+            onSelectReport={(rep) => {
+              setActiveReport(rep);
+              setCurrentScreen('dashboard');
             }}
-            onBack={() => setCurrentScreen('home')}
-          />
-        )}
-
-        {/* MY MEDICINES SCREEN */}
-        {currentScreen === 'my_medicines' && (
-          <MyMedicines
-            language={currentLanguage}
             onSelectMedicine={(med) => {
               setActiveMedicine(med);
-              setMedicineReturnScreen('my_medicines');
+              setMedicineReturnScreen('history');
               setCurrentScreen('medicine_result');
             }}
             onBackToHome={() => setCurrentScreen('home')}
@@ -1146,137 +1030,66 @@ export default function App() {
           />
         )}
 
-        {/* PAST REPORTS */}
-        {currentScreen === 'past_reports' && (
-          <PastReports
+        {/* PRESCRIPTION FLOW */}
+        {currentScreen === 'prescription_scan' && (
+          <CameraScanner
             language={currentLanguage}
-            onSelectReport={(rep) => {
-              setActiveReport(rep);
-              setCurrentScreen('dashboard');
+            initialMode={scanInitialMode}
+            onAnalyze={handleAnalyzePrescription}
+            onCancel={() => setCurrentScreen('home')}
+          />
+        )}
+
+        {currentScreen === 'prescription_verify' && prescriptionDraft && (
+          <PrescriptionVerifyScreen
+            language={currentLanguage}
+            draft={prescriptionDraft}
+            onConfirm={handleExplainPrescription}
+            onBack={() => setCurrentScreen('home')}
+          />
+        )}
+
+        {currentScreen === 'prescription_results' && activePrescription && (
+          <PrescriptionResultsScreen
+            language={currentLanguage}
+            prescription={activePrescription}
+            onSelectMedicine={(med) => {
+              setActiveMedicine(med);
+              setMedicineReturnScreen('prescription_results');
+              setCurrentScreen('medicine_result');
             }}
-            onBackToHome={() => setCurrentScreen('home')}
-            onDataReset={() => {
-              setProfile(getStoredProfile());
-              setCurrentScreen('home');
-            }}
+            onBack={() => setCurrentScreen('home')}
           />
         )}
       </main>
 
-      {/* Permanent Visible Footer */}
-      <footer
-        className={`mt-auto bg-white border-t border-slate-200 py-3 px-4 text-center ${
-          ['home', 'past_reports', 'my_medicines'].includes(currentScreen) && !isProcessing
-            ? 'pb-20'
-            : ''
-        }`}
-      >
-        <p className="text-[11px] sm:text-xs font-bold text-slate-600 max-w-md mx-auto leading-snug">
-          {t.permanentFooter}
+      {/* Subtle Footer */}
+      <footer className="py-4 px-4 text-center print:hidden">
+        <p className="text-sm font-medium text-[var(--color-text-secondary)]">
+          {t.builtByAsmit}
         </p>
       </footer>
 
-      {/* Bottom Tab Navigation Bar on Main Screens */}
-      {['home', 'past_reports', 'my_medicines'].includes(currentScreen) && !isProcessing && (
-        <nav className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-1.5 shadow-lg">
-          <div className="max-w-xl mx-auto grid grid-cols-3 gap-1">
-            <button
-              type="button"
-              onClick={() => setCurrentScreen('home')}
-              className={`flex flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[11px] font-bold transition ${
-                currentScreen === 'home'
-                  ? 'text-teal-700 bg-teal-50'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <Home className="w-5 h-5" />
-              <span>Home</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCurrentScreen('past_reports')}
-              className={`flex flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[11px] font-bold transition ${
-                currentScreen === 'past_reports'
-                  ? 'text-teal-700 bg-teal-50'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <History className="w-5 h-5" />
-              <span className="truncate max-w-full px-1">
-                {t.pastReportsBtn}
-                {savedReports.length > 0 ? ` (${savedReports.length})` : ''}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCurrentScreen('my_medicines')}
-              className={`flex flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[11px] font-bold transition ${
-                currentScreen === 'my_medicines'
-                  ? 'text-indigo-700 bg-indigo-50'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <FolderHeart className="w-5 h-5" />
-              <span className="truncate max-w-full px-1">
-                {mt.myMedicinesBtn}
-                {savedMedicines.length > 0 ? ` (${savedMedicines.length})` : ''}
-              </span>
-            </button>
-          </div>
-        </nav>
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <SettingsModal
+          language={currentLanguage}
+          profile={profile}
+          healthProfile={getHealthProfile()}
+          onLanguageChange={handleLanguageChange}
+          onOpenHealthProfile={() => setShowProfileModal(true)}
+          onOpenPrescriptionScan={() => handleOpenPrescriptionScanner('camera')}
+          onOpenDemoReport={() => setShowDemoSelector(true)}
+          onOpenDemoMedicine={() => setShowDemoMedicineSelector(true)}
+          onDataReset={() => {
+            setProfile(getStoredProfile());
+            setCurrentScreen('home');
+          }}
+          onClose={() => setShowSettingsModal(false)}
+        />
       )}
 
-      {/* Camera vs Upload Photo / PDF Choice Modal */}
-      {scanChoiceTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl border border-slate-100 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-900">
-                {scanChoiceTarget === 'report'
-                  ? t.scanCameraBtn
-                  : scanChoiceTarget === 'medicine'
-                  ? mt.scanMedicineBtn
-                  : mt.scanPrescriptionBtn}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setScanChoiceTarget(null)}
-                className="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => handleLaunchChosenScan('camera')}
-              className="w-full flex items-center gap-3.5 rounded-2xl bg-teal-700 text-white p-4 text-left shadow-sm hover:bg-teal-800 transition active:scale-98"
-            >
-              <Camera className="w-6 h-6 shrink-0" />
-              <div>
-                <span className="text-sm font-black block">Take Photo with Camera</span>
-                <span className="text-xs text-teal-100">Use rear camera</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleLaunchChosenScan('gallery')}
-              className="w-full flex items-center gap-3.5 rounded-2xl bg-slate-100 border border-slate-200 text-slate-900 p-4 text-left hover:bg-slate-200 transition active:scale-98"
-            >
-              <ImageIcon className="w-6 h-6 text-teal-700 shrink-0" />
-              <div>
-                <span className="text-sm font-black block">Upload Photo or PDF</span>
-                <span className="text-xs text-slate-600">Pick from gallery or WhatsApp PDF</span>
-              </div>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Editable Health Profile Modal */}
+      {/* Health Profile Modal */}
       {showProfileModal && (
         <HealthProfileModal
           language={currentLanguage}
@@ -1294,42 +1107,30 @@ export default function App() {
 
       {/* Demo Report Selection Modal */}
       {showDemoSelector && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl border border-slate-100">
-            <h3 className="text-base font-bold text-slate-900 mb-1">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-text)]/50 p-4">
+          <div className="rs-card w-full max-w-sm p-6 space-y-4">
+            <h3 className="text-xl font-extrabold text-[var(--color-text)]">
               Select a Demo Report
             </h3>
-            <p className="text-xs text-slate-500 mb-4">
-              Explore how ReportSamjho simplifies different medical reports:
-            </p>
-
             <div className="space-y-2.5">
               {demoReports.map((demo) => (
                 <button
                   key={demo.id}
                   type="button"
                   onClick={() => handleSelectDemoReport(demo)}
-                  className="w-full text-left rounded-2xl border border-slate-200 p-3 hover:border-teal-500 hover:bg-teal-50/50 transition flex items-center justify-between group"
+                  className="w-full text-left rounded-[14px] bg-[var(--color-bg)] px-4 py-3.5 hover:bg-[var(--color-brand-soft)] flex items-center justify-between transition"
                 >
-                  <div>
-                    <span className="font-bold text-xs text-slate-900 group-hover:text-teal-900 block">
-                      {demo.report_type}
-                    </span>
-                    <span className="text-[11px] text-slate-500 mt-0.5 block">
-                      {demo.findings.length} findings • {demo.overall_severity.toUpperCase()} status
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded-md">
-                    Open
+                  <span className="font-bold text-base text-[var(--color-text)]">
+                    {demo.report_type}
                   </span>
+                  <span className="text-base font-bold text-[var(--color-brand)]">Open</span>
                 </button>
               ))}
             </div>
-
             <button
               type="button"
               onClick={() => setShowDemoSelector(false)}
-              className="mt-5 w-full rounded-2xl bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+              className="w-full rounded-[14px] bg-[var(--color-surface-subtle)] py-3 text-base font-bold text-[var(--color-text)]"
             >
               Cancel
             </button>
@@ -1339,45 +1140,30 @@ export default function App() {
 
       {/* Demo Medicine Selection Modal */}
       {showDemoMedicineSelector && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl border border-slate-100">
-            <h3 className="text-base font-bold text-slate-900 mb-1">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-text)]/50 p-4">
+          <div className="rs-card w-full max-w-sm p-6 space-y-4">
+            <h3 className="text-xl font-extrabold text-[var(--color-text)]">
               Select a Demo Medicine
             </h3>
-            <p className="text-xs text-slate-500 mb-4">
-              Sample medicine results (DEMO - not a real scan):
-            </p>
-
             <div className="space-y-2.5">
               {demoMedicines.map((demo) => (
                 <button
                   key={demo.id}
                   type="button"
                   onClick={() => handleSelectDemoMedicine(demo)}
-                  className="w-full text-left rounded-2xl border border-slate-200 p-3 hover:border-indigo-500 hover:bg-indigo-50/50 transition flex items-center justify-between group"
+                  className="w-full text-left rounded-[14px] bg-[var(--color-bg)] px-4 py-3.5 hover:bg-[var(--color-brand-soft)] flex items-center justify-between transition"
                 >
-                  <div>
-                    <span className="font-bold text-xs text-slate-900 group-hover:text-indigo-900 block">
-                      {demo.medicine.brand}
-                    </span>
-                    <span className="text-[11px] text-slate-500 mt-0.5 block">
-                      {demo.medicine.salt} •{' '}
-                      {demo.medicine.access_level === 'otc'
-                        ? 'Shop buy (OTC)'
-                        : 'Prescription only'}
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md">
-                    Open
+                  <span className="font-bold text-base text-[var(--color-text)]">
+                    {demo.medicine.brand}
                   </span>
+                  <span className="text-base font-bold text-[var(--color-brand)]">Open</span>
                 </button>
               ))}
             </div>
-
             <button
               type="button"
               onClick={() => setShowDemoMedicineSelector(false)}
-              className="mt-5 w-full rounded-2xl bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+              className="w-full rounded-[14px] bg-[var(--color-surface-subtle)] py-3 text-base font-bold text-[var(--color-text)]"
             >
               Cancel
             </button>

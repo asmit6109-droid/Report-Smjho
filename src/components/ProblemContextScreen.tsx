@@ -102,24 +102,24 @@ export const ProblemContextScreen: React.FC<ProblemContextScreenProps> = ({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-slate-700 border border-slate-200 shadow-xs hover:bg-slate-100 transition"
+          className="rs-card inline-flex items-center gap-2 px-4 py-2.5 text-base font-bold text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)] transition"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-5 h-5" />
           <span>Back</span>
         </button>
 
-        <span className="text-xs font-bold text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
+        <span className="text-base font-bold text-[var(--color-brand)] bg-[var(--color-brand-soft)] px-4 py-1.5 rounded-full">
           {photoCount} {photoCount === 1 ? 'photo' : 'photos'} ready
         </span>
       </div>
 
       {/* Main Card */}
-      <div className="rounded-3xl bg-white p-5 sm:p-6 border border-slate-200 shadow-sm space-y-5">
+      <div className="rs-card p-6 space-y-5">
         <div>
-          <h2 className="text-xl font-black text-slate-900 leading-snug">
+          <h2 className="text-xl font-extrabold text-[var(--color-text)] leading-snug">
             {mt.problemTitle}
           </h2>
-          <p className="text-xs text-slate-600 mt-1 font-medium leading-relaxed">
+          <p className="text-base text-[var(--color-text-secondary)] mt-1 font-medium leading-relaxed">
             {mt.problemSubtitle}
           </p>
         </div>
@@ -134,17 +134,13 @@ export const ProblemContextScreen: React.FC<ProblemContextScreenProps> = ({
                 key={chip.id}
                 type="button"
                 onClick={() => toggleChip(chip.label)}
-                className={`flex items-center gap-2 rounded-2xl p-3 text-left text-xs font-bold border-2 transition active:scale-95 ${
+                className={`flex items-center gap-2 rounded-[14px] p-3 text-left text-base font-bold transition ${
                   active
-                    ? 'border-teal-600 bg-teal-50 text-teal-900 shadow-xs'
-                    : 'border-slate-200 bg-slate-50/70 text-slate-700 hover:border-slate-300'
+                    ? 'bg-[var(--color-brand)] text-white shadow-[var(--shadow-card)]'
+                    : 'bg-[var(--color-bg)] text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)]'
                 }`}
               >
-                <Icon
-                  className={`w-4 h-4 shrink-0 ${
-                    active ? 'text-teal-700' : 'text-slate-500'
-                  }`}
-                />
+                <Icon className="w-5 h-5 shrink-0" />
                 <span className="truncate">{chip.label}</span>
               </button>
             );
@@ -158,40 +154,42 @@ export const ProblemContextScreen: React.FC<ProblemContextScreenProps> = ({
             value={problemText}
             onChange={(e) => setProblemText(e.target.value)}
             placeholder={mt.problemPlaceholder}
-            className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:bg-white focus:outline-none transition"
+            className="w-full rounded-[14px] bg-[var(--color-bg)] px-4 py-3 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-secondary)] focus:outline-2 focus:outline-[var(--color-brand)]"
           />
         </div>
 
         {/* Optional Prescription / Report Attach */}
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-3.5">
+        <div className="rounded-[14px] bg-[var(--color-bg)] p-4">
           <button
             type="button"
             disabled={isAttaching || docImages.length >= 3}
             onClick={() => fileInputRef.current?.click()}
-            className="w-full flex items-center justify-center gap-2 text-xs font-bold text-teal-800 hover:text-teal-900 disabled:opacity-50 py-1"
+            className="w-full flex items-center justify-center gap-2 text-base font-bold text-[var(--color-brand)] disabled:opacity-50 py-1"
           >
-            <FilePlus2 className="w-4 h-4 text-teal-700 shrink-0" />
+            <FilePlus2 className="w-5 h-5 shrink-0" />
             <span>{mt.attachDocBtn}</span>
           </button>
 
           {docImages.length > 0 && (
-            <div className="mt-3 flex items-center gap-2.5 overflow-x-auto pt-1">
+            <div className="mt-3 flex items-center gap-3 overflow-x-auto pt-1">
               {docImages.map((img, i) => (
                 <div key={i} className="relative shrink-0">
                   <img
                     src={img}
                     alt={`Attached ${i + 1}`}
-                    className="w-14 h-14 object-cover rounded-xl border border-teal-400"
+                    className="w-16 h-16 object-cover rounded-[12px] border-2 border-[var(--color-brand)]"
                   />
                   <button
                     type="button"
                     onClick={() => setDocImages((prev) => prev.filter((_, idx) => idx !== i))}
-                    className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white rounded-full p-0.5 shadow-sm"
+                    style={{ minHeight: '24px' }}
+                    className="absolute -top-1.5 -right-1.5 bg-[var(--color-text)] text-white rounded-full p-0.5"
+                    aria-label="Remove attachment"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
-                  <span className="mt-1 flex items-center justify-center gap-0.5 text-[10px] font-bold text-emerald-700">
-                    <Check className="w-3 h-3" />
+                  <span className="mt-1 flex items-center justify-center gap-1 text-sm font-bold text-[var(--color-brand)]">
+                    <Check className="w-3.5 h-3.5" />
                     {mt.docAttached}
                   </span>
                 </div>
@@ -214,7 +212,7 @@ export const ProblemContextScreen: React.FC<ProblemContextScreenProps> = ({
           <button
             type="button"
             onClick={() => onSubmit('', [])}
-            className="col-span-1 rounded-2xl border border-slate-200 bg-slate-100 py-3.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition active:scale-98"
+            className="col-span-1 rounded-[14px] bg-[var(--color-surface-subtle)] py-3.5 text-base font-bold text-[var(--color-text)] hover:bg-[var(--color-divider)] transition"
           >
             {mt.skipBtn}
           </button>
@@ -222,10 +220,10 @@ export const ProblemContextScreen: React.FC<ProblemContextScreenProps> = ({
           <button
             type="button"
             onClick={handleContinue}
-            className="col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-teal-700 py-3.5 px-4 text-sm font-extrabold text-white shadow-md hover:bg-teal-800 transition active:scale-98"
+            className="rs-btn-primary col-span-2 flex items-center justify-center gap-2 py-3.5 px-4 text-base font-extrabold"
           >
             <span>{mt.continueBtn}</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-5 h-5" />
           </button>
         </div>
       </div>

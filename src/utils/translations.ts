@@ -85,6 +85,8 @@ export interface TranslationDictionary {
   tapBodyPartHint: string;
   installApp: string;
   installAppIos: string;
+  shareSignOff: string;
+  builtByAsmit: string;
 }
 
 export const translations: Record<SupportedLanguage, TranslationDictionary> = {
@@ -173,6 +175,8 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     tapBodyPartHint: 'Tap the body part to view test notes',
     installApp: 'Install App',
     installAppIos: 'Install on Phone',
+    shareSignOff: 'Explained with ReportSamjho · Built by Asmit',
+    builtByAsmit: 'Built by Asmit',
   },
   hi: {
     appName: 'रिपोर्ट समझो',
@@ -259,6 +263,8 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     tapBodyPartHint: 'जांच देखने के लिए शरीर के अंग पर टैप करें',
     installApp: 'ऐप इंस्टॉल करें',
     installAppIos: 'फोन पर जोड़ें',
+    shareSignOff: 'ReportSamjho (रिपोर्ट समझो) से समझाया गया · Built by Asmit',
+    builtByAsmit: 'अस्मित द्वारा निर्मित · Built by Asmit',
   },
   or: {
     appName: 'ରିପୋର୍ଟ ବୁଝନ୍ତୁ',
@@ -345,5 +351,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     tapBodyPartHint: 'ପରୀକ୍ଷା ତଥ୍ୟ ଦେଖିବାକୁ ଅଙ୍ଗ ଉପରେ ଚିପନ୍ତୁ',
     installApp: 'ଆପ୍ ଇନଷ୍ଟଲ୍ କରନ୍ତୁ',
     installAppIos: 'ଫୋନ୍‌ରେ ଯୋଡନ୍ତୁ',
+    shareSignOff: 'ReportSamjho (ରିପୋର୍ଟ ବୁଝନ୍ତୁ) ଦ୍ୱାରା ବୁଝାଯାଇଛି · Built by Asmit',
+    builtByAsmit: 'ଅସ୍ମିତ୍‌ଙ୍କ ଦ୍ୱାରା ନିର୍ମିତ · Built by Asmit',
   },
 };

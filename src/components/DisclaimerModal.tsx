@@ -57,80 +57,67 @@ export const DisclaimerModal: React.FC<DisclaimerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs overflow-y-auto">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-text)]/55 p-4 backdrop-blur-xs overflow-y-auto">
+      <div className="rs-card w-full max-w-md p-6 my-auto">
         {/* Language switcher selector at the top */}
-        <div className="flex justify-end gap-1 mb-4">
-          <button
-            type="button"
-            onClick={() => setSelectedLang('en')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition ${
-              selectedLang === 'en'
-                ? 'bg-teal-700 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            English
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedLang('hi')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition ${
-              selectedLang === 'hi'
-                ? 'bg-teal-700 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            हिन्दी
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedLang('or')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition ${
-              selectedLang === 'or'
-                ? 'bg-teal-700 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            ଓଡ଼ିଆ
-          </button>
+        <div className="flex justify-end gap-1.5 mb-4">
+          {(
+            [
+              { code: 'en', label: 'English' },
+              { code: 'hi', label: 'हिन्दी' },
+              { code: 'or', label: 'ଓଡ଼ିଆ' },
+            ] as const
+          ).map((langOpt) => (
+            <button
+              key={langOpt.code}
+              type="button"
+              onClick={() => setSelectedLang(langOpt.code)}
+              className={`px-3.5 py-1.5 rounded-full text-base font-bold transition ${
+                selectedLang === langOpt.code
+                  ? 'bg-[var(--color-brand)] text-white shadow-[var(--shadow-card)]'
+                  : 'bg-[var(--color-bg)] text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)]'
+              }`}
+            >
+              {langOpt.label}
+            </button>
+          ))}
         </div>
 
         {step === 'disclaimer' ? (
           <div>
             {/* Header Icon */}
             <div className="flex justify-center mb-3">
-              <div className="h-16 w-16 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 shadow-xs">
+              <div className="h-16 w-16 rounded-[16px] bg-[var(--color-brand-soft)] flex items-center justify-center text-[var(--color-brand)]">
                 <HeartPulse className="w-9 h-9" />
               </div>
             </div>
 
             <div className="text-center">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200 mb-2">
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-700" />
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-[var(--color-brand-soft)] text-[var(--color-brand)] mb-2">
+                <ShieldAlert className="w-4 h-4 shrink-0" />
                 {t.disclaimerTitle}
               </span>
-              <h2 className="text-xl font-black text-slate-900 leading-snug">
+              <h2 className="text-2xl font-extrabold text-[var(--color-text)] leading-snug">
                 {t.appName}
               </h2>
-              <p className="mt-2 text-sm text-slate-700 font-medium leading-relaxed bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200/70">
+              <p className="mt-3 text-base text-[var(--color-text)] font-medium leading-relaxed bg-[var(--color-bg)] p-4 rounded-[14px]">
                 {t.disclaimerNotice}
               </p>
             </div>
 
             {/* Clear bullet points */}
-            <div className="mt-5 space-y-2.5 text-xs text-slate-700">
+            <div className="mt-5 space-y-3 text-base text-[var(--color-text)]">
               <div className="flex items-start gap-2.5">
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-[var(--color-brand)] shrink-0 mt-0.5" />
                 <span>{t.disclaimerBullet1}</span>
               </div>
               <div className="flex items-start gap-2.5">
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-[var(--color-brand)] shrink-0 mt-0.5" />
                 <span>{t.disclaimerBullet2}</span>
               </div>
               <div className="flex items-start gap-2.5">
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span className="font-semibold text-slate-900">{t.disclaimerBullet3}</span>
+                <CheckCircle className="w-5 h-5 text-[var(--color-brand)] shrink-0 mt-0.5" />
+                <span className="font-bold">{t.disclaimerBullet3}</span>
               </div>
             </div>
 
@@ -138,7 +125,7 @@ export const DisclaimerModal: React.FC<DisclaimerModalProps> = ({
             <button
               type="button"
               onClick={handleAcceptDisclaimer}
-              className="mt-6 w-full rounded-2xl bg-teal-700 py-3.5 text-base font-bold text-white shadow-md hover:bg-teal-800 transition active:scale-98"
+              className="rs-btn-primary mt-6 w-full py-3.5 text-lg font-bold"
             >
               {t.acceptAndContinue}
             </button>
@@ -147,22 +134,22 @@ export const DisclaimerModal: React.FC<DisclaimerModalProps> = ({
           <div>
             {/* Step 2: Age and Gender */}
             <div className="flex justify-center mb-3">
-              <div className="h-14 w-14 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 shadow-xs">
+              <div className="h-14 w-14 rounded-[16px] bg-[var(--color-brand-soft)] flex items-center justify-center text-[var(--color-brand)]">
                 <User className="w-7 h-7" />
               </div>
             </div>
 
             <div className="text-center">
-              <h2 className="text-lg font-black text-slate-900 leading-snug">
+              <h2 className="text-xl font-extrabold text-[var(--color-text)] leading-snug">
                 {t.setupProfileTitle}
               </h2>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-base text-[var(--color-text-secondary)]">
                 {t.setupProfileSub}
               </p>
             </div>
 
             {errorMsg && (
-              <div className="mt-3 rounded-xl bg-rose-50 border border-rose-200 p-2.5 text-xs font-semibold text-rose-700 text-center">
+              <div className="mt-3 rounded-[12px] bg-[var(--color-danger-soft)] p-3 text-base font-semibold text-[var(--color-danger)] text-center">
                 {errorMsg}
               </div>
             )}
@@ -170,7 +157,7 @@ export const DisclaimerModal: React.FC<DisclaimerModalProps> = ({
             <div className="mt-5 space-y-4">
               {/* Age Input */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-base font-bold text-[var(--color-text)] mb-1.5">
                   {t.ageLabel}
                 </label>
                 <input
@@ -184,58 +171,40 @@ export const DisclaimerModal: React.FC<DisclaimerModalProps> = ({
                     setErrorMsg('');
                   }}
                   placeholder={t.agePlaceholder}
-                  className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg font-bold text-slate-900 focus:border-teal-600 focus:outline-hidden"
+                  className="w-full rounded-[14px] bg-[var(--color-bg)] px-4 py-3 text-xl font-bold text-[var(--color-text)] focus:outline-2 focus:outline-[var(--color-brand)]"
                 />
               </div>
 
               {/* Gender Radio Choices */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-base font-bold text-[var(--color-text)] mb-1.5">
                   {t.genderLabel}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setGender('male');
-                      setErrorMsg('');
-                    }}
-                    className={`rounded-2xl border-2 py-3 px-2 text-center text-xs font-bold transition active:scale-95 ${
-                      gender === 'male'
-                        ? 'border-teal-700 bg-teal-50 text-teal-900 ring-1 ring-teal-700'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    👨 {t.genderMale}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setGender('female');
-                      setErrorMsg('');
-                    }}
-                    className={`rounded-2xl border-2 py-3 px-2 text-center text-xs font-bold transition active:scale-95 ${
-                      gender === 'female'
-                        ? 'border-teal-700 bg-teal-50 text-teal-900 ring-1 ring-teal-700'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    👩 {t.genderFemale}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setGender('other');
-                      setErrorMsg('');
-                    }}
-                    className={`rounded-2xl border-2 py-3 px-2 text-center text-xs font-bold transition active:scale-95 ${
-                      gender === 'other'
-                        ? 'border-teal-700 bg-teal-50 text-teal-900 ring-1 ring-teal-700'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    👤 {t.genderOther}
-                  </button>
+                  {(
+                    [
+                      { id: 'male', label: t.genderMale },
+                      { id: 'female', label: t.genderFemale },
+                      { id: 'other', label: t.genderOther },
+                    ] as const
+                  ).map((g) => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => {
+                        setGender(g.id);
+                        setErrorMsg('');
+                      }}
+                      className={`rounded-[14px] py-3 px-2 flex flex-col items-center justify-center gap-1 text-base font-bold transition ${
+                        gender === g.id
+                          ? 'bg-[var(--color-brand)] text-white shadow-[var(--shadow-card)]'
+                          : 'bg-[var(--color-bg)] text-[var(--color-text)]'
+                      }`}
+                    >
+                      <User className="w-5 h-5" />
+                      <span>{g.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -244,7 +213,7 @@ export const DisclaimerModal: React.FC<DisclaimerModalProps> = ({
             <button
               type="button"
               onClick={handleFinishProfile}
-              className="mt-6 w-full rounded-2xl bg-teal-700 py-3.5 text-base font-bold text-white shadow-md hover:bg-teal-800 transition active:scale-98"
+              className="rs-btn-primary mt-6 w-full py-3.5 text-lg font-bold"
             >
               {t.saveProfile}
             </button>

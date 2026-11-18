@@ -22,9 +22,9 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ language }) 
     return (
       <button
         onClick={install}
-        className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-teal-800 transition active:scale-95"
+        className="rs-btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-base font-bold"
       >
-        <Download className="w-4 h-4" />
+        <Download className="w-5 h-5" />
         <span>{t.installApp}</span>
       </button>
     );
@@ -36,35 +36,38 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ language }) 
       <>
         <button
           onClick={() => setShowIOSGuide(true)}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-teal-600 bg-white px-3 py-1.5 text-xs font-medium text-teal-800 shadow-sm hover:bg-teal-50 transition active:scale-95"
+          className="inline-flex items-center gap-2 rounded-[14px] bg-[var(--color-brand-soft)] px-4 py-2.5 text-base font-bold text-[var(--color-brand)] hover:bg-[var(--color-divider)] transition"
         >
-          <Share2 className="w-3.5 h-3.5 text-teal-600" />
+          <Share2 className="w-4 h-4" />
           <span>{t.installAppIos}</span>
         </button>
 
         {showIOSGuide && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="text-base font-bold text-slate-900">Install ReportSamjho</h3>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-text)]/50 p-4 backdrop-blur-xs">
+            <div className="rs-card w-full max-w-sm p-6">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--color-divider)]">
+                <h3 className="text-xl font-extrabold text-[var(--color-text)]">
+                  Install ReportSamjho
+                </h3>
                 <button
                   onClick={() => setShowIOSGuide(false)}
-                  className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Close"
+                  className="rounded-full p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)]"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="mt-4 space-y-3 text-sm text-slate-700 leading-relaxed">
+              <div className="mt-4 space-y-3.5 text-base text-[var(--color-text)] leading-relaxed">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800 text-xs">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-soft)] font-bold text-[var(--color-brand)] text-base">
                     1
                   </span>
                   <p>
-                    Tap the <strong>Share</strong> button <Share2 className="inline w-4 h-4 text-blue-600 align-text-bottom" /> at the bottom of Safari.
+                    Tap the <strong>Share</strong> button <Share2 className="inline w-4 h-4 text-[var(--color-brand)] align-text-bottom" /> at the bottom of Safari.
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800 text-xs">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-soft)] font-bold text-[var(--color-brand)] text-base">
                     2
                   </span>
                   <p>
@@ -72,7 +75,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ language }) 
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-100 font-bold text-teal-800 text-xs">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-soft)] font-bold text-[var(--color-brand)] text-base">
                     3
                   </span>
                   <p>
@@ -82,7 +85,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ language }) 
               </div>
               <button
                 onClick={() => setShowIOSGuide(false)}
-                className="mt-5 w-full rounded-xl bg-teal-700 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 transition"
+                className="rs-btn-primary mt-5 w-full py-3 text-base font-bold"
               >
                 Got It
               </button>

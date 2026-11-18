@@ -1,19 +1,78 @@
 @import "tailwindcss";
 
+:root {
+  --color-brand: #0F766E;
+  --color-brand-hover: #0B5D56;
+  --color-brand-soft: #E6F3F2;
+
+  --color-bg: #F6F9F9;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #EEF3F3;
+
+  --color-text: #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-divider: #E5ECEC;
+
+  --color-normal: #16A34A;
+  --color-normal-soft: #F0FDF4;
+  --color-caution: #F59E0B;
+  --color-caution-soft: #FFFBEB;
+  --color-danger: #DC2626;
+  --color-danger-soft: #FEF2F2;
+
+  --radius-card: 16px;
+  --shadow-card: 0 2px 10px rgba(31, 41, 55, 0.05);
+}
+
 @layer base {
-  html, body {
+  html,
+  body {
     margin: 0;
     padding: 0;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Nunito', 'Noto Sans Devanagari', 'Noto Sans Oriya', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
     -webkit-tap-highlight-color: transparent;
   }
+
+  button,
+  a {
+    min-height: 44px;
+  }
+}
+
+.rs-card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.rs-btn-primary {
+  background-color: var(--color-brand);
+  color: #FFFFFF;
+  border-radius: var(--radius-card);
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.rs-btn-primary:hover {
+  background-color: var(--color-brand-hover);
+}
+
+.rs-btn-primary:active {
+  background-color: var(--color-brand-hover);
+  transform: scale(0.99);
 }
 
 @media print {
   body {
-    background: #ffffff !important;
+    background: #FFFFFF !important;
     color: #000000 !important;
   }
-  header, footer, .print\:hidden {
+  header,
+  footer,
+  .print\:hidden {
     display: none !important;
   }
 }

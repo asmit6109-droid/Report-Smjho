@@ -2,7 +2,8 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { SupportedLanguage, translations } from '../utils/translations';
 import { analyzeImageQuality, compressImage, ImageQualityResult } from '../utils/imageQuality';
 import { isPdfFile, renderPdfToJpegPages } from '../utils/pdfUtils';
-import { Camera, Image as ImageIcon, X, AlertTriangle, RefreshCw, Plus, Check, ArrowLeft, Flashlight, Loader2 } from 'lucide-react';
+import { triggerLightHaptic } from '../utils/haptics';
+import { Camera, Image as ImageIcon, X, AlertTriangle, Plus, Check, ArrowLeft, Loader2 } from 'lucide-react';
 
 interface CameraScannerProps {
   language: SupportedLanguage;
@@ -17,7 +18,6 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
   onAnalyze,
   onCancel,
   initialMode = 'camera',
-  scannerHint,
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -25,15 +25,12 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
 
   const [cameraActive, setCameraActive] = useState<boolean>(initialMode === 'camera');
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
-  const [torchOn, setTorchOn] = useState<boolean>(false);
   const [pages, setPages] = useState<string[]>([]);
   const [lastQualityCheck, setLastQualityCheck] = useState<ImageQualityResult | null>(null);
   const [isProcessingCapture, setIsProcessingCapture] = useState<boolean>(false);
 
   const t = translations[language];
 
-  // Stop camera media tracks
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -44,25 +41,22 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
     }
   }, []);
 
-  // Start device camera
   const startCamera = useCallback(async () => {
     stopCamera();
     setCameraError(null);
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera not supported in this browser environment');
+        throw new Error('Camera not supported');
       }
 
-      const constraints: MediaStreamConstraints = {
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: facingMode },
+          facingMode: { ideal: 'environment' },
           width: { ideal: 1920 },
           height: { ideal: 1080 },
         },
         audio: false,
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      });
       streamRef.current = stream;
 
       if (videoRef.current) {
@@ -70,13 +64,11 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
         await videoRef.current.play();
       }
       setCameraActive(true);
-    } catch (err: unknown) {
-      console.warn('Camera access failed, falling back to file picker:', err);
-      const message = err instanceof Error ? err.message : String(err);
-      setCameraError(message.includes('Permission') ? 'Camera permission was denied.' : 'Camera not available.');
+    } catch {
+      setCameraError('Camera unavailable');
       setCameraActive(false);
     }
-  }, [facingMode, stopCamera]);
+  }, [stopCamera]);
 
   useEffect(() => {
     if (cameraActive) {
@@ -87,29 +79,6 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
     };
   }, [cameraActive, startCamera, stopCamera]);
 
-  // Toggle torch/flashlight if supported
-  const toggleTorch = async () => {
-    if (!streamRef.current) return;
-    const track = streamRef.current.getVideoTracks()[0];
-    if (track && 'applyConstraints' in track) {
-      try {
-        const nextState = !torchOn;
-        await track.applyConstraints({
-          advanced: [{ torch: nextState } as MediaTrackConstraintSet],
-        });
-        setTorchOn(nextState);
-      } catch (err) {
-        console.warn('Torch constraint not supported', err);
-      }
-    }
-  };
-
-  // Flip front/rear camera
-  const flipCamera = () => {
-    setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
-  };
-
-  // Process captured image: compress & check quality
   const handleProcessImage = async (dataUrl: string) => {
     setIsProcessingCapture(true);
     try {
@@ -118,12 +87,11 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
 
       if (!quality.isAcceptable) {
         setLastQualityCheck(quality);
+        setPages((prev) => [...prev, compressed]);
       } else {
         setLastQualityCheck(null);
+        setPages((prev) => [...prev, compressed]);
       }
-
-      // Add to pages
-      setPages((prev) => [...prev, compressed]);
     } catch (err) {
       console.error('Failed to process image capture', err);
     } finally {
@@ -131,8 +99,8 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
     }
   };
 
-  // Snap photo from video element
   const takePhoto = async () => {
+    triggerLightHaptic();
     if (!videoRef.current) return;
     const video = videoRef.current;
     const canvas = document.createElement('canvas');
@@ -146,7 +114,6 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
     await handleProcessImage(dataUrl);
   };
 
-  // Handle files selected via file input (gallery / PDF)
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const files = Array.from(e.target.files);
@@ -161,15 +128,14 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
               setLastQualityCheck(null);
               setPages((prev) => [...prev, ...pdfPages].slice(0, 6));
             }
-          } catch (pdfErr) {
-            console.error('PDF render failed', pdfErr);
+          } catch {
             setLastQualityCheck({
               isAcceptable: false,
               reason: 'blurry',
               brightness: 0,
               contrast: 0,
               sharpness: 0,
-              message: 'Could not open this PDF. Try a photo or screenshot instead.',
+              message: 'Could not open PDF. Try a photo instead.',
             });
           }
           continue;
@@ -192,7 +158,6 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
     }
   };
 
-  // Remove a specific page
   const removePage = (index: number) => {
     setPages((prev) => prev.filter((_, i) => i !== index));
     if (pages.length <= 1) {
@@ -200,62 +165,31 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
     }
   };
 
-  // Finalize & Analyze
   const handleProceedToAnalyze = () => {
     if (pages.length === 0) return;
+    triggerLightHaptic();
     stopCamera();
     onAnalyze(pages);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white select-none">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-10">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[var(--color-text)] text-white select-none">
+      {/* Minimal Top Back Icon */}
+      <div className="absolute top-4 left-4 z-20">
         <button
           type="button"
           onClick={() => {
             stopCamera();
             onCancel();
           }}
-          className="flex items-center gap-1.5 rounded-full p-2 text-slate-300 hover:text-white hover:bg-slate-800 transition"
+          aria-label="Back"
+          className="w-11 h-11 rounded-full bg-black/45 text-white flex items-center justify-center hover:bg-black/65 transition"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-xs font-bold">{t.backToHome}</span>
+          <ArrowLeft className="w-6 h-6" />
         </button>
-
-        <div className="text-center">
-          <span className="text-xs font-bold text-teal-400">
-            {pages.length} {t.pagesCaptured}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          {cameraActive && (
-            <>
-              <button
-                type="button"
-                onClick={toggleTorch}
-                title="Flashlight"
-                className={`p-2 rounded-full transition ${
-                  torchOn ? 'bg-amber-400 text-slate-950' : 'text-slate-300 hover:bg-slate-800'
-                }`}
-              >
-                <Flashlight className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={flipCamera}
-                title="Flip Camera"
-                className="p-2 rounded-full text-slate-300 hover:bg-slate-800 transition"
-              >
-                <RefreshCw className="w-5 h-5" />
-              </button>
-            </>
-          )}
-        </div>
       </div>
 
-      {/* Camera / Viewport Area */}
+      {/* Full-Screen Camera Viewport */}
       <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
         {cameraActive ? (
           <>
@@ -267,43 +201,28 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
               className="absolute inset-0 w-full h-full object-cover"
             />
 
-            {/* Document Scanner Frame Overlay with Corner Guides */}
-            <div className="absolute inset-8 sm:inset-12 pointer-events-none flex flex-col justify-between">
-              {/* Top Corners */}
+            {/* Simple Corner Frame Guide */}
+            <div className="absolute inset-10 sm:inset-14 pointer-events-none flex flex-col justify-between">
               <div className="flex justify-between">
-                <div className="w-8 h-8 border-t-4 border-l-4 border-teal-400 rounded-tl-lg shadow-sm" />
-                <div className="w-8 h-8 border-t-4 border-r-4 border-teal-400 rounded-tr-lg shadow-sm" />
+                <div className="w-9 h-9 border-t-4 border-l-4 border-white rounded-tl-xl" />
+                <div className="w-9 h-9 border-t-4 border-r-4 border-white rounded-tr-xl" />
               </div>
-
-              {/* Center Helper Text */}
-              <div className="text-center">
-                <span className="bg-slate-950/70 text-slate-200 text-xs px-3.5 py-1.5 rounded-full backdrop-blur-md border border-slate-700 font-medium">
-                  {scannerHint || 'Align medical report inside frame'}
-                </span>
-              </div>
-
-              {/* Bottom Corners */}
               <div className="flex justify-between">
-                <div className="w-8 h-8 border-b-4 border-l-4 border-teal-400 rounded-bl-lg shadow-sm" />
-                <div className="w-8 h-8 border-b-4 border-r-4 border-teal-400 rounded-br-lg shadow-sm" />
+                <div className="w-9 h-9 border-b-4 border-l-4 border-white rounded-bl-xl" />
+                <div className="w-9 h-9 border-b-4 border-r-4 border-white rounded-br-xl" />
               </div>
             </div>
           </>
         ) : (
-          <div className="p-6 text-center max-w-sm">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-teal-400 mb-4 border border-slate-700">
+          <div className="p-6 text-center max-w-xs space-y-5">
+            <div className="mx-auto w-16 h-16 rounded-[16px] bg-white/10 flex items-center justify-center text-white">
               <Camera className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">
-              {cameraError || 'Camera unavailable'}
-            </h3>
-            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-              You can select saved report photos or PDF documents directly from your phone.
-            </p>
+            <p className="text-base font-bold text-white/90">{cameraError || 'Upload Photo or PDF'}</p>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded-2xl bg-teal-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-teal-500 transition active:scale-95"
+              className="rs-btn-primary inline-flex items-center gap-2.5 px-6 py-3.5 text-base font-bold"
             >
               <ImageIcon className="w-5 h-5" />
               <span>Choose Photo or PDF</span>
@@ -312,45 +231,35 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
         )}
 
         {isProcessingCapture && (
-          <div className="absolute inset-0 z-30 bg-slate-950/75 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-white">
-            <Loader2 className="w-8 h-8 animate-spin text-teal-400" />
-            <span className="text-xs font-bold">Preparing clear pages...</span>
+          <div className="absolute inset-0 z-30 bg-black/70 flex flex-col items-center justify-center gap-2 text-white">
+            <Loader2 className="w-9 h-9 animate-spin text-white" />
           </div>
         )}
 
-        {/* Quality Warning Banner if blurry/dark */}
+        {/* Blurry / Dark Photo Quality Banner */}
         {lastQualityCheck && (
-          <div className="absolute top-4 left-4 right-4 z-20 rounded-2xl bg-amber-500/95 p-3.5 text-slate-950 shadow-xl backdrop-blur-md border border-amber-300">
-            <div className="flex items-start gap-2.5">
-              <AlertTriangle className="w-5 h-5 text-slate-950 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h4 className="text-xs font-black uppercase tracking-wider">
-                  {t.retakePhoto}
-                </h4>
-                <p className="text-xs font-semibold mt-0.5 leading-snug">
-                  {lastQualityCheck.message || t.blurryWarning}
-                </p>
-                <div className="mt-2.5 flex items-center gap-2">
+          <div className="absolute top-18 left-4 right-4 z-20 rounded-[16px] bg-[var(--color-caution-soft)] p-4 text-[var(--color-text)] shadow-[var(--shadow-card)]">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-6 h-6 text-[var(--color-caution)] shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-2.5">
+                <p className="text-base font-extrabold">{t.retakePhoto}</p>
+                <div className="flex items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => {
-                      if (pages.length > 0) {
-                        removePage(pages.length - 1);
-                      }
+                      if (pages.length > 0) removePage(pages.length - 1);
                       setLastQualityCheck(null);
-                      if (!cameraActive) {
-                        fileInputRef.current?.click();
-                      }
+                      if (!cameraActive) fileInputRef.current?.click();
                     }}
-                    className="rounded-xl bg-slate-950 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-900 transition"
+                    className="rounded-[12px] bg-[var(--color-text)] px-4 py-2 text-base font-bold text-white"
                   >
-                    Retake Photo
+                    Retake
                   </button>
                   {pages.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setLastQualityCheck(null)}
-                      className="rounded-xl bg-white/70 px-3 py-1.5 text-xs font-bold text-slate-900 hover:bg-white transition"
+                      className="rounded-[12px] bg-[var(--color-surface)] px-4 py-2 text-base font-bold text-[var(--color-text)]"
                     >
                       {t.blurryProceed}
                     </button>
@@ -362,96 +271,71 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({
         )}
       </div>
 
-      {/* Multi-Page Thumbnail Strip */}
+      {/* Minimal Captured Pages Strip (only shown after 1+ capture) */}
       {pages.length > 0 && (
-        <div className="bg-slate-900 px-4 py-2 border-t border-slate-800 flex items-center gap-3 overflow-x-auto">
-          <span className="text-[11px] font-bold text-slate-400 shrink-0 uppercase tracking-wider">
-            Pages ({pages.length}):
-          </span>
-          <div className="flex items-center gap-2">
-            {pages.map((imgUrl, idx) => (
-              <div key={idx} className="relative shrink-0 group">
-                <img
-                  src={imgUrl}
-                  alt={`Page ${idx + 1}`}
-                  className="w-12 h-16 object-cover rounded-lg border-2 border-teal-500 shadow-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => removePage(idx)}
-                  className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white rounded-full p-0.5 shadow-md hover:bg-rose-700"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-                <span className="absolute bottom-0 inset-x-0 bg-black/70 text-center text-[9px] font-bold text-white py-0.5 rounded-b-md">
-                  P.{idx + 1}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="bg-[var(--color-text)] px-4 py-2.5 flex items-center gap-2.5 overflow-x-auto">
+          {pages.map((imgUrl, idx) => (
+            <div key={idx} className="relative shrink-0">
+              <img
+                src={imgUrl}
+                alt={`Page ${idx + 1}`}
+                className="w-12 h-15 object-cover rounded-[10px] border-2 border-[var(--color-brand)]"
+              />
+              <button
+                type="button"
+                onClick={() => removePage(idx)}
+                style={{ minHeight: '24px' }}
+                className="absolute -top-1.5 -right-1.5 bg-[var(--color-text)] border border-white text-white rounded-full p-0.5"
+                aria-label="Remove page"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Bottom Controls Bar */}
-      <div className="bg-slate-950 px-6 py-4 flex items-center justify-between gap-4 border-t border-slate-900">
-        {/* Gallery / File Picker Button */}
+      {/* Minimal Bottom Controls: Small Gallery Icon + Big Capture Button (+ Check when ready) */}
+      <div className="bg-black px-8 py-6 flex items-center justify-between">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex flex-col items-center gap-1 text-slate-300 hover:text-white transition"
+          aria-label="Open gallery"
+          className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center text-white hover:bg-white/25 transition"
         >
-          <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center border border-slate-700">
-            <ImageIcon className="w-6 h-6 text-teal-400" />
-          </div>
-          <span className="text-[11px] font-semibold">Gallery</span>
+          <ImageIcon className="w-6 h-6" />
         </button>
 
-        {/* Big Shutter / Capture Button */}
-        {cameraActive && (
+        {cameraActive ? (
           <button
             type="button"
             disabled={isProcessingCapture}
             onClick={takePhoto}
             aria-label="Capture photo"
-            className="w-18 h-18 rounded-full border-4 border-white p-1 flex items-center justify-center bg-teal-500 hover:bg-teal-400 transition active:scale-95 shadow-lg disabled:opacity-50"
+            className="w-20 h-20 rounded-full border-4 border-white p-1.5 flex items-center justify-center bg-[var(--color-brand)] active:scale-95 disabled:opacity-50"
           >
-            <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
-              {pages.length > 0 ? (
-                <Plus className="w-7 h-7 text-teal-700" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-teal-600" />
-              )}
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+              {pages.length > 0 && <Plus className="w-7 h-7 text-[var(--color-brand)]" />}
             </div>
           </button>
+        ) : (
+          <div className="w-20 h-20" />
         )}
 
-        {/* Analyze / Finish Button */}
-        <button
-          type="button"
-          disabled={pages.length === 0}
-          onClick={handleProceedToAnalyze}
-          className={`flex flex-col items-center gap-1 transition ${
-            pages.length > 0
-              ? 'text-teal-400 hover:text-teal-300 active:scale-95'
-              : 'text-slate-600 pointer-events-none'
-          }`}
-        >
-          <div
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${
-              pages.length > 0
-                ? 'bg-teal-600 text-white border-teal-500 shadow-md animate-pulse'
-                : 'bg-slate-900 text-slate-600 border-slate-800'
-            }`}
+        {pages.length > 0 ? (
+          <button
+            type="button"
+            onClick={handleProceedToAnalyze}
+            aria-label="Use photos"
+            className="w-12 h-12 rounded-full bg-[var(--color-brand)] text-white flex items-center justify-center hover:bg-[var(--color-brand-hover)] transition"
           >
             <Check className="w-6 h-6" />
-          </div>
-          <span className="text-[11px] font-bold">
-            {pages.length > 0 ? t.analyzePages : 'No Pages'}
-          </span>
-        </button>
+          </button>
+        ) : (
+          <div className="w-12 h-12" />
+        )}
       </div>
 
-      {/* Hidden File Input (Supports Photos & Lab PDFs) */}
       <input
         ref={fileInputRef}
         type="file"

@@ -83,22 +83,22 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs overflow-y-auto">
-      <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl border border-slate-100 my-auto max-h-[90vh] overflow-y-auto space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-text)]/50 p-4 backdrop-blur-xs overflow-y-auto">
+      <div className="rs-card w-full max-w-md p-6 my-auto max-h-[90vh] overflow-y-auto space-y-5">
+        <div className="flex items-center justify-between border-b border-[var(--color-divider)] pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[12px] bg-[var(--color-brand-soft)] text-[var(--color-brand)] flex items-center justify-center">
               <User className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-900">
+              <h3 className="text-xl font-extrabold text-[var(--color-text)]">
                 {language === 'hi'
                   ? 'मेरी स्वास्थ्य प्रोफाइल'
                   : language === 'or'
                   ? 'ମୋର ସ୍ୱାସ୍ଥ୍ୟ ପ୍ରୋଫାଇଲ୍'
                   : 'My Health Profile'}
               </h3>
-              <p className="text-[11px] text-slate-500 font-medium">
+              <p className="text-sm text-[var(--color-text-secondary)] font-medium">
                 Saved only on this phone
               </p>
             </div>
@@ -106,22 +106,23 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close"
+            className="p-2 rounded-[12px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {errorMsg && (
-          <div className="rounded-xl bg-rose-50 border border-rose-200 p-2.5 text-xs font-bold text-rose-700">
+          <div className="rounded-[12px] bg-[var(--color-danger-soft)] p-3 text-base font-bold text-[var(--color-danger)]">
             {errorMsg}
           </div>
         )}
 
         {/* Age & Gender */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label className="block text-base font-bold text-[var(--color-text)] mb-1.5">
               {t.ageLabel}
             </label>
             <input
@@ -134,12 +135,12 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                 setAge(e.target.value);
                 setErrorMsg('');
               }}
-              className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:border-teal-600 focus:outline-hidden"
+              className="w-full rounded-[12px] bg-[var(--color-bg)] px-4 py-3 text-lg font-bold text-[var(--color-text)] focus:outline-2 focus:outline-[var(--color-brand)]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label className="block text-base font-bold text-[var(--color-text)] mb-1.5">
               {t.genderLabel}
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -157,10 +158,10 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                     setGender(g.id);
                     setErrorMsg('');
                   }}
-                  className={`rounded-xl border py-2 px-2 text-xs font-bold transition ${
+                  className={`rounded-[12px] py-3 px-2 text-base font-bold transition ${
                     gender === g.id
-                      ? 'border-teal-700 bg-teal-50 text-teal-900'
-                      : 'border-slate-200 bg-white text-slate-700'
+                      ? 'bg-[var(--color-brand)] text-white shadow-[var(--shadow-card)]'
+                      : 'bg-[var(--color-bg)] text-[var(--color-text)]'
                   }`}
                 >
                   {g.label}
@@ -171,15 +172,15 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
         </div>
 
         {/* Allergies & Conditions */}
-        <div className="pt-2 border-t border-slate-100 space-y-3">
-          <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-900">
-            <HeartHandshake className="w-4 h-4 text-indigo-600" />
+        <div className="pt-3 border-t border-[var(--color-divider)] space-y-4">
+          <div className="flex items-center gap-2 text-base font-extrabold text-[var(--color-brand)]">
+            <HeartHandshake className="w-5 h-5 shrink-0" />
             <span>{mt.healthProfileTitle}</span>
           </div>
 
           <div>
-            <p className="text-[11px] font-bold text-slate-600 mb-1.5">{mt.allergiesLabel}</p>
-            <div className="flex flex-wrap gap-1.5">
+            <p className="text-base font-bold text-[var(--color-text)] mb-2">{mt.allergiesLabel}</p>
+            <div className="flex flex-wrap gap-2">
               {[...new Set([...COMMON_ALLERGIES, ...allergies])].map((item) => {
                 const active = allergies.includes(item);
                 return (
@@ -187,10 +188,10 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                     key={item}
                     type="button"
                     onClick={() => toggleItem(allergies, setAllergies, item)}
-                    className={`rounded-full px-3 py-1 text-xs font-bold border transition ${
+                    className={`rounded-full px-4 py-2 text-base font-bold transition ${
                       active
-                        ? 'bg-indigo-700 text-white border-indigo-700'
-                        : 'bg-slate-50 text-slate-700 border-slate-200'
+                        ? 'bg-[var(--color-brand)] text-white'
+                        : 'bg-[var(--color-bg)] text-[var(--color-text)]'
                     }`}
                   >
                     {item}
@@ -198,27 +199,28 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                 );
               })}
             </div>
-            <div className="flex gap-1.5 mt-2">
+            <div className="flex gap-2 mt-2.5">
               <input
                 type="text"
                 value={customAllergy}
                 onChange={(e) => setCustomAllergy(e.target.value)}
                 placeholder="Add other allergy..."
-                className="flex-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs"
+                className="flex-1 rounded-[12px] bg-[var(--color-bg)] px-3.5 py-2.5 text-base text-[var(--color-text)] focus:outline-2 focus:outline-[var(--color-brand)]"
               />
               <button
                 type="button"
                 onClick={() => addCustom(customAllergy, () => setCustomAllergy(''), allergies, setAllergies)}
-                className="rounded-xl bg-slate-800 px-3 text-white"
+                aria-label="Add allergy"
+                className="rs-btn-primary px-4"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-5 h-5" />
               </button>
             </div>
           </div>
 
           <div>
-            <p className="text-[11px] font-bold text-slate-600 mb-1.5">{mt.conditionsLabel}</p>
-            <div className="flex flex-wrap gap-1.5">
+            <p className="text-base font-bold text-[var(--color-text)] mb-2">{mt.conditionsLabel}</p>
+            <div className="flex flex-wrap gap-2">
               {[...new Set([...COMMON_CONDITIONS, ...conditions])].map((item) => {
                 const active = conditions.includes(item);
                 return (
@@ -226,10 +228,10 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                     key={item}
                     type="button"
                     onClick={() => toggleItem(conditions, setConditions, item)}
-                    className={`rounded-full px-3 py-1 text-xs font-bold border transition ${
+                    className={`rounded-full px-4 py-2 text-base font-bold transition ${
                       active
-                        ? 'bg-indigo-700 text-white border-indigo-700'
-                        : 'bg-slate-50 text-slate-700 border-slate-200'
+                        ? 'bg-[var(--color-brand)] text-white'
+                        : 'bg-[var(--color-bg)] text-[var(--color-text)]'
                     }`}
                   >
                     {item}
@@ -237,36 +239,37 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                 );
               })}
             </div>
-            <div className="flex gap-1.5 mt-2">
+            <div className="flex gap-2 mt-2.5">
               <input
                 type="text"
                 value={customCondition}
                 onChange={(e) => setCustomCondition(e.target.value)}
                 placeholder="Add other condition..."
-                className="flex-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs"
+                className="flex-1 rounded-[12px] bg-[var(--color-bg)] px-3.5 py-2.5 text-base text-[var(--color-text)] focus:outline-2 focus:outline-[var(--color-brand)]"
               />
               <button
                 type="button"
                 onClick={() =>
                   addCustom(customCondition, () => setCustomCondition(''), conditions, setConditions)
                 }
-                className="rounded-xl bg-slate-800 px-3 text-white"
+                aria-label="Add condition"
+                className="rs-btn-primary px-4"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          <label className="flex items-center justify-between gap-2 rounded-2xl border border-indigo-200 bg-indigo-50/50 px-3.5 py-2.5 cursor-pointer">
-            <span className="flex items-center gap-2 text-xs font-bold text-slate-800">
-              <Baby className="w-4 h-4 text-indigo-700 shrink-0" />
+          <label className="flex items-center justify-between gap-3 rounded-[14px] bg-[var(--color-brand-soft)] px-4 py-3 cursor-pointer min-h-[44px]">
+            <span className="flex items-center gap-2.5 text-base font-bold text-[var(--color-text)]">
+              <Baby className="w-5 h-5 text-[var(--color-brand)] shrink-0" />
               <span>{mt.pregnantLabel}</span>
             </span>
             <input
               type="checkbox"
               checked={isPregnant}
               onChange={(e) => setIsPregnant(e.target.checked)}
-              className="w-4 h-4 accent-indigo-700"
+              className="w-5 h-5 accent-[var(--color-brand)]"
             />
           </label>
         </div>
@@ -274,9 +277,9 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
         <button
           type="button"
           onClick={handleSave}
-          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-teal-700 py-3 text-sm font-extrabold text-white shadow-md hover:bg-teal-800 transition"
+          className="rs-btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-base font-extrabold"
         >
-          <Check className="w-4 h-4" />
+          <Check className="w-5 h-5" />
           <span>
             {language === 'hi'
               ? 'प्रोफाइल सेव करें'
