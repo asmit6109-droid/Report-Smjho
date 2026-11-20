@@ -1,0 +1,3060 @@
+{
+  "version": "1.0.0",
+  "_medical_review_notice": "EDITABLE MEDICAL GLOSSARY: Plain-language analogies, flow steps, and doctor questions for ReportSamjho. Doctors or medical students can review any entry and change review_status from 'needs_doctor_or_medical_student_review' to 'reviewed'.",
+  "last_updated": "2026-11-20",
+  "entries": [
+    {
+      "id": "tsh",
+      "kind": "test",
+      "aliases": ["tsh", "thyroid stimulating hormone", "s.tsh", "serum tsh", "ultrasensitive tsh"],
+      "analogyIcon": "bike_throttle",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "TSH (Thyroid Signal)",
+        "analogy": "Think of your thyroid like a bike's accelerator, and TSH as the hand controlling how hard to press it.",
+        "whatItMeasures": "Measures the signal from your brain telling your thyroid how fast to run your body.",
+        "feelings": {
+          "low": ["Heart beating fast", "Sweating or feeling warm", "Weight dropping easily"],
+          "high": ["Feeling tired or sleepy", "Feeling cold easily", "Weight going up slowly"],
+          "normal": ["Steady daily energy", "Comfortable body warmth"],
+          "general": ["Changes in energy", "Weight or sleep shifts"]
+        },
+        "doctorQuestion": "Should we repeat my thyroid test or check T3 and T4?"
+      },
+      "hi": {
+        "title": "टीएसएच (थायरॉइड संकेत)",
+        "analogy": "थायरॉइड शरीर की बाइक का एक्सीलेटर है, और टीएसएच वह हाथ है जो इसकी रफ्तार तय करता है।",
+        "whatItMeasures": "यह दिमाग से थायरॉइड को जाने वाले संदेश की मात्रा जांचता है।",
+        "feelings": {
+          "low": ["दिल की धड़कन तेज लगना", "ज्यादा पसीना या गर्मी लगना", "बिना कारण वजन घटना"],
+          "high": ["जल्दी थकान या सुस्ती लगना", "जल्दी ठंड लगना", "धीरे-धीरे वजन बढ़ना"],
+          "normal": ["दिन भर सामान्य ऊर्जा", "शरीर का संतुलित तापमान"],
+          "general": ["ऊर्जा में बदलाव", "वजन या नींद में फर्क"]
+        },
+        "doctorQuestion": "क्या हमें टी3, टी4 या कुछ हफ्तों बाद दोबारा टीएसएच जांच करानी चाहिए?"
+      },
+      "or": {
+        "title": "ଟିଏସଏଚ୍ (ଥାଇରଏଡ୍ ସଙ୍କେତ)",
+        "analogy": "ଥାଇରଏଡ୍ ହେଉଛି ବାଇକ୍ ର ଆକ୍ସିଲେଟର ପରି, ଏବଂ ଟିଏସଏଚ୍ ହେଉଛି ଏହାକୁ କେତେ ଜୋରରେ ଦବାଇବେ ତାହାର ସଙ୍କେତ।",
+        "whatItMeasures": "ମସ୍ତିଷ୍କରୁ ଥାଇରଏଡ୍ କୁ ଯାଉଥିବା କାମ କରିବାର ସଙ୍କେତ ମାପେ।",
+        "feelings": {
+          "low": ["ହୃଦସ୍ପନ୍ଦନ ଦ୍ରୁତ ହେବା", "ଅଧିକ ଗରମ ବା ଝାଳ ଲାଗିବା", "ଓଜନ କମିଯିବା"],
+          "high": ["ଶୀଘ୍ର ଥକା ଲାଗିବା", "ଶୀତ ବେଶି ଲାଗିବା", "ଓଜନ ବଢ଼ିବା"],
+          "normal": ["ଦିନସାରା ସ୍ଥିର ଶକ୍ତି", "ସ୍ୱାଭାବିକ ତାପମାତ୍ରା"],
+          "general": ["ଶକ୍ତିରେ ପରିବର୍ତ୍ତନ", "ଓଜନ ବା ନିଦରେ ଫରକ"]
+        },
+        "doctorQuestion": "ଆମେ କି ଟି୩, ଟି୪ କିମ୍ବା ପୁଣି ଥରେ ଟିଏସଏଚ୍ ପରୀକ୍ଷା କରିବୁ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "head", "label_en": "Brain", "label_hi": "दिमाग", "label_or": "ମସ୍ତିଷ୍କ" },
+          { "icon": "signal", "label_en": "TSH Signal", "label_hi": "टीएसएच संकेत", "label_or": "ଟିଏସଏଚ୍ ସଙ୍କେତ" },
+          { "icon": "throttle", "label_en": "Thyroid", "label_hi": "थायरॉइड", "label_or": "ଥାଇରଏଡ୍" },
+          { "icon": "energy", "label_en": "Body Speed", "label_hi": "शरीर की रफ्तार", "label_or": "ଶରୀର ଗତି" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 2, "normal": -1 },
+        "captionByStatus": {
+          "low": {
+            "en": "The brain lowered the TSH signal because the thyroid is already running fast.",
+            "hi": "थायरॉइड तेज चल रहा है, इसलिए दिमाग ने टीएसएच संकेत कम कर दिया है।",
+            "or": "ଥାଇରଏଡ୍ ଦ୍ରୁତ ଚାଲୁଥିବାରୁ ମସ୍ତିଷ୍କ ଟିଏସଏଚ୍ ସଙ୍କେତ କମାଇ ଦେଇଛି।"
+          },
+          "high": {
+            "en": "The brain is sending a stronger TSH signal to help a slow thyroid speed up.",
+            "hi": "सुस्त थायरॉइड को तेज करने के लिए दिमाग ज्यादा टीएसएच संकेत भेज रहा है।",
+            "or": "ଧୀର ଥାଇରଏଡ୍ କୁ ଚଳାଇବା ପାଇଁ ମସ୍ତିଷ୍କ ଅଧିକ ଟିଏସଏଚ୍ ସଙ୍କେତ ପଠାଉଛି।"
+          },
+          "normal": {
+            "en": "The signal and thyroid speed are working in smooth balance.",
+            "hi": "टीएसएच संकेत और थायरॉइड की रफ्तार सही संतुलन में हैं।",
+            "or": "ଟିଏସଏଚ୍ ସଙ୍କେତ ଏବଂ ଥାଇରଏଡ୍ ଗତି ସଠିକ୍ ସନ୍ତୁଳନରେ ଅଛି।"
+          }
+        }
+      }
+    },
+    {
+      "id": "t3",
+      "kind": "test",
+      "aliases": ["t3", "total t3", "free t3", "ft3", "triiodothyronine"],
+      "analogyIcon": "bike_throttle",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "T3 (Active Thyroid Fuel)",
+        "analogy": "T3 is the active fuel from your thyroid that powers your daily body speed.",
+        "whatItMeasures": "Measures the fast-acting thyroid hormone flowing in your blood.",
+        "feelings": {
+          "low": ["Low energy", "Feeling sluggish", "Dry skin"],
+          "high": ["Restlessness", "Warm hands", "Fast heartbeat"],
+          "normal": ["Balanced energy through the day"],
+          "general": ["Changes in energy or warmth"]
+        },
+        "doctorQuestion": "Do my T3 and TSH results match each other?"
+      },
+      "hi": {
+        "title": "टी3 (थायरॉइड ईंधन)",
+        "analogy": "टी3 थायरॉइड से निकलने वाला सक्रिय ईंधन है जो शरीर को चुस्त रखता है।",
+        "whatItMeasures": "खून में मौजूद सक्रिय थायरॉइड हार्मोन की मात्रा नापता है।",
+        "feelings": {
+          "low": ["थकान और सुस्ती", "रूखी त्वचा", "ठंड लगना"],
+          "high": ["बेचैनी लगना", "हाथ गर्म रहना", "तेज धड़कन"],
+          "normal": ["दिन भर संतुलित ऊर्जा"],
+          "general": ["ऊर्जा या गर्मी में बदलाव"]
+        },
+        "doctorQuestion": "क्या मेरे टी3 और टीएसएच के नतीजे आपस में मेल खाते हैं?"
+      },
+      "or": {
+        "title": "ଟି୩ (ସକ୍ରିୟ ଥାଇରଏଡ୍ ଶକ୍ତି)",
+        "analogy": "ଟି୩ ହେଉଛି ଥାଇରଏଡ୍ ରୁ ଆସୁଥିବା ସକ୍ରିୟ ଶକ୍ତି ଯାହା ଶରୀରର ଗତି ଚଳାଏ।",
+        "whatItMeasures": "ରକ୍ତରେ ଥିବା ସକ୍ରିୟ ଥାଇରଏଡ୍ ହରମୋନ୍ ମାପେ।",
+        "feelings": {
+          "low": ["କମ୍ ଶକ୍ତି ଓ ଅଳସୁଆ", "ଶୁଖିଲା ଚର୍ମ", "ଶୀତ ଲାଗିବା"],
+          "high": ["ଅସ୍ଥିର ଲାଗିବା", "ହାତ ଗରମ ରହିବା", "ଦ୍ରୁତ ହୃଦସ୍ପନ୍ଦନ"],
+          "normal": ["ଦିନସାରା ସନ୍ତୁଳିତ ଶକ୍ତି"],
+          "general": ["ଶକ୍ତି ବା ଗରମରେ ପରିବର୍ତ୍ତନ"]
+        },
+        "doctorQuestion": "ମୋର ଟି୩ ଏବଂ ଟିଏସଏଚ୍ ଫଳାଫଳ କଣ ପରସ୍ପର ସହ ମେଳ ଖାଉଛି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "throttle", "label_en": "Thyroid", "label_hi": "थायरॉइड", "label_or": "ଥାଇରଏଡ୍" },
+          { "icon": "drop", "label_en": "T3 in Blood", "label_hi": "खून में टी3", "label_or": "ରକ୍ତରେ ଟି୩" },
+          { "icon": "energy", "label_en": "Body Energy", "label_hi": "शरीर ऊर्जा", "label_or": "ଶରୀର ଶକ୍ତି" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": {
+            "en": "Less T3 fuel in the blood can make your body feel slower.",
+            "hi": "खून में टी3 कम होने से शरीर थोड़ा सुस्त महसूस कर सकता है।",
+            "or": "ରକ୍ତରେ ଟି୩ କମ୍ ଥିବାରୁ ଶରୀର ଟିକେ ଧୀର ଲାଗିପାରେ।"
+          },
+          "high": {
+            "en": "Extra T3 in the blood pushes body speed higher than usual.",
+            "hi": "खून में ज्यादा टी3 शरीर की रफ्तार को तेज कर देता है।",
+            "or": "ରକ୍ତରେ ଅଧିକ ଟି୩ ଶରୀର ଗତିକୁ ବଢ଼ାଇ ଦେଇଥାଏ।"
+          },
+          "normal": {
+            "en": "T3 thyroid fuel is in a healthy range.",
+            "hi": "टी3 हार्मोन स्वस्थ सीमा के अंदर है।",
+            "or": "ଟି୩ ହରମୋନ୍ ସୁସ୍ଥ ସୀମା ମଧ୍ୟରେ ଅଛି।"
+          }
+        }
+      }
+    },
+    {
+      "id": "t4",
+      "kind": "test",
+      "aliases": ["t4", "total t4", "free t4", "ft4", "thyroxine"],
+      "analogyIcon": "bike_throttle",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "T4 (Thyroid Hormone Reserve)",
+        "analogy": "T4 is the main fuel stored and sent out by your thyroid gland for steady energy.",
+        "whatItMeasures": "Measures the main hormone made by your thyroid gland.",
+        "feelings": {
+          "low": ["Tiredness", "Weight gain", "Dryness"],
+          "high": ["Nervousness", "Weight loss", "Warmth"],
+          "normal": ["Steady energy levels"],
+          "general": ["Energy or temperature changes"]
+        },
+        "doctorQuestion": "Is my T4 level balanced with my TSH?"
+      },
+      "hi": {
+        "title": "टी4 (मुख्य थायरॉइड हार्मोन)",
+        "analogy": "टी4 थायरॉइड से बनने वाला मुख्य ईंधन है जो शरीर को लगातार ऊर्जा देता है।",
+        "whatItMeasures": "यह थायरॉइड ग्रंथि द्वारा बनाए गए मुख्य हार्मोन को नापता है।",
+        "feelings": {
+          "low": ["थकान लगना", "वजन बढ़ना", "त्वचा सूखना"],
+          "high": ["घबराहट", "वजन कम होना", "गर्मी लगना"],
+          "normal": ["स्थिर दैनिक ऊर्जा"],
+          "general": ["ऊर्जा में उतार-चढ़ाव"]
+        },
+        "doctorQuestion": "क्या मेरा टी4 स्तर टीएसएच के साथ संतुलित है?"
+      },
+      "or": {
+        "title": "ଟି୪ (ମୁଖ୍ୟ ଥାଇରଏଡ୍ ହରମୋନ୍)",
+        "analogy": "ଟି୪ ହେଉଛି ଥାଇରଏଡ୍ ତିଆରି କରୁଥିବା ମୁଖ୍ୟ ଶକ୍ତି ଭଣ୍ଡାର ଯାହା ଶରୀରକୁ ଚଳାଏ।",
+        "whatItMeasures": "ଥାଇରଏଡ୍ ଗ୍ରନ୍ଥି ଦ୍ୱାରା ତିଆରି ମୁଖ୍ୟ ହରମୋନ୍ ମାପେ।",
+        "feelings": {
+          "low": ["ଥକାପଣ", "ଓଜନ ବୃଦ୍ଧି", "ଶୁଖିଲାପଣ"],
+          "high": ["ଅସ୍ଥିରତା", "ଓଜନ ହ୍ରାସ", "ଗରମ ଲାଗିବା"],
+          "normal": ["ସ୍ଥିର ଦୈନିକ ଶକ୍ତି"],
+          "general": ["ଶକ୍ତିରେ ପରିବର୍ତ୍ତନ"]
+        },
+        "doctorQuestion": "ମୋର ଟି୪ ସ୍ତର ଟିଏସଏଚ୍ ସହିତ ସନ୍ତୁଳିତ ଅଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "throttle", "label_en": "Thyroid Makes T4", "label_hi": "थायरॉइड से टी4", "label_or": "ଥାଇରଏଡ୍ ରୁ ଟି୪" },
+          { "icon": "drop", "label_en": "T4 in Blood", "label_hi": "खून में टी4", "label_or": "ରକ୍ତରେ ଟି୪" },
+          { "icon": "energy", "label_en": "Turns Into Energy", "label_hi": "ऊर्जा में बदलाव", "label_or": "ଶକ୍ତିରେ ପରିଣତ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": {
+            "en": "Thyroid is releasing less T4 reserve than usual.",
+            "hi": "थायरॉइड सामान्य से कम टी4 बना रहा है।",
+            "or": "ଥାଇରଏଡ୍ ସାଧାରଣଠାରୁ କମ୍ ଟି୪ ତିଆରି କରୁଛି।"
+          },
+          "high": {
+            "en": "Thyroid is releasing extra T4 into the blood.",
+            "hi": "थायरॉइड खून में ज्यादा टी4 छोड़ रहा है।",
+            "or": "ଥାଇରଏଡ୍ ରକ୍ତରେ ଅଧିକ ଟି୪ ଛାଡ଼ୁଛି।"
+          },
+          "normal": {
+            "en": "Thyroid T4 supply is steady and normal.",
+            "hi": "टी4 हार्मोन का स्तर बिल्कुल सामान्य है।",
+            "or": "ଟି୪ ହରମୋନ୍ ଯୋଗାଣ ସ୍ଥିର ଏବଂ ସ୍ୱାଭାବିକ ଅଛି।"
+          }
+        }
+      }
+    },
+    {
+      "id": "hba1c",
+      "kind": "test",
+      "aliases": ["hba1c", "glycated hemoglobin", "a1c", "3 month sugar", "glycosylated hemoglobin"],
+      "analogyIcon": "key_lock",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "HbA1c (3-Month Sugar Average)",
+        "analogy": "Like checking how much sugar stuck to blood cells over the last 3 months, not just today's meal.",
+        "whatItMeasures": "Shows your average blood sugar level over the past 2 to 3 months.",
+        "feelings": {
+          "low": ["Dizziness or shakiness", "Sudden hunger", "Sweating"],
+          "high": ["Often feels normal at first", "Extra thirst", "Frequent urination"],
+          "normal": ["Steady 3-month sugar balance"],
+          "general": ["Thirst or tiredness"]
+        },
+        "doctorQuestion": "What 3-month HbA1c target is best for my age?"
+      },
+      "hi": {
+        "title": "एचबीए1सी (3 महीने की शुगर का औसत)",
+        "analogy": "यह सिर्फ आज के खाने नहीं, बल्कि पिछले 3 महीनों में खून में रही शुगर का पक्का हिसाब दिखाता है।",
+        "whatItMeasures": "पिछले 2 से 3 महीनों की औसत ब्लड शुगर जांचता है।",
+        "feelings": {
+          "low": ["चक्कर या कंपकंपी", "अचानक भूख लगना", "पसीना आना"],
+          "high": ["शुरू में कोई लक्षण नहीं दिखता", "ज्यादा प्यास लगना", "बार-बार पेशाब आना"],
+          "normal": ["3 महीने की शुगर संतुलित है"],
+          "general": ["प्यास या थकान"]
+        },
+        "doctorQuestion": "मेरी उम्र के हिसाब से एचबीए1सी का सही लक्ष्य क्या होना चाहिए?"
+      },
+      "or": {
+        "title": "ଏଚବିଏ୧ସି (୩ ମାସର ଶର୍କରା ହାରାହାରି)",
+        "analogy": "ଏହା କେବଳ ଆଜିର ଖାଦ୍ୟ ନୁହେଁ, ଗତ ୩ ମାସରେ ରକ୍ତରେ କେତେ ଶର୍କରା ଥିଲା ତାହାର ହିସାବ ଦେଖାଏ।",
+        "whatItMeasures": "ଗତ ୨ ରୁ ୩ ମାସର ହାରାହାରି ରକ୍ତ ଶର୍କରା ମାପେ।",
+        "feelings": {
+          "low": ["ମୁଣ୍ଡ ବୁଲାଇବା ବା ଥରିବା", "ହଠାତ୍ ଭୋକ ଲାଗିବା", "ଝାଳ ବୋହିବା"],
+          "high": ["ଆରମ୍ଭରେ କୌଣସି ଲକ୍ଷଣ ନଥାଇପାରେ", "ଅଧିକ ଶୋଷ ଲାଗିବା", "ବାରମ୍ବାର ପରିସ୍ରା ଲାଗିବା"],
+          "normal": ["୩ ମାସର ଶର୍କରା ସନ୍ତୁଳିତ ଅଛି"],
+          "general": ["ଶୋଷ କିମ୍ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ମୋ ବୟସ ଅନୁସାରେ ଏଚବିଏ୧ସି ର ସଠିକ୍ ଲକ୍ଷ୍ୟ କେତେ ହେବା ଉଚିତ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Food Sugar", "label_hi": "खाने की शुगर", "label_or": "ଖାଦ୍ୟ ଶର୍କରା" },
+          { "icon": "key", "label_en": "Insulin Key", "label_hi": "इंसुलिन चाबी", "label_or": "ଇନସୁଲିନ୍ ଚାବି" },
+          { "icon": "drop", "label_en": "3-Month Blood Record", "label_hi": "3 महीने का रिकॉर्ड", "label_or": "୩ ମାସର ରେକର୍ଡ" }
+        ],
+        "highlightIndexByStatus": { "low": 2, "high": 2, "critical": 2, "normal": -1 },
+        "captionByStatus": {
+          "low": {
+            "en": "3-month average sugar stayed lower than the usual range.",
+            "hi": "3 महीने का शुगर औसत सामान्य सीमा से कम रहा है।",
+            "or": "୩ ମାସର ଶର୍କରା ହାରାହାରି ସାଧାରଣଠାରୁ କମ୍ ରହିଛି।"
+          },
+          "high": {
+            "en": "More sugar stayed in the blood over the past 3 months.",
+            "hi": "पिछले 3 महीनों में खून में शुगर का औसत कुछ ज्यादा रहा।",
+            "or": "ଗତ ୩ ମାସରେ ରକ୍ତରେ ଶର୍କରା ହାରାହାରି ଅଧିକ ରହିଛି।"
+          },
+          "normal": {
+            "en": "Your 3-month blood sugar average stayed in the healthy zone.",
+            "hi": "पिछले 3 महीनों का शुगर औसत स्वस्थ सीमा में रहा।",
+            "or": "ଗତ ୩ ମାସର ଶର୍କରା ହାରାହାରି ସୁସ୍ଥ ସୀମାରେ ଅଛି।"
+          }
+        }
+      }
+    },
+    {
+      "id": "blood_sugar_fasting",
+      "kind": "test",
+      "aliases": ["fasting blood sugar", "fasting glucose", "fbs", "blood glucose fasting", "glucose fasting", "blood sugar"],
+      "analogyIcon": "key_lock",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Fasting Blood Sugar",
+        "analogy": "Sugar is body fuel. Insulin is the key that opens cells to let that fuel inside after an overnight rest.",
+        "whatItMeasures": "Checks blood sugar level on an empty stomach before breakfast.",
+        "feelings": {
+          "low": ["Weakness or shaking", "Sweating", "Feeling faint"],
+          "high": ["Extra thirst", "Dry mouth", "Tiredness after meals"],
+          "normal": ["Smooth morning energy"],
+          "general": ["Thirst or low energy"]
+        },
+        "doctorQuestion": "Do I need an HbA1c test along with this sugar check?"
+      },
+      "hi": {
+        "title": "खाली पेट ब्लड शुगर",
+        "analogy": "शुगर शरीर का ईंधन है और इंसुलिन वह चाबी है जो इसे शरीर के कमरों में पहुंचाती है।",
+        "whatItMeasures": "सुबह बिना कुछ खाए खून में शुगर की मात्रा नापता है।",
+        "feelings": {
+          "low": ["कमजोरी या कंपकंपी", "अचानक पसीना आना", "चक्कर महसूस होना"],
+          "high": ["ज्यादा प्यास लगना", "मुंह सूखना", "थकान लगना"],
+          "normal": ["सुबह की ऊर्जा ठीक है"],
+          "general": ["प्यास या कमजोरी"]
+        },
+        "doctorQuestion": "क्या इस जांच के साथ मुझे एचबीए1सी भी कराना चाहिए?"
+      },
+      "or": {
+        "title": "ଖାଲି ପେଟ ରକ୍ତ ଶର୍କରା",
+        "analogy": "ଶର୍କରା ହେଉଛି ଶରୀରର ଇନ୍ଧନ ଏବଂ ଇନସୁଲିନ୍ ହେଉଛି ସେହି ଚାବି ଯାହା ଏହାକୁ ଶରୀର ଭିତରକୁ ପଠାଏ।",
+        "whatItMeasures": "ସକାଳେ କିଛି ନଖାଇ ରକ୍ତରେ ଶର୍କରା ପରିମାଣ ମାପେ।",
+        "feelings": {
+          "low": ["ଦୁର୍ବଳ ବା ଥରିବା", "ଝାଳ ବୋହିବା", "ମୁଣ୍ଡ ବୁଲାଇବା"],
+          "high": ["ଅଧିକ ଶୋଷ ଲାଗିବା", "ପାଟି ଶୁଖିବା", "ଥକା ଲାଗିବା"],
+          "normal": ["ସକାଳର ଶକ୍ତି ସ୍ୱାଭାବିକ ଅଛି"],
+          "general": ["ଶୋଷ କିମ୍ବା ଦୁର୍ବଳତା"]
+        },
+        "doctorQuestion": "ଏହି ପରୀକ୍ଷା ସହିତ ମୁଁ ଏଚବିଏ୧ସି ମଧ୍ୟ କରିବା ଉଚିତ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "drop", "label_en": "Sugar in Blood", "label_hi": "खून में शुगर", "label_or": "ରକ୍ତରେ ଶର୍କରା" },
+          { "icon": "key", "label_en": "Insulin Key", "label_hi": "इंसुलिन चाबी", "label_or": "ଇନସୁଲିନ୍ ଚାବି" },
+          { "icon": "energy", "label_en": "Cell Energy", "label_hi": "कोशिका ऊर्जा", "label_or": "ଶରୀର ଶକ୍ତି" }
+        ],
+        "highlightIndexByStatus": { "low": 0, "high": 1, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": {
+            "en": "Blood sugar dropped below the usual fasting range.",
+            "hi": "खाली पेट ब्लड शुगर सामान्य सीमा से कम है।",
+            "or": "ଖାଲି ପେଟ ରକ୍ତ ଶର୍କରା ସାଧାରଣ ସୀମାଠାରୁ କମ୍ ଅଛି।"
+          },
+          "high": {
+            "en": "Extra sugar is waiting in the blood because the insulin key is slower.",
+            "hi": "चाबी धीमी चलने से खून में थोड़ा ज्यादा शुगर रुक गया है।",
+            "or": "ଇନସୁଲିନ୍ ଚାବି ଧୀର କାମ କରୁଥିବାରୁ ରକ୍ତରେ ଅଧିକ ଶର୍କରା ରହିଛି।"
+          },
+          "normal": {
+            "en": "Morning blood sugar is entering cells smoothly.",
+            "hi": "सुबह का ब्लड शुगर बिल्कुल सही संतुलन में है।",
+            "or": "ସକାଳ ରକ୍ତ ଶର୍କରା ସଠିକ୍ ସନ୍ତୁଳନରେ ଅଛି।"
+          }
+        }
+      }
+    },
+    {
+      "id": "blood_sugar_pp",
+      "kind": "test",
+      "aliases": ["post prandial", "ppbs", "pp blood sugar", "random blood sugar", "rbs", "post meal glucose"],
+      "analogyIcon": "key_lock",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "After-Meal / Random Blood Sugar",
+        "analogy": "Shows how smoothly your body clears food sugar from the blood after eating.",
+        "whatItMeasures": "Measures blood sugar after a meal or at any time of day.",
+        "feelings": {
+          "low": ["Shakiness", "Hunger", "Dizziness"],
+          "high": ["Sleepiness after eating", "Extra thirst", "Frequent urine"],
+          "normal": ["Body handles meal sugar well"],
+          "general": ["After-meal tiredness or thirst"]
+        },
+        "doctorQuestion": "Does this after-meal sugar number match my eating schedule?"
+      },
+      "hi": {
+        "title": "खाने के बाद / रैंडम ब्लड शुगर",
+        "analogy": "दिखाता है कि खाना खाने के बाद शरीर खून से शुगर को कितनी आसानी से संभालता है।",
+        "whatItMeasures": "खाने के बाद या दिन में किसी भी समय ब्लड शुगर जांचता है।",
+        "feelings": {
+          "low": ["कंपकंपी", "तेज भूख", "चक्कर आना"],
+          "high": ["खाने के बाद भारी नींद", "प्यास बढ़ना", "बार-बार पेशाब"],
+          "normal": ["शरीर खाने की शुगर सही पचा रहा है"],
+          "general": ["खाने के बाद थकान"]
+        },
+        "doctorQuestion": "क्या खाने के समय के हिसाब से यह शुगर ठीक है?"
+      },
+      "or": {
+        "title": "ଖାଇବା ପରେ / ର୍ୟାଣ୍ଡମ୍ ରକ୍ତ ଶର୍କରା",
+        "analogy": "ଖାଇବା ପରେ ଶରୀର ରକ୍ତରୁ ଶର୍କରାକୁ କେତେ ସହଜରେ ଗ୍ରହଣ କରେ ତାହା ଦେଖାଏ।",
+        "whatItMeasures": "ଖାଇବା ପରେ କିମ୍ବା ଦିନର ଯେକୌଣସି ସମୟରେ ରକ୍ତ ଶର୍କରା ମାପେ।",
+        "feelings": {
+          "low": ["ଥରିବା", "ଭୋକ", "ମୁଣ୍ଡ ବୁଲାଇବା"],
+          "high": ["ଖାଇବା ପରେ ନିଦ ଲାଗିବା", "ଶୋଷ", "ବାରମ୍ବାର ପରିସ୍ରା"],
+          "normal": ["ଶରୀର ଖାଦ୍ୟ ଶର୍କରାକୁ ଭଲ ଭାବେ ସମ୍ଭାଳୁଛି"],
+          "general": ["ଖାଇବା ପରେ ଥକାପଣ"]
+        },
+        "doctorQuestion": "ମୋର ଖାଇବା ସମୟ ଅନୁସାରେ ଏହି ଶର୍କରା ସ୍ତର ଠିକ୍ ଅଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Meal", "label_hi": "भोजन", "label_or": "ଖାଦ୍ୟ" },
+          { "icon": "key", "label_en": "Insulin Key", "label_hi": "इंसुलिन चाबी", "label_or": "ଇନସୁଲିନ୍ ଚାବି" },
+          { "icon": "energy", "label_en": "Used for Energy", "label_hi": "ऊर्जा उपयोग", "label_or": "ଶକ୍ତି ବ୍ୟବହାର" }
+        ],
+        "highlightIndexByStatus": { "low": 0, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": {
+            "en": "Sugar after food is lower than expected.",
+            "hi": "शुगर सामान्य स्तर से कम है।",
+            "or": "ଶର୍କରା ସାଧାରଣ ସ୍ତରଠାରୁ କମ୍ ଅଛି।"
+          },
+          "high": {
+            "en": "Sugar stayed higher in the blood after eating.",
+            "hi": "खाने के बाद खून में शुगर थोड़ी देर तक ज्यादा बनी रही।",
+            "or": "ଖାଇବା ପରେ ରକ୍ତରେ ଶର୍କରା ଅଧିକ ରହିଛି।"
+          },
+          "normal": {
+            "en": "Sugar moved smoothly from food into body energy.",
+            "hi": "खाने से मिली शुगर सही तरह शरीर में उपयोग हो गई।",
+            "or": "ଖାଦ୍ୟରୁ ମିଳିଥିବା ଶର୍କରା ସଠିକ୍ ଭାବେ ବ୍ୟବହାର ହୋଇଛି।"
+          }
+        }
+      }
+    },
+    {
+      "id": "hemoglobin",
+      "kind": "test",
+      "aliases": ["hemoglobin", "haemoglobin", "hb", "hb%", "hgb"],
+      "analogyIcon": "oxygen_truck",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Hemoglobin (Oxygen Trucks)",
+        "analogy": "Think of hemoglobin like small trucks in your blood that carry oxygen from your lungs to your whole body.",
+        "whatItMeasures": "Measures how many oxygen-carrying protein trucks are in your blood.",
+        "feelings": {
+          "low": ["Feeling tired quickly", "Shortness of breath on stairs", "Pale skin or dizziness"],
+          "high": ["Headache", "Flushed face", "Mild dizziness"],
+          "normal": ["Good oxygen supply for daily work"],
+          "general": ["Tiredness or breathlessness"]
+        },
+        "doctorQuestion": "Do I need iron or vitamin checks to keep my hemoglobin healthy?"
+      },
+      "hi": {
+        "title": "हीमोग्लोबिन (ऑक्सीजन लाने वाले ट्रक)",
+        "analogy": "हीमोग्लोबिन खून के अंदर छोटे ट्रक जैसा है जो फेफड़ों से पूरे शरीर तक ऑक्सीजन पहुंचाता है।",
+        "whatItMeasures": "यह खून में ऑक्सीजन ढोने वाले कणों की मात्रा जांचता है।",
+        "feelings": {
+          "low": ["जल्दी थकान लगना", "सीढ़ी चढ़ने में सांस फूलना", "चेहरा पीला या चक्कर आना"],
+          "high": ["सिर भारी लगना", "चेहरा लाल दिखना", "हल्का चक्कर"],
+          "normal": ["शरीर को अच्छी ऑक्सीजन मिल रही है"],
+          "general": ["थकान या सांस फूलना"]
+        },
+        "doctorQuestion": "क्या हीमोग्लोबिन सुधारने के लिए आयरन या विटामिन की जांच जरूरी है?"
+      },
+      "or": {
+        "title": "ହିମୋଗ୍ଲୋବିନ୍ (ଅମ୍ଳଜାନ ବୋହିବା ଟ୍ରକ୍)",
+        "analogy": "ହିମୋଗ୍ଲୋବିନ୍ ରକ୍ତରେ ଥିବା ଛୋଟ ଟ୍ରକ୍ ପରି, ଯାହା ଫୁସଫୁସରୁ ସାରା ଶରୀରକୁ ଅମ୍ଳଜାନ ପହଞ୍ଚାଏ।",
+        "whatItMeasures": "ରକ୍ତରେ ଅମ୍ଳଜାନ ବୋହିବା ଶକ୍ତି କେତେ ଅଛି ତାହା ମାପେ।",
+        "feelings": {
+          "low": ["ଶୀଘ୍ର ଥକା ଲାଗିବା", "ଶିଡ଼ି ଚଢ଼ିଲେ ଶ୍ୱାସ ଫୁଲିବା", "ମୁଣ୍ଡ ବୁଲାଇବା ବା ଫିକା ଦେଖାଯିବା"],
+          "high": ["ମୁଣ୍ଡବିନ୍ଧା", "ମୁହଁ ଲାଲ ଦେଖାଯିବା", "ହାଲୁକା ମୁଣ୍ଡ ବୁଲାଇବା"],
+          "normal": ["ଶରୀରକୁ ଭଲ ଅମ୍ଳଜାନ ମିଳୁଛି"],
+          "general": ["ଥକାପଣ କିମ୍ବା ନିଶ୍ୱାସ ଫୁଲିବା"]
+        },
+        "doctorQuestion": "ହିମୋଗ୍ଲୋବିନ୍ ପାଇଁ ଆଇରନ୍ କିମ୍ବା ଭିଟାମିନ୍ ପରୀକ୍ଷା ଦରକାର କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "lungs", "label_en": "Lungs Breathe", "label_hi": "फेफड़ों से सांस", "label_or": "ଫୁସଫୁସ ନିଶ୍ୱାସ" },
+          { "icon": "truck", "label_en": "Hemoglobin Trucks", "label_hi": "हीमोग्लोबिन ट्रक", "label_or": "ହିମୋଗ୍ଲୋବିନ୍ ଟ୍ରକ୍" },
+          { "icon": "energy", "label_en": "Body Gets Oxygen", "label_hi": "शरीर को ताकत", "label_or": "ଶରୀରକୁ ଶକ୍ତି" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": {
+            "en": "Fewer oxygen trucks are on the road, so muscles may tire sooner.",
+            "hi": "ऑक्सीजन ढोने वाले ट्रक कुछ कम हैं, इसलिए शरीर जल्दी थक सकता है।",
+            "or": "ଅମ୍ଳଜାନ ବୋହିବା ଟ୍ରକ୍ କମ୍ ଥିବାରୁ ଶରୀର ଶୀଘ୍ର ଥକିଯାଇପାରେ।"
+          },
+          "high": {
+            "en": "There are extra oxygen carriers packed in the blood.",
+            "hi": "खून में हीमोग्लोबिन की मात्रा सामान्य से ज्यादा है।",
+            "or": "ରକ୍ତରେ ହିମୋଗ୍ଲୋବିନ୍ ସାଧାରଣଠାରୁ ଅଧିକ ଅଛି।"
+          },
+          "normal": {
+            "en": "Plenty of oxygen trucks are delivering energy smoothly.",
+            "hi": "ऑक्सीजन ढोने वाले ट्रक शरीर में सही काम कर रहे हैं।",
+            "or": "ଅମ୍ଳଜାନ ବୋହିବା ଟ୍ରକ୍ ସୁସ୍ଥ ଭାବେ କାମ କରୁଛି।"
+          }
+        }
+      }
+    },
+    {
+      "id": "rbc",
+      "kind": "test",
+      "aliases": ["rbc", "red blood cell", "red blood cells", "erythrocyte"],
+      "analogyIcon": "oxygen_truck",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Red Blood Cells (RBC)",
+        "analogy": "Red blood cells are the delivery vans that hold your hemoglobin and carry air around the body.",
+        "whatItMeasures": "Counts how many red blood cells are flowing in a drop of blood.",
+        "feelings": {
+          "low": ["Fatigue", "Weakness", "Pale palms"],
+          "high": ["Mild headache", "Feeling warm"],
+          "normal": ["Healthy oxygen delivery"],
+          "general": ["Low stamina"]
+        },
+        "doctorQuestion": "Do my RBC count and hemoglobin tell the same story?"
+      },
+      "hi": {
+        "title": "लाल रक्त कण (आरबीसी)",
+        "analogy": "लाल रक्त कण वे गाड़ियां हैं जिनमें हीमोग्लोबिन बैठकर शरीर में हवा पहुंचाता है।",
+        "whatItMeasures": "खून की एक बूंद में लाल रक्त कणों की संख्या गिनता है।",
+        "feelings": {
+          "low": ["थकान", "कमजोरी", "हथेलियां पीली दिखना"],
+          "high": ["हल्का सिरदर्द", "गर्मी लगना"],
+          "normal": ["खून में ऑक्सीजन की अच्छी सप्लाई"],
+          "general": ["कमजोरी महसूस होना"]
+        },
+        "doctorQuestion": "क्या मेरा आरबीसी और हीमोग्लोबिन एक जैसी बात बता रहे हैं?"
+      },
+      "or": {
+        "title": "ଲାଲ୍ ରକ୍ତ କଣିକା (ଆରବିସି)",
+        "analogy": "ଲାଲ୍ ରକ୍ତ କଣିକା ହେଉଛି ସେହି ଗାଡ଼ି ଯେଉଁଥିରେ ହିମୋଗ୍ଲୋବିନ୍ ବସି ଶରୀରକୁ ଅମ୍ଳଜାନ ନିଏ।",
+        "whatItMeasures": "ରକ୍ତରେ ଲାଲ୍ ରକ୍ତ କଣିକାର ସଂଖ୍ୟା ଗଣନା କରେ।",
+        "feelings": {
+          "low": ["ଥକାପଣ", "ଦୁର୍ବଳତା", "ପାପୁଲି ଫିକା ଦିଶିବା"],
+          "high": ["ସାମାନ୍ୟ ମୁଣ୍ଡବିନ୍ଧା", "ଗରମ ଲାଗିବା"],
+          "normal": ["ସୁସ୍ଥ ଅମ୍ଳଜାନ ଯୋଗାଣ"],
+          "general": ["କମ୍ ଶକ୍ତି"]
+        },
+        "doctorQuestion": "ମୋର ଆରବିସି ଏବଂ ହିମୋଗ୍ଲୋବିନ୍ ସମାନ କଥା କହୁଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "bone", "label_en": "Bone Marrow", "label_hi": "हड्डी का मज्जा", "label_or": "ଅସ୍ଥି ମଜ୍ଜା" },
+          { "icon": "truck", "label_en": "RBC Cells", "label_hi": "लाल कण", "label_or": "ଲାଲ୍ କଣିକା" },
+          { "icon": "energy", "label_en": "Body Oxygen", "label_hi": "शरीर को ऑक्सीजन", "label_or": "ଶରୀରକୁ ଅମ୍ଳଜାନ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Red blood cell count is lower than normal.", "hi": "लाल रक्त कणों की गिनती सामान्य से कम है।", "or": "ଲାଲ୍ ରକ୍ତ କଣିକା ସଂଖ୍ୟା ସାଧାରଣଠାରୁ କମ୍ ଅଛି।" },
+          "high": { "en": "Red blood cell count is higher than normal.", "hi": "लाल रक्त कणों की गिनती सामान्य से अधिक है।", "or": "ଲାଲ୍ ରକ୍ତ କଣିକା ସଂଖ୍ୟା ସାଧାରଣଠାରୁ ଅଧିକ ଅଛି।" },
+          "normal": { "en": "Red blood cell count is healthy.", "hi": "लाल रक्त कणों की संख्या स्वस्थ है।", "or": "ଲାଲ୍ ରକ୍ତ କଣିକା ସଂଖ୍ୟା ସୁସ୍ଥ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "wbc",
+      "kind": "test",
+      "aliases": ["wbc", "total leukocyte", "tlc", "white blood cell", "white blood cells", "leucocyte"],
+      "analogyIcon": "soldier_shield",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "WBC (Body's Guard Soldiers)",
+        "analogy": "White blood cells are like village watchmen who come out in larger numbers whenever germs visit.",
+        "whatItMeasures": "Counts the germ-fighting cells patrolling your blood.",
+        "feelings": {
+          "low": ["Catching colds easily", "Feeling run down"],
+          "high": ["Fever or body ache", "Sore throat or cough", "Swelling near an infection"],
+          "normal": ["Calm, balanced body defense"],
+          "general": ["Fever, cough, or tiredness"]
+        },
+        "doctorQuestion": "Could this WBC count mean an infection or normal recovery?"
+      },
+      "hi": {
+        "title": "डब्ल्यूबीसी (शरीर के रक्षक सिपाही)",
+        "analogy": "सफेद रक्त कण शरीर के पहरेदार सिपाही हैं। जब कोई कीटाणु आता है, तो इनकी संख्या बढ़ जाती है।",
+        "whatItMeasures": "खून में कीटाणुओं से लड़ने वाले रक्षा कणों की गिनती करता है।",
+        "feelings": {
+          "low": ["जल्दी जुकाम या संक्रमण होना", "कमजोरी लगना"],
+          "high": ["बुखार या बदन दर्द", "गले में खराश या खांसी", "कहीं सूजन या जलन"],
+          "normal": ["शरीर की सुरक्षा प्रणाली संतुलित है"],
+          "general": ["बुखार या थकान"]
+        },
+        "doctorQuestion": "क्या डब्ल्यूबीसी में यह बदलाव किसी संक्रमण या सुधार की वजह से है?"
+      },
+      "or": {
+        "title": "ଡବ୍ଲୁବିସି (ଶରୀରର ରକ୍ଷକ ସୈନିକ)",
+        "analogy": "ଶ୍ୱେତ ରକ୍ତ କଣିକା ହେଉଛନ୍ତି ଶରୀରର ଜଗୁଆଳି ସୈନିକ। ଜୀବାଣୁ ଆସିଲେ ଏମାନଙ୍କ ସଂଖ୍ୟା ବଢ଼ିଯାଏ।",
+        "whatItMeasures": "ରକ୍ତରେ ଜୀବାଣୁ ସହ ଲଢ଼ୁଥିବା ରକ୍ଷକ କଣିକା ଗଣନା କରେ।",
+        "feelings": {
+          "low": ["ସହଜରେ ଥଣ୍ଡା ବା ସଂକ୍ରମଣ ହେବା", "ଦୁର୍ବଳ ଲାଗିବା"],
+          "high": ["ଜ୍ୱର କିମ୍ବା ଦେହ ବିନ୍ଧା", "ଗଳା ଦରଜ ବା କାଶ", "ସଂକ୍ରମଣ ସ୍ଥାନରେ ଫୁଲା"],
+          "normal": ["ଶରୀରର ସୁରକ୍ଷା ସନ୍ତୁଳିତ ଅଛି"],
+          "general": ["ଜ୍ୱର କିମ୍ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ଏହି ଡବ୍ଲୁବିସି ସଂଖ୍ୟା କୌଣସି ସଂକ୍ରମଣ ଯୋଗୁଁ ହୋଇଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "shield", "label_en": "Germ / Stress", "label_hi": "कीटाणु / तनाव", "label_or": "ଜୀବାଣୁ / ଚାପ" },
+          { "icon": "soldier", "label_en": "WBC Soldiers", "label_hi": "डब्ल्यूबीसी सिपाही", "label_or": "ଡବ୍ଲୁବିସି ସୈନିକ" },
+          { "icon": "check", "label_en": "Body Protected", "label_hi": "शरीर की रक्षा", "label_or": "ଶରୀର ସୁରକ୍ଷା" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Fewer guard cells are circulating in the blood right now.", "hi": "अभी खून में रक्षक सिपाहियों की संख्या कुछ कम है।", "or": "ଏବେ ରକ୍ତରେ ରକ୍ଷକ କଣିକା ସଂଖ୍ୟା ଟିକେ କମ୍ ଅଛି।" },
+          "high": { "en": "Extra guard cells came out, often to fight germs or inflammation.", "hi": "कीटाणु या सूजन से लड़ने के लिए ज्यादा सिपाही बाहर आए हैं।", "or": "ଜୀବାଣୁ ବା ଫୁଲା ସହ ଲଢ଼ିବାକୁ ଅଧିକ ସୈନିକ ବାହାରିଛନ୍ତି।" },
+          "normal": { "en": "Your body's guard cells are at a calm normal level.", "hi": "शरीर के रक्षक कण सामान्य स्तर पर हैं।", "or": "ଶରୀରର ରକ୍ଷକ କଣିକା ସ୍ୱାଭାବିକ ସ୍ତରରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "platelets",
+      "kind": "test",
+      "aliases": ["platelet", "platelets", "plt", "thrombocyte"],
+      "analogyIcon": "repair_patch",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Platelets (Natural Bandage Patches)",
+        "analogy": "Platelets are tiny repair patches in blood that rush to seal a cut or stop bleeding.",
+        "whatItMeasures": "Counts the clotting patches in your blood.",
+        "feelings": {
+          "low": ["Easy bruising", "Bleeding gums when brushing", "Tiny red skin spots"],
+          "high": ["Usually no symptoms", "Mild tingling or headache"],
+          "normal": ["Healthy clotting protection"],
+          "general": ["Bruising or bleeding changes"]
+        },
+        "doctorQuestion": "Do I need a repeat platelet check in a couple of days?"
+      },
+      "hi": {
+        "title": "प्लेटलेट्स (खून रोकने वाली पट्टी)",
+        "analogy": "प्लेटलेट्स खून में मौजूद छोटी पट्टियां हैं जो कहीं चोट लगने पर तुरंत खून बहना रोकती हैं।",
+        "whatItMeasures": "खून का थक्का बनाने वाले कणों की संख्या नापता है।",
+        "feelings": {
+          "low": ["जल्दी नील पड़ना", "ब्रश करते समय मसूड़ों से खून", "त्वचा पर छोटे लाल दाने"],
+          "high": ["आमतौर पर कोई लक्षण नहीं", "हल्का सिरदर्द"],
+          "normal": ["खून रोकने की क्षमता सही है"],
+          "general": ["नील पड़ना या खून बहना"]
+        },
+        "doctorQuestion": "क्या कुछ दिनों बाद प्लेटलेट्स की दोबारा जांच करानी चाहिए?"
+      },
+      "or": {
+        "title": "ପ୍ଲେଟଲେଟ୍ (ରକ୍ତ ବନ୍ଦ କରିବା ପଟି)",
+        "analogy": "ପ୍ଲେଟଲେଟ୍ ହେଉଛି ରକ୍ତରେ ଥିବା ଛୋଟ ମରାମତି ପଟି, ଯାହା ଖଣ୍ଡିଆ ହେଲେ ରକ୍ତ ବନ୍ଦ କରେ।",
+        "whatItMeasures": "ରକ୍ତ ଜମାଟ ବାନ୍ଧୁଥିବା କଣିକା ସଂଖ୍ୟା ମାପେ।",
+        "feelings": {
+          "low": ["ସହଜରେ ନୀଳ ଦାଗ ପଡ଼ିବା", "ଦାନ୍ତ ଘଷିଲେ ରକ୍ତ ବାହାରିବା", "ଚର୍ମରେ ଛୋଟ ଲାଲ୍ ଦାଗ"],
+          "high": ["ସାଧାରଣତଃ ଲକ୍ଷଣ ନଥାଏ", "ସାମାନ୍ୟ ମୁଣ୍ଡବିନ୍ଧା"],
+          "normal": ["ରକ୍ତ ଜମାଟ ଶକ୍ତି ସୁସ୍ଥ ଅଛି"],
+          "general": ["ନୀଳ ଦାଗ ବା ରକ୍ତସ୍ରାବ"]
+        },
+        "doctorQuestion": "କିଛି ଦିନ ପରେ ପୁଣି ପ୍ଲେଟଲେଟ୍ ପରୀକ୍ଷା କରିବା ଦରକାର କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "drop", "label_en": "Small Vessel Nick", "label_hi": "छोटी चोट", "label_or": "ଛୋଟ ଆଘାତ" },
+          { "icon": "patch", "label_en": "Platelet Patches", "label_hi": "प्लेटलेट पट्टी", "label_or": "ପ୍ଲେଟଲେଟ୍ ପଟି" },
+          { "icon": "check", "label_en": "Bleeding Stops", "label_hi": "खून रुकना", "label_or": "ରକ୍ତ ବନ୍ଦ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Fewer repair patches are present, so watch for unusual bleeding.", "hi": "मरम्मत करने वाली पट्टियां कम हैं, इसलिए खून बहने पर ध्यान दें।", "or": "ମରାମତି ପଟି କମ୍ ଥିବାରୁ ରକ୍ତସ୍ରାବ ପ୍ରତି ଧ୍ୟାନ ଦିଅନ୍ତୁ।" },
+          "high": { "en": "More clotting patches than usual are in the blood.", "hi": "खून में प्लेटलेट्स सामान्य से अधिक हैं।", "or": "ରକ୍ତରେ ପ୍ଲେଟଲେଟ୍ ସାଧାରଣଠାରୁ ଅଧିକ ଅଛି।" },
+          "normal": { "en": "Plenty of repair patches are ready when needed.", "hi": "प्लेटलेट्स की संख्या सामान्य और सुरक्षित है।", "or": "ପ୍ଲେଟଲେଟ୍ ସଂଖ୍ୟା ସ୍ୱାଭାବିକ ଏବଂ ସୁରକ୍ଷିତ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "esr",
+      "kind": "test",
+      "aliases": ["esr", "erythrocyte sedimentation rate"],
+      "analogyIcon": "soldier_shield",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "ESR (Swelling & Irritation Clue)",
+        "analogy": "Like seeing smoke from a fire — ESR shows there may be swelling or irritation somewhere, without naming the exact spot.",
+        "whatItMeasures": "Measures how quickly red blood cells settle in a tube, a general clue for inflammation.",
+        "feelings": {
+          "low": ["Usually harmless"],
+          "high": ["Body ache or joint stiffness", "Mild fever", "Fatigue"],
+          "normal": ["No extra hidden swelling signal"],
+          "general": ["Joint pain or mild fever"]
+        },
+        "doctorQuestion": "What could be causing this raised ESR?"
+      },
+      "hi": {
+        "title": "ईएसआर (सूजन का सामान्य संकेत)",
+        "analogy": "यह धुएं जैसा संकेत है जो बताता है कि शरीर में कहीं हल्की सूजन या संक्रमण हो सकता है।",
+        "whatItMeasures": "शरीर में किसी भी तरह की सूजन या जलन का सामान्य संकेत जांचता है।",
+        "feelings": {
+          "low": ["आमतौर पर चिंता की बात नहीं"],
+          "high": ["जोड़ों या बदन में दर्द", "हल्का बुखार", "थकान"],
+          "normal": ["सूजन का कोई अतिरिक्त संकेत नहीं"],
+          "general": ["बदन दर्द या थकान"]
+        },
+        "doctorQuestion": "मेरा ईएसआर बढ़ने का क्या कारण हो सकता है?"
+      },
+      "or": {
+        "title": "ଇଏସଆର୍ (ଫୁଲା ବା ପ୍ରଦାହ ସଙ୍କେତ)",
+        "analogy": "ଏହା ଧୂଆଁ ଦେଖିବା ପରି, ଯାହା ଶରୀରରେ କୌଣସି ସ୍ଥାନରେ ସାମାନ୍ୟ ଫୁଲା ବା ସଂକ୍ରମଣ ଥିବା ସୂଚନା ଦିଏ।",
+        "whatItMeasures": "ଶରୀରରେ ସାଧାରଣ ପ୍ରଦାହ ବା ଫୁଲା ଅଛି କି ନାହିଁ ମାପେ।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ ଚିନ୍ତାର କାରଣ ନୁହେଁ"],
+          "high": ["ଗଣ୍ଠି ବା ଦେହ ବିନ୍ଧା", "ହାଲୁକା ଜ୍ୱର", "ଥକାପଣ"],
+          "normal": ["କୌଣସି ଅଧିକ ଫୁଲା ସଙ୍କେତ ନାହିଁ"],
+          "general": ["ଦେହ ବିନ୍ଧା ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ମୋର ଇଏସଆର୍ ବଢ଼ିବାର କାରଣ କଣ ହୋଇପାରେ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "shield", "label_en": "Body Irritation", "label_hi": "शरीर में सूजन", "label_or": "ଶରୀରରେ ପ୍ରଦାହ" },
+          { "icon": "drop", "label_en": "Blood Proteins Rise", "label_hi": "खून में बदलाव", "label_or": "ରକ୍ତରେ ପରିବର୍ତ୍ତନ" },
+          { "icon": "lab", "label_en": "ESR Number Rises", "label_hi": "ईएसआर बढ़ना", "label_or": "ଇଏସଆର୍ ବଢ଼ିବା" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 2, "critical": 2, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "ESR is low and calm.", "hi": "ईएसआर कम और शांत है।", "or": "ଇଏସଆର୍ କମ୍ ଏବଂ ଶାନ୍ତ ଅଛି।" },
+          "high": { "en": "ESR is raised, pointing to possible inflammation or infection.", "hi": "ईएसआर बढ़ा है, जो शरीर में किसी सूजन का संकेत देता है।", "or": "ଇଏସଆର୍ ବଢ଼ିଛି, ଯାହା ଶରୀରରେ ପ୍ରଦାହ ସୂଚନା ଦିଏ।" },
+          "normal": { "en": "ESR shows no extra inflammation signal.", "hi": "ईएसआर बिल्कुल सामान्य सीमा में है।", "or": "ଇଏସଆର୍ ସ୍ୱାଭାବିକ ସୀମାରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "mcv",
+      "kind": "test",
+      "aliases": ["mcv", "mean corpuscular volume"],
+      "analogyIcon": "oxygen_truck",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "MCV (Size of Red Blood Cells)",
+        "analogy": "Shows whether your oxygen trucks (red blood cells) are small, normal, or extra large.",
+        "whatItMeasures": "Measures the average size of your red blood cells.",
+        "feelings": {
+          "low": ["Often seen with low iron tiredness"],
+          "high": ["Often seen with low Vitamin B12 tiredness"],
+          "normal": ["Red blood cells are normal size"],
+          "general": ["Fatigue or weakness"]
+        },
+        "doctorQuestion": "Should we check iron or Vitamin B12 based on my MCV?"
+      },
+      "hi": {
+        "title": "एमसीवी (लाल कणों का आकार)",
+        "analogy": "यह बताता है कि आपके खून के ऑक्सीजन ट्रक छोटे हैं, सामान्य हैं या बड़े हैं।",
+        "whatItMeasures": "लाल रक्त कणों के औसत आकार को नापता है।",
+        "feelings": {
+          "low": ["आयरन की कमी से थकान हो सकती है"],
+          "high": ["विटामिन बी12 की कमी से कमजोरी हो सकती है"],
+          "normal": ["लाल रक्त कण सही आकार के हैं"],
+          "general": ["कमजोरी या सुस्ती"]
+        },
+        "doctorQuestion": "क्या एमसीवी के आधार पर आयरन या विटामिन बी12 जांचना चाहिए?"
+      },
+      "or": {
+        "title": "ଏମସିଭି (ଲାଲ୍ ରକ୍ତ କଣିକାର ଆକାର)",
+        "analogy": "ଏହା ଦେଖାଏ ଯେ ଆପଣଙ୍କ ଅମ୍ଳଜାନ ଟ୍ରକ୍ ଗୁଡ଼ିକ ଛୋଟ, ସ୍ୱାଭାବିକ ନା ବଡ଼ ଅଛି।",
+        "whatItMeasures": "ଲାଲ୍ ରକ୍ତ କଣିକାର ହାରାହାରି ଆକାର ମାପେ।",
+        "feelings": {
+          "low": ["ଆଇରନ୍ କମିରୁ ଥକାପଣ ହୋଇପାରେ"],
+          "high": ["ଭିଟାମିନ୍ ବି୧୨ କମିରୁ ଦୁର୍ବଳତା ହୋଇପାରେ"],
+          "normal": ["ଲାଲ୍ କଣିକା ସଠିକ୍ ଆକାରର ଅଛି"],
+          "general": ["ଥକାପଣ ବା ଦୁର୍ବଳତା"]
+        },
+        "doctorQuestion": "ଏମସିଭି ଦେଖି ଆଇରନ୍ କିମ୍ବା ଭିଟାମିନ୍ ବି୧୨ ପରୀକ୍ଷା କରିବୁ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Iron & B12", "label_hi": "आयरन और बी12", "label_or": "ଆଇରନ୍ ଓ ବି୧୨" },
+          { "icon": "truck", "label_en": "Cell Size", "label_hi": "कण का आकार", "label_or": "କଣିକା ଆକାର" },
+          { "icon": "energy", "label_en": "Oxygen Flow", "label_hi": "ऑक्सीजन प्रवाह", "label_or": "ଅମ୍ଳଜାନ ପ୍ରବାହ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Red blood cells are slightly smaller than average.", "hi": "लाल रक्त कण सामान्य से छोटे हैं।", "or": "ଲାଲ୍ ରକ୍ତ କଣିକା ସାଧାରଣଠାରୁ ଛୋଟ ଅଛି।" },
+          "high": { "en": "Red blood cells are slightly larger than average.", "hi": "लाल रक्त कण सामान्य से बड़े हैं।", "or": "ଲାଲ୍ ରକ୍ତ କଣିକା ସାଧାରଣଠାରୁ ବଡ଼ ଅଛି।" },
+          "normal": { "en": "Red blood cells are the right size.", "hi": "लाल रक्त कण सही आकार में हैं।", "or": "ଲାଲ୍ ରକ୍ତ କଣିକା ସଠିକ୍ ଆକାରରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "hematocrit",
+      "kind": "test",
+      "aliases": ["hematocrit", "haematocrit", "pcv", "packed cell volume", "hct"],
+      "analogyIcon": "oxygen_truck",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Hematocrit / PCV",
+        "analogy": "Shows how much space inside your blood is filled by oxygen-carrying red cells versus liquid.",
+        "whatItMeasures": "Measures the percentage of red blood cells in your blood.",
+        "feelings": {
+          "low": ["Tiredness", "Weakness"],
+          "high": ["May happen when body needs more water", "Headache"],
+          "normal": ["Healthy balance of cells and fluid"],
+          "general": ["Fatigue or thirst"]
+        },
+        "doctorQuestion": "Is my PCV connected to my hydration or hemoglobin?"
+      },
+      "hi": {
+        "title": "हेमेटोक्रिट / पीसीवी",
+        "analogy": "यह बताता है कि आपके खून में लाल कणों और तरल पानी का अनुपात कितना है।",
+        "whatItMeasures": "खून में लाल रक्त कणों का प्रतिशत नापता है।",
+        "feelings": {
+          "low": ["थकान", "कमजोरी"],
+          "high": ["शरीर में पानी कम होने पर बढ़ सकता है", "सिरदर्द"],
+          "normal": ["खून और तरल का सही संतुलन"],
+          "general": ["थकान या प्यास"]
+        },
+        "doctorQuestion": "क्या मेरा पीसीवी पानी की कमी या हीमोग्लोबिन से जुड़ा है?"
+      },
+      "or": {
+        "title": "ହେମାଟୋକ୍ରିଟ୍ / ପିସିଭି",
+        "analogy": "ରକ୍ତରେ ଲାଲ୍ କଣିକା ଏବଂ ପାଣିର ଅଂଶ କେତେ ଅଛି ତାହା ଏହା ଦେଖାଏ।",
+        "whatItMeasures": "ରକ୍ତରେ ଲାଲ୍ କଣିକାର ଶତକଡ଼ା ଭାଗ ମାପେ।",
+        "feelings": {
+          "low": ["ଥକାପଣ", "ଦୁର୍ବଳତା"],
+          "high": ["ପାଣି କମ୍ ପିଇଲେ ବଢ଼ିପାରେ", "ମୁଣ୍ଡବିନ୍ଧା"],
+          "normal": ["କଣିକା ଏବଂ ଜଳର ସୁସ୍ଥ ସନ୍ତୁଳନ"],
+          "general": ["ଥକାପଣ ବା ଶୋଷ"]
+        },
+        "doctorQuestion": "ମୋର ପିସିଭି ପାଣି କମି କିମ୍ବା ହିମୋଗ୍ଲୋବିନ୍ ସହ ଜଡ଼ିତ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "drop", "label_en": "Blood Fluid", "label_hi": "खून का तरल", "label_or": "ରକ୍ତ ଜଳ" },
+          { "icon": "truck", "label_en": "Red Cells %", "label_hi": "लाल कण %", "label_or": "ଲାଲ୍ କଣିକା %" },
+          { "icon": "energy", "label_en": "Smooth Flow", "label_hi": "सही प्रवाह", "label_or": "ସୁସ୍ଥ ପ୍ରବାହ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Share of red blood cells in blood is low.", "hi": "खून में लाल कणों का प्रतिशत कम है।", "or": "ରକ୍ତରେ ଲାଲ୍ କଣିକା ଭାଗ କମ୍ ଅଛି।" },
+          "high": { "en": "Blood is thicker with red cells, sometimes from low water intake.", "hi": "खून थोड़ा गाढ़ा है, कभी-कभी पानी कम पीने से ऐसा होता है।", "or": "ରକ୍ତ ଟିକେ ଗାଢ଼ ଅଛି, ପାଣି କମ୍ ପିଇଲେ ଏପରି ହୋଇପାରେ।" },
+          "normal": { "en": "Red cells and blood fluid are well balanced.", "hi": "खून में लाल कण और तरल संतुलित हैं।", "or": "ରକ୍ତରେ କଣିକା ଏବଂ ଜଳ ସନ୍ତୁଳିତ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "creatinine",
+      "kind": "test",
+      "aliases": ["creatinine", "serum creatinine", "s.creatinine", "creat"],
+      "analogyIcon": "water_filter",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Creatinine (Kidney Filter Check)",
+        "analogy": "Think of your kidneys like a water filter. Creatinine is everyday muscle waste waiting to be filtered out.",
+        "whatItMeasures": "Shows how cleanly your kidneys are filtering waste out of your blood.",
+        "feelings": {
+          "low": ["Usually harmless (often normal in smaller muscles)"],
+          "high": ["Often no early symptoms", "Swelling in feet or ankles", "Tiredness or urine changes"],
+          "normal": ["Kidneys are filtering cleanly"],
+          "general": ["Foot swelling, thirst, or urine changes"]
+        },
+        "doctorQuestion": "Are my kidneys filtering well, and how much water should I drink?"
+      },
+      "hi": {
+        "title": "क्रिएटिनिन (किडनी फिल्टर जांच)",
+        "analogy": "किडनी पानी के फिल्टर जैसी है। क्रिएटिनिन शरीर का सामान्य कचरा है जिसे किडनी छानकर बाहर निकालती है।",
+        "whatItMeasures": "दिखाता है कि आपकी किडनी खून से गंदगी को कितनी अच्छी तरह साफ कर रही है।",
+        "feelings": {
+          "low": ["आमतौर पर सामान्य बात है"],
+          "high": ["शुरू में कोई तकलीफ नहीं दिखती", "पैर या टखने में सूजन", "थकान या पेशाब में बदलाव"],
+          "normal": ["किडनी खून को अच्छी तरह साफ कर रही है"],
+          "general": ["पैरों में सूजन या थकान"]
+        },
+        "doctorQuestion": "क्या मेरी किडनी ठीक छान रही है और मुझे रोज कितना पानी पीना चाहिए?"
+      },
+      "or": {
+        "title": "କ୍ରିଏଟିନିନ୍ (କିଡନୀ ଛଣା ପରୀକ୍ଷା)",
+        "analogy": "ଆପଣଙ୍କ କିଡନୀ ପାଣି ଫିଲ୍ଟର ପରି। କ୍ରିଏଟିନିନ୍ ହେଉଛି ଦୈନନ୍ଦିନ ବର୍ଜ୍ୟବସ୍ତୁ ଯାହାକୁ କିଡନୀ ଛାଣି ବାହାର କରେ।",
+        "whatItMeasures": "କିଡନୀ ରକ୍ତରୁ ବର୍ଜ୍ୟବସ୍ତୁ କେତେ ଭଲ ଭାବେ ଛାଣୁଛି ତାହା ଦେଖାଏ।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ କ୍ଷତିକାରକ ନୁହେଁ"],
+          "high": ["ଆରମ୍ଭରେ କୌଣସି ଲକ୍ଷଣ ନଥାଇପାରେ", "ପାଦ କିମ୍ବା ଗୋଇଠି ଫୁଲିବା", "ଥକାପଣ ବା ପରିସ୍ରା ପରିବର୍ତ୍ତନ"],
+          "normal": ["କିଡନୀ ସଫା ଭାବେ ଛାଣୁଛି"],
+          "general": ["ପାଦ ଫୁଲା କିମ୍ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ମୋର କିଡନୀ ଭଲ ଭାବେ ଛାଣୁଛି କି ଏବଂ ମୁଁ କେତେ ପାଣି ପିଇବା ଉଚିତ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "muscle", "label_en": "Body Waste", "label_hi": "शरीर का कचरा", "label_or": "ଶରୀର ବର୍ଜ୍ୟ" },
+          { "icon": "filter", "label_en": "Kidney Filter", "label_hi": "किडनी फिल्टर", "label_or": "କିଡନୀ ଫିଲ୍ଟର" },
+          { "icon": "drop", "label_en": "Leaves in Urine", "label_hi": "पेशाब से बाहर", "label_or": "ପରିସ୍ରାରେ ବାହାର" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Very little creatinine waste is waiting in the blood.", "hi": "खून में क्रिएटिनिन कम है, जो आमतौर पर सामान्य है।", "or": "ରକ୍ତରେ କ୍ରିଏଟିନିନ୍ କମ୍ ଅଛି, ଯାହା ସାଧାରଣତଃ ସ୍ୱାଭାବିକ।" },
+          "high": { "en": "The kidney filter is clearing waste a bit slower right now.", "hi": "किडनी फिल्टर अभी कचरा थोड़ा धीरे साफ कर रहा है।", "or": "କିଡନୀ ଫିଲ୍ଟର ଏବେ ବର୍ଜ୍ୟ ଟିକେ ଧୀରେ ସଫା କରୁଛି।" },
+          "normal": { "en": "The kidney filter is clearing creatinine smoothly.", "hi": "किडनी फिल्टर सही तरीके से काम कर रहा है।", "or": "କିଡନୀ ଫିଲ୍ଟର ସୁସ୍ଥ ଭାବେ କାମ କରୁଛି।" }
+        }
+      }
+    },
+    {
+      "id": "urea",
+      "kind": "test",
+      "aliases": ["urea", "blood urea", "bun", "blood urea nitrogen", "serum urea"],
+      "analogyIcon": "water_filter",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Blood Urea / BUN",
+        "analogy": "Urea is leftover waste after protein food is used. Healthy kidneys wash it out through urine.",
+        "whatItMeasures": "Checks how well kidneys clear protein waste and whether your body has enough water.",
+        "feelings": {
+          "low": ["Usually harmless"],
+          "high": ["Dry mouth or thirst", "Tiredness", "Poor appetite"],
+          "normal": ["Kidneys clearing waste well"],
+          "general": ["Thirst or low energy"]
+        },
+        "doctorQuestion": "Could drinking more water help or is a kidney check needed?"
+      },
+      "hi": {
+        "title": "ब्लड यूरिया / बीयूएन",
+        "analogy": "प्रोटीन पचने के बाद बचा कचरा यूरिया है। किडनी इसे पेशाब के जरिए बाहर धो देती है।",
+        "whatItMeasures": "किडनी की सफाई और शरीर में पानी की स्थिति जांचता है।",
+        "feelings": {
+          "low": ["आमतौर पर चिंता की बात नहीं"],
+          "high": ["मुंह सूखना या प्यास", "थकान", "भूख कम लगना"],
+          "normal": ["किडनी सही सफाई कर रही है"],
+          "general": ["प्यास या थकान"]
+        },
+        "doctorQuestion": "क्या यह पानी कम पीने से बढ़ा है या किडनी की और जांच चाहिए?"
+      },
+      "or": {
+        "title": "ରକ୍ତ ୟୁରିଆ / ବିୟୁଏନ୍",
+        "analogy": "ପ୍ରୋଟିନ୍ ହଜମ ହେବା ପରେ ବଳକା ବର୍ଜ୍ୟ ହେଉଛି ୟୁରିଆ। କିଡନୀ ଏହାକୁ ପରିସ୍ରା ବାଟେ ବାହାର କରେ।",
+        "whatItMeasures": "କିଡନୀ ସଫା କରିବା ଶକ୍ତି ଏବଂ ଶରୀରର ଜଳ ସ୍ତର ମାପେ।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ କ୍ଷତିକାରକ ନୁହେଁ"],
+          "high": ["ପାଟି ଶୁଖିବା ବା ଶୋଷ", "ଥକାପଣ", "ଭୋକ କମିବା"],
+          "normal": ["କିଡନୀ ଭଲ ଭାବେ ସଫା କରୁଛି"],
+          "general": ["ଶୋଷ ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ଏହା ପାଣି କମ୍ ପିଇବାରୁ ବଢ଼ିଛି ନା ଅଧିକ କିଡନୀ ପରୀକ୍ଷା ଦରକାର?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Protein Food", "label_hi": "प्रोटीन भोजन", "label_or": "ପ୍ରୋଟିନ୍ ଖାଦ୍ୟ" },
+          { "icon": "filter", "label_en": "Kidney Filter", "label_hi": "किडनी फिल्टर", "label_or": "କିଡନୀ ଫିଲ୍ଟର" },
+          { "icon": "drop", "label_en": "Washed Out", "label_hi": "पेशाब में बाहर", "label_or": "ପରିସ୍ରାରେ ବାହାର" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Urea waste in blood is low.", "hi": "खून में यूरिया कम है।", "or": "ରକ୍ତରେ ୟୁରିଆ କମ୍ ଅଛି।" },
+          "high": { "en": "Extra urea stayed in blood, from low water or slower filtering.", "hi": "पानी कम होने या धीमी सफाई से यूरिया कुछ ज्यादा है।", "or": "ପାଣି କମ୍ କିମ୍ବା ଧୀର ଛଣା ଯୋଗୁଁ ୟୁରିଆ ଅଧିକ ଅଛି।" },
+          "normal": { "en": "Urea waste is being washed out cleanly.", "hi": "यूरिया सही तरीके से साफ हो रहा है।", "or": "ୟୁରିଆ ସଠିକ୍ ଭାବେ ସଫା ହେଉଛି।" }
+        }
+      }
+    },
+    {
+      "id": "egfr",
+      "kind": "test",
+      "aliases": ["egfr", "gfr", "glomerular filtration"],
+      "analogyIcon": "water_filter",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "eGFR (Kidney Filter Speed)",
+        "analogy": "Like checking how fast a water filter cleans water each minute — higher numbers mean faster cleaning.",
+        "whatItMeasures": "Estimates how fast your kidneys filter blood each minute.",
+        "feelings": {
+          "low": ["Often no early feeling", "Swelling in feet", "Tiredness"],
+          "high": ["Healthy fast filtering"],
+          "normal": ["Strong kidney filtering speed"],
+          "general": ["Foot swelling or urine changes"]
+        },
+        "doctorQuestion": "How can I protect my kidney filtering speed long-term?"
+      },
+      "hi": {
+        "title": "ईजीएफआर (किडनी छानने की रफ्तार)",
+        "analogy": "यह बताता है कि आपका किडनी फिल्टर हर मिनट कितना खून साफ कर रहा है — ज्यादा नंबर मतलब बेहतर सफाई।",
+        "whatItMeasures": "किडनी के खून साफ करने की रफ्तार बताता है।",
+        "feelings": {
+          "low": ["शुरू में कोई लक्षण नहीं दिखता", "पैरों में सूजन", "थकान"],
+          "high": ["अच्छी सफाई रफ्तार"],
+          "normal": ["किडनी की रफ्तार स्वस्थ है"],
+          "general": ["पैरों में सूजन या पेशाब में फर्क"]
+        },
+        "doctorQuestion": "किडनी की इस रफ्तार को सुरक्षित रखने के लिए मुझे क्या ध्यान रखना चाहिए?"
+      },
+      "or": {
+        "title": "ଇଜିଏଫଆର୍ (କିଡନୀ ଛଣା ବେଗ)",
+        "analogy": "ଏହା ଦେଖାଏ କିଡନୀ ଫିଲ୍ଟର ପ୍ରତି ମିନିଟ୍ ରେ କେତେ ରକ୍ତ ସଫା କରୁଛି — ଅଧିକ ସଂଖ୍ୟା ମାନେ ଭଲ କାମ।",
+        "whatItMeasures": "କିଡନୀ ରକ୍ତ ଛାଣିବାର ବେଗ ମାପେ।",
+        "feelings": {
+          "low": ["ଆରମ୍ଭରେ କୌଣସି ଲକ୍ଷଣ ନଥାଏ", "ପାଦ ଫୁଲିବା", "ଥକାପଣ"],
+          "high": ["ଭଲ ଛଣା ବେଗ"],
+          "normal": ["କିଡନୀ ଛଣା ବେଗ ସୁସ୍ଥ ଅଛି"],
+          "general": ["ପାଦ ଫୁଲା ବା ପରିସ୍ରା ପରିବର୍ତ୍ତନ"]
+        },
+        "doctorQuestion": "ମୋର କିଡନୀ ଛଣା ବେଗକୁ ସୁରକ୍ଷିତ ରଖିବା ପାଇଁ କଣ କରିବା ଉଚିତ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "drop", "label_en": "Blood Enters", "label_hi": "खून आता है", "label_or": "ରକ୍ତ ଆସେ" },
+          { "icon": "filter", "label_en": "Filter Speed", "label_hi": "छानने की गति", "label_or": "ଛାଣିବା ବେଗ" },
+          { "icon": "check", "label_en": "Clean Blood", "label_hi": "साफ खून", "label_or": "ସଫା ରକ୍ତ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": -1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Filter speed is slower than the normal adult target.", "hi": "छानने की रफ्तार सामान्य लक्ष्य से कम है।", "or": "ଛାଣିବା ବେଗ ସାଧାରଣ ଲକ୍ଷ୍ୟଠାରୁ କମ୍ ଅଛି।" },
+          "high": { "en": "Kidneys are filtering smoothly.", "hi": "किडनी तेजी से साफ कर रही है।", "or": "କିଡନୀ ଦ୍ରୁତ ଏବଂ ଭଲ ଭାବେ ଛାଣୁଛି।" },
+          "normal": { "en": "Kidney filter speed is healthy.", "hi": "किडनी छानने की गति स्वस्थ है।", "or": "କିଡନୀ ଛଣା ବେଗ ସୁସ୍ଥ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "uric_acid",
+      "kind": "test",
+      "aliases": ["uric acid", "serum uric acid", "urate"],
+      "analogyIcon": "water_filter",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Uric Acid",
+        "analogy": "Like tiny salt crystals in water — if too much builds up, it can settle in joints like the big toe.",
+        "whatItMeasures": "Measures natural body waste that leaves through kidneys.",
+        "feelings": {
+          "low": ["Usually harmless"],
+          "high": ["Pain or warmth in toe or joint", "Joint stiffness", "Mild swelling"],
+          "normal": ["Balanced waste clearance"],
+          "general": ["Toe or joint discomfort"]
+        },
+        "doctorQuestion": "Should I adjust my diet or water intake for uric acid?"
+      },
+      "hi": {
+        "title": "यूरिक एसिड",
+        "analogy": "यह पानी में घुले छोटे नमक के कणों जैसा है — ज्यादा होने पर यह जोड़ों, खासकर अंगूठे में जम सकता है।",
+        "whatItMeasures": "खून में यूरिक एसिड नामक कचरे की मात्रा जांचता है।",
+        "feelings": {
+          "low": ["आमतौर पर सामान्य"],
+          "high": ["पैर के अंगूठे या जोड़ में दर्द", "जोड़ों में अकड़न", "हल्की सूजन"],
+          "normal": ["यूरिक एसिड संतुलित है"],
+          "general": ["जोड़ों में दर्द या सूजन"]
+        },
+        "doctorQuestion": "क्या यूरिक एसिड के लिए मुझे खान-पान या पानी में बदलाव करना चाहिए?"
+      },
+      "or": {
+        "title": "ୟୁରିକ୍ ଏସିଡ୍",
+        "analogy": "ଏହା ପାଣିରେ ଥିବା ଛୋଟ ଲୁଣ କଣା ପରି — ଅଧିକ ହେଲେ ଗଣ୍ଠି କିମ୍ବା ପାଦ ଆଙ୍ଗୁଠିରେ ଜମି ଯନ୍ତ୍ରଣା ଦେଇପାରେ।",
+        "whatItMeasures": "ରକ୍ତରେ ୟୁରିକ୍ ଏସିଡ୍ ର ପରିମାଣ ମାପେ।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ କ୍ଷତିକାରକ ନୁହେଁ"],
+          "high": ["ପାଦ ଆଙ୍ଗୁଠି ବା ଗଣ୍ଠି ଦରଜ", "ଗଣ୍ଠି ଟାଣ ଲାଗିବା", "ସାମାନ୍ୟ ଫୁଲା"],
+          "normal": ["ୟୁରିକ୍ ଏସିଡ୍ ସନ୍ତୁଳିତ ଅଛି"],
+          "general": ["ଗଣ୍ଠି ଯନ୍ତ୍ରଣା"]
+        },
+        "doctorQuestion": "ୟୁରିକ୍ ଏସିଡ୍ ପାଇଁ ମୁଁ ଖାଦ୍ୟ ବା ପାଣି ପିଇବାରେ ପରିବର୍ତ୍ତନ କରିବି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Food Breakdown", "label_hi": "भोजन पाचन", "label_or": "ଖାଦ୍ୟ ହଜମ" },
+          { "icon": "drop", "label_en": "Uric Acid in Blood", "label_hi": "खून में यूरिक एसिड", "label_or": "ରକ୍ତରେ ୟୁରିକ୍ ଏସିଡ୍" },
+          { "icon": "filter", "label_en": "Kidney Clearance", "label_hi": "किडनी निकासी", "label_or": "କିଡନୀ ନିଷ୍କାସନ" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Uric acid level is low.", "hi": "यूरिक एसिड स्तर कम है।", "or": "ୟୁରିକ୍ ଏସିଡ୍ ସ୍ତର କମ୍ ଅଛି।" },
+          "high": { "en": "Extra uric acid is building up in the blood.", "hi": "खून में यूरिक एसिड की मात्रा बढ़ रही है।", "or": "ରକ୍ତରେ ୟୁରିକ୍ ଏସିଡ୍ ଅଧିକ ଜମୁଛି।" },
+          "normal": { "en": "Uric acid is clearing out smoothly.", "hi": "यूरिक एसिड सामान्य सीमा में है।", "or": "ୟୁରିକ୍ ଏସିଡ୍ ସ୍ୱାଭାବିକ ସୀମାରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "sodium",
+      "kind": "test",
+      "aliases": ["sodium", "serum sodium", "na", "na+"],
+      "analogyIcon": "battery_energy",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Sodium (Body Salt & Water Balance)",
+        "analogy": "Like the salt in ORS — sodium helps hold the right amount of water inside your body.",
+        "whatItMeasures": "Measures the main body salt controlling water and nerve signals.",
+        "feelings": {
+          "low": ["Weakness or confusion", "Nausea", "Headache"],
+          "high": ["Strong thirst", "Dry tongue", "Restlessness"],
+          "normal": ["Healthy salt and water balance"],
+          "general": ["Weakness or thirst"]
+        },
+        "doctorQuestion": "Should I adjust my fluid or salt intake?"
+      },
+      "hi": {
+        "title": "सोडियम (शरीर का नमक और पानी)",
+        "analogy": "ओआरएस के नमक जैसा — सोडियम शरीर में पानी और नसों के संदेश का संतुलन रखता है।",
+        "whatItMeasures": "खून में सोडियम नमक का स्तर नापता है।",
+        "feelings": {
+          "low": ["कमजोरी या सुस्ती", "जी मिचलाना", "सिरदर्द"],
+          "high": ["तेज प्यास लगना", "जीभ सूखना", "बेचैनी"],
+          "normal": ["नमक और पानी सही संतुलन में हैं"],
+          "general": ["कमजोरी या प्यास"]
+        },
+        "doctorQuestion": "क्या मुझे पानी या नमक की मात्रा में बदलाव करना चाहिए?"
+      },
+      "or": {
+        "title": "ସୋଡ଼ିୟମ୍ (ଶରୀର ଲୁଣ ଏବଂ ଜଳ ସନ୍ତୁଳନ)",
+        "analogy": "ଓଆରଏସ୍ ରେ ଥିବା ଲୁଣ ପରି — ସୋଡ଼ିୟମ୍ ଶରୀରରେ ପାଣି ଏବଂ ସ୍ନାୟୁ ସଙ୍କେତକୁ ସନ୍ତୁଳିତ ରଖେ।",
+        "whatItMeasures": "ରକ୍ତରେ ସୋଡ଼ିୟମ୍ ଲୁଣର ସ୍ତର ମାପେ।",
+        "feelings": {
+          "low": ["ଦୁର୍ବଳତା ବା ଅସ୍ପଷ୍ଟ ଲାଗିବା", "ବାନ୍ତି ଲାଗିବା", "ମୁଣ୍ଡବିନ୍ଧା"],
+          "high": ["ଅଧିକ ଶୋଷ", "ଜିଭ ଶୁଖିବା", "ଅସ୍ଥିରତା"],
+          "normal": ["ଲୁଣ ଏବଂ ପାଣିର ସୁସ୍ଥ ସନ୍ତୁଳନ"],
+          "general": ["ଦୁର୍ବଳତା ବା ଶୋଷ"]
+        },
+        "doctorQuestion": "ମୁଁ ପାଣି କିମ୍ବା ଲୁଣ ପରିମାଣରେ କିଛି ପରିବର୍ତ୍ତନ କରିବି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "drop", "label_en": "Water & Salt", "label_hi": "पानी और नमक", "label_or": "ପାଣି ଓ ଲୁଣ" },
+          { "icon": "filter", "label_en": "Kidney Balance", "label_hi": "किडनी संतुलन", "label_or": "କିଡନୀ ସନ୍ତୁଳନ" },
+          { "icon": "energy", "label_en": "Nerve Signals", "label_hi": "नसों का काम", "label_or": "ସ୍ନାୟୁ କାମ" }
+        ],
+        "highlightIndexByStatus": { "low": 0, "high": 0, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Body salt (sodium) is diluted or lower than usual.", "hi": "खून में सोडियम नमक सामान्य से कम है।", "or": "ରକ୍ତରେ ସୋଡ଼ିୟମ୍ ଲୁଣ ସାଧାରଣଠାରୁ କମ୍ ଅଛି।" },
+          "high": { "en": "Body salt is higher, often when body needs more water.", "hi": "पानी कम होने से शरीर में सोडियम बढ़ सकता है।", "or": "ପାଣି କମ୍ ହେଲେ ସୋଡ଼ିୟମ୍ ସ୍ତର ବଢ଼ିପାରେ।" },
+          "normal": { "en": "Salt and water are balanced cleanly.", "hi": "सोडियम और पानी का संतुलन बिल्कुल सही है।", "or": "ସୋଡ଼ିୟମ୍ ଏବଂ ଜଳ ସନ୍ତୁଳନ ସଠିକ୍ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "potassium",
+      "kind": "test",
+      "aliases": ["potassium", "serum potassium", "k", "k+"],
+      "analogyIcon": "battery_energy",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Potassium (Heart & Muscle Spark)",
+        "analogy": "Like a small electrical battery spark that keeps your heartbeat steady and muscles moving.",
+        "whatItMeasures": "Measures the mineral that helps heart and muscle cells fire smoothly.",
+        "feelings": {
+          "low": ["Muscle cramps or weakness", "Tiredness"],
+          "high": ["Irregular heartbeat feeling", "Tingling or weakness"],
+          "normal": ["Steady muscle and heart spark"],
+          "general": ["Muscle cramps or heartbeat changes"]
+        },
+        "doctorQuestion": "Do any of my medicines or diet affect my potassium level?"
+      },
+      "hi": {
+        "title": "पोटैशियम (दिल और मांसपेशियों की बिजली)",
+        "analogy": "छोटी बैटरी के करंट जैसा जो दिल की धड़कन और मांसपेशियों को सही चलाता है।",
+        "whatItMeasures": "दिल और मांसपेशियों के लिए जरूरी पोटैशियम खनिज जांचता है।",
+        "feelings": {
+          "low": ["मांसपेशियों में ऐंठन या कमजोरी", "थकान"],
+          "high": ["धड़कन में बदलाव महसूस होना", "झुनझुनी या कमजोरी"],
+          "normal": ["दिल और मांसपेशियों की चाल संतुलित है"],
+          "general": ["ऐंठन या कमजोरी"]
+        },
+        "doctorQuestion": "क्या मेरी कोई दवा या भोजन पोटैशियम पर असर डाल रहा है?"
+      },
+      "or": {
+        "title": "ପୋଟାସିୟମ୍ (ହୃଦୟ ଓ ମାଂସପେଶୀ ଶକ୍ତି)",
+        "analogy": "ଏହା ଛୋଟ ବ୍ୟାଟେରୀ କରେଣ୍ଟ ପରି, ଯାହା ହୃଦସ୍ପନ୍ଦନ ଏବଂ ମାଂସପେଶୀକୁ ଠିକ୍ ଭାବେ ଚଳାଏ।",
+        "whatItMeasures": "ହୃଦୟ ଏବଂ ମାଂସପେଶୀ ପାଇଁ ଜରୁରୀ ପୋଟାସିୟମ୍ ମାପେ।",
+        "feelings": {
+          "low": ["ମାଂସପେଶୀ ଟାଣିବା ବା ଦୁର୍ବଳତା", "ଥକାପଣ"],
+          "high": ["ହୃଦସ୍ପନ୍ଦନରେ ପରିବର୍ତ୍ତନ", "ଝିମଝିମ ବା ଦୁର୍ବଳତା"],
+          "normal": ["ହୃଦୟ ଏବଂ ମାଂସପେଶୀ ସ୍ଥିର ଅଛି"],
+          "general": ["ମାଂସପେଶୀ ଟାଣିବା ବା ଦୁର୍ବଳତା"]
+        },
+        "doctorQuestion": "ମୋର କୌଣସି ଔଷଧ କିମ୍ବା ଖାଦ୍ୟ ପୋଟାସିୟମ୍ ଉପରେ ପ୍ରଭାବ ପକାଉଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Fruits & Food", "label_hi": "फल और भोजन", "label_or": "ଫଳ ଓ ଖାଦ୍ୟ" },
+          { "icon": "energy", "label_en": "Blood Potassium", "label_hi": "खून में पोटैशियम", "label_or": "ରକ୍ତରେ ପୋଟାସିୟମ୍" },
+          { "icon": "heart", "label_en": "Heart & Muscles", "label_hi": "दिल व मांसपेशी", "label_or": "ହୃଦୟ ଓ ମାଂସପେଶୀ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Potassium spark is lower than usual.", "hi": "खून में पोटैशियम कुछ कम है।", "or": "ରକ୍ତରେ ପୋଟାସିୟମ୍ ଟିକେ କମ୍ ଅଛି।" },
+          "high": { "en": "Potassium level is higher than usual; check with a doctor promptly.", "hi": "पोटैशियम सामान्य से ज्यादा है, डॉक्टर को जरूर दिखाएं।", "or": "ପୋଟାସିୟମ୍ ସାଧାରଣଠାରୁ ଅଧିକ ଅଛି, ଡାକ୍ତରଙ୍କୁ ଦେଖାନ୍ତୁ।" },
+          "normal": { "en": "Potassium keeps heart and muscle signals steady.", "hi": "पोटैशियम सामान्य और सुरक्षित सीमा में है।", "or": "ପୋଟାସିୟମ୍ ସ୍ୱାଭାବିକ ସୀମାରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "sgpt",
+      "kind": "test",
+      "aliases": ["sgpt", "alt", "alanine transaminase", "alanine aminotransferase"],
+      "analogyIcon": "kitchen_factory",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "SGPT / ALT (Liver Helper Check)",
+        "analogy": "Think of your liver as the body's clean-up kitchen. When liver cells feel stressed, a little SGPT leaks into the blood.",
+        "whatItMeasures": "Measures a helper protein mostly found inside liver cells.",
+        "feelings": {
+          "low": ["Usually completely fine"],
+          "high": ["Often no symptoms", "Mild tiredness", "Heaviness on upper right belly"],
+          "normal": ["Liver cells are calm"],
+          "general": ["Mild tiredness or loss of appetite"]
+        },
+        "doctorQuestion": "Could fatty liver, diet, or a medicine be raising my SGPT?"
+      },
+      "hi": {
+        "title": "एसजीपीटी / एएलटी (लिवर की जांच)",
+        "analogy": "लिवर शरीर की रसोई और सफाई कारखाना है। जब लिवर पर थोड़ा बोझ पड़ता है, तो एसजीपीटी खून में ज्यादा दिखने लगता है।",
+        "whatItMeasures": "लिवर की कोशिकाओं में रहने वाले मुख्य एंजाइम की मात्रा जांचता है।",
+        "feelings": {
+          "low": ["आमतौर पर बिल्कुल सामान्य"],
+          "high": ["अक्सर कोई लक्षण नहीं दिखता", "हल्की थकान", "पेट के दाहिने ऊपर भारीपन"],
+          "normal": ["लिवर की कोशिकाएं शांत और स्वस्थ हैं"],
+          "general": ["भूख कम लगना या हल्की थकान"]
+        },
+        "doctorQuestion": "क्या फैटी लिवर, खान-पान या किसी दवा से एसजीपीटी बढ़ा है?"
+      },
+      "or": {
+        "title": "ଏସଜିପିଟି / ଏଏଲଟି (ଲିଭର ଯାଞ୍ଚ)",
+        "analogy": "ଲିଭର ହେଉଛି ଶରୀରର ରୋଷେଇ ଓ ସଫା କାରଖାନା। ଲିଭର ଉପରେ ଚାପ ପଡ଼ିଲେ ଏସଜିପିଟି ରକ୍ତରେ ବଢ଼ିଯାଏ।",
+        "whatItMeasures": "ଲିଭର କୋଷ ଭିତରେ ଥିବା ମୁଖ୍ୟ ଏନଜାଇମ୍ ମାପେ।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ ସମ୍ପୂର୍ଣ୍ଣ ଠିକ୍"],
+          "high": ["ଅନେକ ସମୟରେ ଲକ୍ଷଣ ନଥାଏ", "ସାମାନ୍ୟ ଥକାପଣ", "ଉପର ଡାହାଣ ପେଟରେ ଭାରି ଲାଗିବା"],
+          "normal": ["ଲିଭର କୋଷ ଶାନ୍ତ ଓ ସୁସ୍ଥ ଅଛି"],
+          "general": ["ଭୋକ କମିବା ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ଫ୍ୟାଟି ଲିଭର, ଖାଦ୍ୟ କିମ୍ବା କୌଣସି ଔଷଧ ଯୋଗୁଁ ଏସଜିପିଟି ବଢ଼ିଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "liver", "label_en": "Liver Kitchen", "label_hi": "लिवर कारखाना", "label_or": "ଲିଭର କାରଖାନା" },
+          { "icon": "drop", "label_en": "SGPT in Blood", "label_hi": "खून में एसजीपीटी", "label_or": "ରକ୍ତରେ ଏସଜିପିଟି" },
+          { "icon": "check", "label_en": "Cell Calmness", "label_hi": "कोशिका स्थिति", "label_or": "କୋଷ ସ୍ଥିତି" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 0, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Liver cells are quiet and healthy.", "hi": "लिवर की कोशिकाएं शांत हैं।", "or": "ଲିଭର କୋଷ ଶାନ୍ତ ଅଛି।" },
+          "high": { "en": "Liver cells are working under extra strain and leaking SGPT.", "hi": "लिवर पर कुछ अतिरिक्त बोझ है जिससे एसजीपीटी बाहर आ रहा है।", "or": "ଲିଭର ଉପରେ ଅଧିକ ଚାପ ଥିବାରୁ ଏସଜିପିଟି ରକ୍ତକୁ ଆସୁଛି।" },
+          "normal": { "en": "Liver cells are calm and healthy.", "hi": "लिवर की जांच सामान्य है।", "or": "ଲିଭର ପରୀକ୍ଷା ସ୍ୱାଭାବିକ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "sgot",
+      "kind": "test",
+      "aliases": ["sgot", "ast", "aspartate transaminase", "aspartate aminotransferase"],
+      "analogyIcon": "kitchen_factory",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "SGOT / AST (Liver & Muscle Helper)",
+        "analogy": "Like SGPT, SGOT lives inside your liver and muscles and shows up in blood if those tissues feel strained.",
+        "whatItMeasures": "Measures an enzyme found in the liver and muscles.",
+        "feelings": {
+          "low": ["Usually normal"],
+          "high": ["Tiredness", "Muscle soreness after heavy work", "Poor appetite"],
+          "normal": ["Liver and muscle cells are calm"],
+          "general": ["Tiredness or body ache"]
+        },
+        "doctorQuestion": "Is my SGOT raised because of liver strain or muscle activity?"
+      },
+      "hi": {
+        "title": "एसजीओटी / एएसटी (लिवर व मांसपेशी जांच)",
+        "analogy": "यह लिवर और मांसपेशियों में रहने वाला कण है। उन पर जोर पड़ने पर यह खून में थोड़ा बढ़ जाता है।",
+        "whatItMeasures": "लिवर और मांसपेशियों में मौजूद एंजाइम नापता है।",
+        "feelings": {
+          "low": ["आमतौर पर सामान्य"],
+          "high": ["थकान लगना", "भारी काम के बाद शरीर दुखना", "भूख कम लगना"],
+          "normal": ["लिवर और मांसपेशियां शांत हैं"],
+          "general": ["थकान या बदन दर्द"]
+        },
+        "doctorQuestion": "क्या मेरा एसजीओटी लिवर या भारी मेहनत की वजह से बढ़ा है?"
+      },
+      "or": {
+        "title": "ଏସଜିଓଟି / ଏଏସଟି (ଲିଭର ଓ ମାଂସପେଶୀ ଯାଞ୍ଚ)",
+        "analogy": "ଏହା ଲିଭର ଏବଂ ମାଂସପେଶୀରେ ରହେ। ସେମାନଙ୍କ ଉପରେ ଚାପ ପଡ଼ିଲେ ରକ୍ତରେ ବଢ଼ିଯାଏ।",
+        "whatItMeasures": "ଲିଭର ଏବଂ ମାଂସପେଶୀରେ ଥିବା ଏନଜାଇମ୍ ମାପେ।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ ସ୍ୱାଭାବିକ"],
+          "high": ["ଥକାପଣ", "କଠିନ କାମ ପରେ ଦେହ ଦରଜ", "ଭୋକ କମିବା"],
+          "normal": ["ଲିଭର ଏବଂ ମାଂସପେଶୀ ଶାନ୍ତ ଅଛି"],
+          "general": ["ଥକାପଣ ବା ଦେହ ବିନ୍ଧା"]
+        },
+        "doctorQuestion": "ମୋର ଏସଜିଓଟି ଲିଭର ଚାପ ନା ମାଂସପେଶୀ ପରିଶ୍ରମ ଯୋଗୁଁ ବଢ଼ିଛି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "liver", "label_en": "Liver / Muscle", "label_hi": "लिवर / मांसपेशी", "label_or": "ଲିଭର / ମାଂସପେଶୀ" },
+          { "icon": "drop", "label_en": "SGOT in Blood", "label_hi": "खून में एसजीओटी", "label_or": "ରକ୍ତରେ ଏସଜିଓଟି" },
+          { "icon": "check", "label_en": "Recovery", "label_hi": "सुधार", "label_or": "ସୁସ୍ଥତା" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 0, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Liver and muscles are calm.", "hi": "लिवर और मांसपेशियां सामान्य हैं।", "or": "ଲିଭର ଏବଂ ମାଂସପେଶୀ ସ୍ୱାଭାବିକ ଅଛି।" },
+          "high": { "en": "Liver or muscle cells showed extra strain.", "hi": "लिवर या मांसपेशियों पर थोड़ा अतिरिक्त दबाव पड़ा है।", "or": "ଲିଭର କିମ୍ବା ମାଂସପେଶୀ ଉପରେ ଅଧିକ ଚାପ ପଡ଼ିଛି।" },
+          "normal": { "en": "SGOT is within healthy limits.", "hi": "एसजीओटी स्वस्थ सीमा के अंदर है।", "or": "ଏସଜିଓଟି ସୁସ୍ଥ ସୀମା ମଧ୍ୟରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "bilirubin",
+      "kind": "test",
+      "aliases": ["bilirubin", "total bilirubin", "direct bilirubin", "indirect bilirubin", "jaundice"],
+      "analogyIcon": "kitchen_factory",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Bilirubin (Yellow Pigment Check)",
+        "analogy": "When old red blood cells retire, they leave behind a yellow tint. Your liver clears it like emptying a dustbin.",
+        "whatItMeasures": "Measures how well your liver is clearing yellow bile pigment.",
+        "feelings": {
+          "low": ["Normal and harmless"],
+          "high": ["Yellowish eyes or skin", "Dark yellow urine", "Tiredness or nausea"],
+          "normal": ["Liver is clearing yellow tint smoothly"],
+          "general": ["Yellow eyes or loss of appetite"]
+        },
+        "doctorQuestion": "Is this bilirubin level mild or needing a closer liver scan?"
+      },
+      "hi": {
+        "title": "बिलीरुबिन (पीलिया जांच)",
+        "analogy": "जब पुराने लाल कण टूटते हैं तो पीला रंग निकलता है। लिवर इसे कूड़ेदान की तरह साफ कर बाहर निकालता है।",
+        "whatItMeasures": "खून में पीले तत्व (बिलीरुबिन) की मात्रा जांचता है।",
+        "feelings": {
+          "low": ["बिल्कुल सामान्य"],
+          "high": ["आंखों या त्वचा में पीलापन", "गहरा पीला पेशाब", "भूख न लगना या मितली"],
+          "normal": ["लिवर पीला तत्व सही साफ कर रहा है"],
+          "general": ["आंखों में पीलापन या थकान"]
+        },
+        "doctorQuestion": "क्या बिलीरुबिन हल्का बढ़ा है या इसके लिए अल्ट्रासाउंड की जरूरत है?"
+      },
+      "or": {
+        "title": "ବିଲିରୁବିନ୍ (ଜଣ୍ଡିସ୍ ଯାଞ୍ଚ)",
+        "analogy": "ପୁରୁଣା ଲାଲ୍ ରକ୍ତ କଣିକା ଭାଙ୍ଗିଲେ ହଳଦିଆ ରଙ୍ଗ ବାହାରେ। ଲିଭର ଏହାକୁ ଅଳିଆ ଡବା ପରି ସଫା କରି ବାହାର କରେ।",
+        "whatItMeasures": "ଲିଭର ହଳଦିଆ ରଙ୍ଗକୁ କେତେ ଭଲ ଭାବେ ସଫା କରୁଛି ତାହା ମାପେ।",
+        "feelings": {
+          "low": ["ସମ୍ପୂର୍ଣ୍ଣ ସ୍ୱାଭାବିକ"],
+          "high": ["ଆଖି ବା ଚର୍ମ ହଳଦିଆ ଦିଶିବା", "ଗାଢ଼ ହଳଦିଆ ପରିସ୍ରା", "ଭୋକ ନଲାଗିବା ବା ବାନ୍ତି ଲାଗିବା"],
+          "normal": ["ଲିଭର ସୁସ୍ଥ ଭାବେ ସଫା କରୁଛି"],
+          "general": ["ଆଖି ହଳଦିଆ ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ଏହି ବିଲିରୁବିନ୍ ସ୍ତର ସାମାନ୍ୟ ନା ଅଧିକ ଲିଭର ପରୀକ୍ଷା ଦରକାର?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "truck", "label_en": "Old Red Cells", "label_hi": "पुराने रक्त कण", "label_or": "ପୁରୁଣା କଣିକା" },
+          { "icon": "liver", "label_en": "Liver Cleans", "label_hi": "लिवर सफाई", "label_or": "ଲିଭର ସଫା" },
+          { "icon": "check", "label_en": "Leaves Body", "label_hi": "शरीर से बाहर", "label_or": "ଶରୀରରୁ ବାହାର" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Yellow pigment is cleared easily.", "hi": "पीला तत्व आसानी से साफ हो रहा है।", "or": "ହଳଦିଆ ରଙ୍ଗ ସହଜରେ ସଫା ହେଉଛି।" },
+          "high": { "en": "The liver is taking longer to clear this yellow pigment.", "hi": "लिवर पीले तत्व को साफ करने में थोड़ा धीमा चल रहा है।", "or": "ଲିଭର ଏହି ହଳଦିଆ ରଙ୍ଗ ସଫା କରିବାକୁ ଅଧିକ ସମୟ ନେଉଛି।" },
+          "normal": { "en": "Liver is clearing bilirubin cleanly.", "hi": "लिवर बिलीरुबिन को ठीक से साफ कर रहा है।", "or": "ଲିଭର ବିଲିରୁବିନ୍ କୁ ସଠିକ୍ ଭାବେ ସଫା କରୁଛି।" }
+        }
+      }
+    },
+    {
+      "id": "alkaline_phosphatase",
+      "kind": "test",
+      "aliases": ["alkaline phosphatase", "alp", "alk phos"],
+      "analogyIcon": "kitchen_factory",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Alkaline Phosphatase (ALP)",
+        "analogy": "An enzyme found in bile pipes of the liver and in growing or healing bones.",
+        "whatItMeasures": "Checks liver bile flow and bone activity.",
+        "feelings": {
+          "low": ["Usually harmless"],
+          "high": ["Usually no symptoms", "Itchy skin or right belly ache if bile slows"],
+          "normal": ["Healthy liver pipes and bone turnover"],
+          "general": ["Bone ache or stomach heaviness"]
+        },
+        "doctorQuestion": "Is my ALP coming from liver bile pipes or bone activity?"
+      },
+      "hi": {
+        "title": "अल्कलाइन फॉस्फेटेज (एएलपी)",
+        "analogy": "यह लिवर की पित्त नलियों और हड्डियों में पाया जाने वाला एंजाइम है।",
+        "whatItMeasures": "लिवर के पित्त प्रवाह और हड्डियों की गतिविधि जांचता है।",
+        "feelings": {
+          "low": ["आमतौर पर सामान्य"],
+          "high": ["अक्सर लक्षण नहीं होते", "पित्त रुकने पर खुजली या दाहिने पेट में दर्द"],
+          "normal": ["लिवर और हड्डियां सामान्य हैं"],
+          "general": ["हड्डी या पेट में हल्की तकलीफ"]
+        },
+        "doctorQuestion": "मेरा एएलपी लिवर से जुड़ा है या हड्डियों से?"
+      },
+      "or": {
+        "title": "ଆଲକାଲାଇନ୍ ଫସଫାଟେଜ୍ (ଏଏଲପି)",
+        "analogy": "ଏହା ଲିଭରର ପିତ୍ତ ନଳୀ ଏବଂ ହାଡ଼ରେ ମିଳୁଥିବା ଏକ ଏନଜାଇମ୍।",
+        "whatItMeasures": "ଲିଭର ପିତ୍ତ ପ୍ରବାହ ଏବଂ ହାଡ଼ର କ୍ରିୟାଶୀଳତା ମାପେ।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ କ୍ଷତିକାରକ ନୁହେଁ"],
+          "high": ["ସାଧାରଣତଃ ଲକ୍ଷଣ ନଥାଏ", "ପିତ୍ତ ଅଟକିଲେ କୁଣ୍ଡେଇ ହେବା ବା ପେଟ ଦରଜ"],
+          "normal": ["ଲିଭର ନଳୀ ଓ ହାଡ଼ ସୁସ୍ଥ ଅଛି"],
+          "general": ["ହାଡ଼ ଦରଜ ବା ପେଟ ଭାରି"]
+        },
+        "doctorQuestion": "ମୋର ଏଏଲପି ଲିଭର ନା ହାଡ଼ ସହିତ ଜଡ଼ିତ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "liver", "label_en": "Liver / Bone", "label_hi": "लिवर / हड्डी", "label_or": "ଲିଭର / ହାଡ଼" },
+          { "icon": "drop", "label_en": "ALP Enzyme", "label_hi": "एएलपी एंजाइम", "label_or": "ଏଏଲପି ଏନଜାଇମ୍" },
+          { "icon": "check", "label_en": "Smooth Flow", "label_hi": "सही प्रवाह", "label_or": "ସଠିକ୍ ପ୍ରବାହ" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 0, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "ALP is calm.", "hi": "एएलपी सामान्य से कम है।", "or": "ଏଏଲପି କମ୍ ଅଛି।" },
+          "high": { "en": "Bile flow or bone activity is higher than usual.", "hi": "लिवर पित्त नली या हड्डी में गतिविधि बढ़ी हुई है।", "or": "ପିତ୍ତ ପ୍ରବାହ କିମ୍ବା ହାଡ଼ କ୍ରିୟା ଅଧିକ ଅଛି।" },
+          "normal": { "en": "ALP is in a healthy range.", "hi": "एएलपी सामान्य सीमा में है।", "or": "ଏଏଲପି ସୁସ୍ଥ ସୀମାରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "albumin",
+      "kind": "test",
+      "aliases": ["albumin", "serum albumin", "total protein", "s.albumin"],
+      "analogyIcon": "kitchen_factory",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Albumin / Total Protein",
+        "analogy": "Albumin is a helpful sponge protein made by the liver that keeps fluid inside blood vessels.",
+        "whatItMeasures": "Checks nutrition, liver protein making, and fluid balance.",
+        "feelings": {
+          "low": ["Puffiness around feet or eyes", "Weakness"],
+          "high": ["Sometimes seen with mild dehydration"],
+          "normal": ["Good body protein reserves"],
+          "general": ["Swelling or tiredness"]
+        },
+        "doctorQuestion": "Should I add more protein foods to my daily meals?"
+      },
+      "hi": {
+        "title": "एल्ब्यूमिन / टोटल प्रोटीन",
+        "analogy": "एल्ब्यूमिन लिवर से बनने वाला स्पंज जैसा प्रोटीन है जो खून की नसों में पानी रोक कर रखता है।",
+        "whatItMeasures": "शरीर के पोषण और लिवर के प्रोटीन बनाने की क्षमता जांचता है।",
+        "feelings": {
+          "low": ["पैरों या आंखों के पास हल्की सूजन", "कमजोरी"],
+          "high": ["पानी कम पीने पर बढ़ सकता है"],
+          "normal": ["शरीर में प्रोटीन की अच्छी मात्रा है"],
+          "general": ["सूजन या कमजोरी"]
+        },
+        "doctorQuestion": "क्या मुझे रोज के खाने में प्रोटीन थोड़ा बढ़ाना चाहिए?"
+      },
+      "or": {
+        "title": "ଆଲବୁମିନ୍ / ଟୋଟାଲ୍ ପ୍ରୋଟିନ୍",
+        "analogy": "ଆଲବୁମିନ୍ ଲିଭର ତିଆରି କରୁଥିବା ସ୍ପଞ୍ଜ ପରି ପ୍ରୋଟିନ୍ ଯାହା ରକ୍ତନଳୀରେ ଜଳକୁ ବାନ୍ଧି ରଖେ।",
+        "whatItMeasures": "ପୋଷଣ ଏବଂ ଲିଭରର ପ୍ରୋଟିନ୍ ତିଆରି ଶକ୍ତି ମାପେ।",
+        "feelings": {
+          "low": ["ପାଦ ବା ଆଖି ପାଖରେ ଫୁଲା", "ଦୁର୍ବଳତା"],
+          "high": ["ପାଣି କମ୍ ପିଇଲେ ବଢ଼ିପାରେ"],
+          "normal": ["ଶରୀରରେ ଭଲ ପ୍ରୋଟିନ୍ ଅଛି"],
+          "general": ["ଫୁଲା ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ମୁଁ ଦୈନନ୍ଦିନ ଖାଦ୍ୟରେ ଅଧିକ ପ୍ରୋଟିନ୍ ଖାଇବା ଉଚିତ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Protein Food", "label_hi": "प्रोटीन भोजन", "label_or": "ପ୍ରୋଟିନ୍ ଖାଦ୍ୟ" },
+          { "icon": "liver", "label_en": "Liver Makes Albumin", "label_hi": "लिवर बनाए एल्ब्यूमिन", "label_or": "ଲିଭର ଆଲବୁମିନ୍ ତିଆରି" },
+          { "icon": "drop", "label_en": "Holds Vessel Fluid", "label_hi": "नसों में पानी संतुलन", "label_or": "ରକ୍ତନଳୀ ଜଳ ସନ୍ତୁଳନ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 2, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Protein sponge in blood is low, which can allow puffiness.", "hi": "खून में प्रोटीन कम होने से हल्की सूजन आ सकती है।", "or": "ରକ୍ତରେ ପ୍ରୋଟିନ୍ କମ୍ ଥିବାରୁ ଫୁଲା ହୋଇପାରେ।" },
+          "high": { "en": "Protein looks concentrated, often from needing more water.", "hi": "पानी कम होने से प्रोटीन गाढ़ा दिख सकता है।", "or": "ପାଣି କମ୍ ପିଇଲେ ପ୍ରୋଟିନ୍ ଅଧିକ ଦେଖାଯାଇପାରେ।" },
+          "normal": { "en": "Liver is maintaining healthy protein levels.", "hi": "प्रोटीन का स्तर स्वस्थ है।", "or": "ପ୍ରୋଟିନ୍ ସ୍ତର ସୁସ୍ଥ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "total_cholesterol",
+      "kind": "test",
+      "aliases": ["total cholesterol", "cholesterol", "serum cholesterol"],
+      "analogyIcon": "pipe_flow",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Total Cholesterol (Blood Fats)",
+        "analogy": "Like cooking oil flowing through kitchen pipes — some is helpful, too much slowly sticks to the pipe walls.",
+        "whatItMeasures": "Measures all cholesterol fats moving through your blood.",
+        "feelings": {
+          "low": ["Usually fine unless very low"],
+          "high": ["Usually has no symptoms at all", "Needs long-term heart pipe care"],
+          "normal": ["Blood pipes are staying clear"],
+          "general": ["Usually no symptoms — checked for prevention"]
+        },
+        "doctorQuestion": "Looking at my HDL and LDL, how are my heart pipes doing?"
+      },
+      "hi": {
+        "title": "कुल कोलेस्ट्रॉल (खून की चर्बी)",
+        "analogy": "यह रसोई के पाइप में बहते तेल जैसा है — थोड़ा जरूरी है, लेकिन ज्यादा होने पर धीरे-धीरे पाइप में जम सकता है।",
+        "whatItMeasures": "खून में बहने वाली कुल चर्बी (कोलेस्ट्रॉल) की मात्रा नापता है।",
+        "feelings": {
+          "low": ["आमतौर पर ठीक रहता है"],
+          "high": ["अक्सर कोई लक्षण महसूस नहीं होता", "दिल की नसों की देखभाल जरूरी है"],
+          "normal": ["खून की नसें साफ और स्वस्थ हैं"],
+          "general": ["बिना लक्षण के बचाव के लिए जांच"]
+        },
+        "doctorQuestion": "मेरे एचडीएल और एलडीएल को देखते हुए दिल की सेहत कैसी है?"
+      },
+      "or": {
+        "title": "ଟୋଟାଲ୍ କୋଲେଷ୍ଟେରଲ୍ (ରକ୍ତ ଚର୍ବି)",
+        "analogy": "ରୋଷେଇ ପାଇପ୍ ରେ ଯାଉଥିବା ତେଲ ପରି — ଅଳ୍ପ ଦରକାରୀ, କିନ୍ତୁ ବେଶି ହେଲେ ପାଇପ୍ ଭିତରେ ଜମିଯାଇପାରେ।",
+        "whatItMeasures": "ରକ୍ତରେ ପ୍ରବାହିତ ମୋଟ କୋଲେଷ୍ଟେରଲ୍ ଚର୍ବି ମାପେ।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ ଠିକ୍ ଥାଏ"],
+          "high": ["ସାଧାରଣତଃ କୌଣସି ଲକ୍ଷଣ ନଥାଏ", "ହୃଦୟ ନଳୀ ଯତ୍ନ ଦରକାର"],
+          "normal": ["ରକ୍ତନଳୀ ସଫା ଏବଂ ସୁସ୍ଥ ଅଛି"],
+          "general": ["ସୁରକ୍ଷା ପାଇଁ ନିୟମିତ ପରୀକ୍ଷା"]
+        },
+        "doctorQuestion": "ମୋର ଏଚଡିଏଲ୍ ଏବଂ ଏଲଡିଏଲ୍ ଦେଖି ମୋ ହୃଦୟ ନଳୀ କିପରି ଅଛି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Diet & Liver", "label_hi": "भोजन और लिवर", "label_or": "ଖାଦ୍ୟ ଓ ଲିଭର" },
+          { "icon": "pipe", "label_en": "Blood Pipes", "label_hi": "खून की नसें", "label_or": "ରକ୍ତନଳୀ" },
+          { "icon": "heart", "label_en": "Heart Flow", "label_hi": "दिल का प्रवाह", "label_or": "ହୃଦୟ ପ୍ରବାହ" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Blood cholesterol is low.", "hi": "कोलेस्ट्रॉल कम है।", "or": "କୋଲେଷ୍ଟେରଲ୍ କମ୍ ଅଛି।" },
+          "high": { "en": "Extra cholesterol is flowing in blood pipes over time.", "hi": "खून की नसों में अतिरिक्त चर्बी बह रही है।", "or": "ରକ୍ତନଳୀରେ ଅଧିକ ଚର୍ବି ପ୍ରବାହିତ ହେଉଛି।" },
+          "normal": { "en": "Cholesterol in your blood pipes is in a safe range.", "hi": "खून की चर्बी सुरक्षित सीमा में है।", "or": "ରକ୍ତ ଚର୍ବି ସୁରକ୍ଷିତ ସୀମାରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "ldl",
+      "kind": "test",
+      "aliases": ["ldl", "ldl cholesterol", "low density lipoprotein"],
+      "analogyIcon": "pipe_flow",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "LDL ('Sticky' Cholesterol)",
+        "analogy": "LDL is the sticky oil that can slowly cling to the inside walls of blood pipes if there is too much.",
+        "whatItMeasures": "Measures the type of cholesterol that can clog blood vessels over time.",
+        "feelings": {
+          "low": ["Great for clean blood pipes"],
+          "high": ["Usually no symptoms", "Raises long-term heart pipe buildup"],
+          "normal": ["Sticky cholesterol is kept low"],
+          "general": ["Checked to protect heart pipes early"]
+        },
+        "doctorQuestion": "What lifestyle steps or treatment will help lower my LDL?"
+      },
+      "hi": {
+        "title": "एलडीएल (चिपकने वाला कोलेस्ट्रॉल)",
+        "analogy": "एलडीएल वह गाढ़ा तेल है जो ज्यादा होने पर धीरे-धीरे खून की नसों की दीवारों पर चिपक सकता है।",
+        "whatItMeasures": "नसों में जमने वाले कोलेस्ट्रॉल की मात्रा नापता है।",
+        "feelings": {
+          "low": ["नसों के लिए बहुत अच्छा"],
+          "high": ["कोई लक्षण नहीं दिखता", "नसों में जमाव का खतरा बढ़ा सकता है"],
+          "normal": ["चिपकने वाला कोलेस्ट्रॉल नियंत्रण में है"],
+          "general": ["दिल की सुरक्षा के लिए जांच"]
+        },
+        "doctorQuestion": "एलडीएल कम करने के लिए खाने और चलने-फिरने में क्या बदलाव करूं?"
+      },
+      "or": {
+        "title": "ଏଲଡିଏଲ୍ (ଲାଗିଯିବା ଚର୍ବି)",
+        "analogy": "ଏଲଡିଏଲ୍ ହେଉଛି ସେହି ଅଠାଳିଆ ତେଲ ଯାହା ଅଧିକ ହେଲେ ଧୀରେ ଧୀରେ ରକ୍ତନଳୀ ଭିତରେ ଲାଗିଯାଏ।",
+        "whatItMeasures": "ରକ୍ତନଳୀରେ ଜମି ପାରୁଥିବା କୋଲେଷ୍ଟେରଲ୍ ମାପେ।",
+        "feelings": {
+          "low": ["ରକ୍ତନଳୀ ପାଇଁ ବହୁତ ଭଲ"],
+          "high": ["କୌଣସି ଲକ୍ଷଣ ନଥାଏ", "ଦୀର୍ଘକାଳୀନ ରକ୍ତନଳୀ ଜମାଟ ବଢ଼ାଇପାରେ"],
+          "normal": ["ଅଠାଳିଆ ଚର୍ବି ନିୟନ୍ତ୍ରଣରେ ଅଛି"],
+          "general": ["ହୃଦୟ ସୁରକ୍ଷା ପାଇଁ ପରୀକ୍ଷା"]
+        },
+        "doctorQuestion": "ଏଲଡିଏଲ୍ କମାଇବା ପାଇଁ ଖାଦ୍ୟ ବା ବ୍ୟାୟାମରେ କଣ ପରିବର୍ତ୍ତନ କରିବି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "drop", "label_en": "LDL Fat", "label_hi": "एलडीएल चर्बी", "label_or": "ଏଲଡିଏଲ୍ ଚର୍ବି" },
+          { "icon": "pipe", "label_en": "Vessel Walls", "label_hi": "नस की दीवार", "label_or": "ନଳୀ କାନ୍ଥ" },
+          { "icon": "heart", "label_en": "Heart Supply", "label_hi": "दिल की सप्लाई", "label_or": "ହୃଦୟ ଯୋଗାଣ" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Very little sticky fat is touching vessel walls.", "hi": "नसों की दीवारों पर चर्बी जमा नहीं हो रही।", "or": "ରକ୍ତନଳୀ କାନ୍ଥରେ ଅତି କମ୍ ଚର୍ବି ଲାଗୁଛି।" },
+          "high": { "en": "Extra sticky LDL fat is passing through blood vessels.", "hi": "नसों से ज्यादा एलडीएल चर्बी गुजर रही है।", "or": "ରକ୍ତନଳୀ ଦେଇ ଅଧିକ ଏଲଡିଏଲ୍ ଚର୍ବି ଯାଉଛି।" },
+          "normal": { "en": "LDL stays in a safe level for your vessels.", "hi": "एलडीएल नसों के लिए सुरक्षित स्तर पर है।", "or": "ଏଲଡିଏଲ୍ ରକ୍ତନଳୀ ପାଇଁ ସୁରକ୍ଷିତ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "hdl",
+      "kind": "test",
+      "aliases": ["hdl", "hdl cholesterol", "high density lipoprotein"],
+      "analogyIcon": "pipe_flow",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "HDL ('Cleaning' Cholesterol)",
+        "analogy": "HDL is the helpful sweeper that scrubs sticky fat out of your blood pipes — higher is better.",
+        "whatItMeasures": "Measures the protective cholesterol that cleans excess fat.",
+        "feelings": {
+          "low": ["No symptoms — walking & healthy oils help raise it"],
+          "high": ["Strong vessel-cleaning protection"],
+          "normal": ["Good vessel-cleaning cholesterol"],
+          "general": ["Usually no symptoms"]
+        },
+        "doctorQuestion": "How can I gently boost my good HDL cholesterol?"
+      },
+      "hi": {
+        "title": "एचडीएल (सफाई करने वाला कोलेस्ट्रॉल)",
+        "analogy": "एचडीएल एक अच्छा झाड़ू लगाने वाला है जो नसों से चिपचिपी चर्बी साफ करता है — इसका ज्यादा होना अच्छा है।",
+        "whatItMeasures": "नसों को साफ रखने वाले अच्छे कोलेस्ट्रॉल को नापता है।",
+        "feelings": {
+          "low": ["कोई लक्षण नहीं — पैदल चलने से यह बढ़ता है"],
+          "high": ["नसों की बहुत अच्छी सफाई सुरक्षा"],
+          "normal": ["अच्छा कोलेस्ट्रॉल सही स्तर पर है"],
+          "general": ["आमतौर पर कोई लक्षण नहीं"]
+        },
+        "doctorQuestion": "अपना अच्छा एचडीएल कोलेस्ट्रॉल बढ़ाने के लिए मैं क्या कर सकता हूं?"
+      },
+      "or": {
+        "title": "ଏଚଡିଏଲ୍ (ସଫା କରୁଥିବା ଭଲ ଚର୍ବି)",
+        "analogy": "ଏଚଡିଏଲ୍ ହେଉଛି ଭଲ ଝାଡ଼ୁଦାର ପରି ଯିଏ ରକ୍ତନଳୀରୁ ଖରାପ ଚର୍ବି ସଫା କରେ — ଅଧିକ ହେଲେ ଭଲ।",
+        "whatItMeasures": "ରକ୍ତନଳୀ ସଫା ରଖୁଥିବା ଭଲ କୋଲେଷ୍ଟେରଲ୍ ମାପେ।",
+        "feelings": {
+          "low": ["କୌଣସି ଲକ୍ଷଣ ନଥାଏ — ଚାଲିବା ଦ୍ୱାରା ଏହା ବଢ଼େ"],
+          "high": ["ରକ୍ତନଳୀ ପାଇଁ ଉତ୍ତମ ସୁରକ୍ଷା"],
+          "normal": ["ଭଲ କୋଲେଷ୍ଟେରଲ୍ ସଠିକ୍ ଅଛି"],
+          "general": ["ସାଧାରଣତଃ ଲକ୍ଷଣ ନଥାଏ"]
+        },
+        "doctorQuestion": "ମୋର ଭଲ ଏଚଡିଏଲ୍ ବଢ଼ାଇବା ପାଇଁ କଣ କରିବା ଉଚିତ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "pipe", "label_en": "Vessel Fat", "label_hi": "नसों की चर्बी", "label_or": "ନଳୀର ଚର୍ବି" },
+          { "icon": "check", "label_en": "HDL Sweeper", "label_hi": "एचडीएल सफाई", "label_or": "ଏଚଡିଏଲ୍ ସଫା" },
+          { "icon": "liver", "label_en": "Cleared by Liver", "label_hi": "लिवर से बाहर", "label_or": "ଲିଭର ଦ୍ୱାରା ସଫା" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": -1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Cleaning cholesterol is slightly low; daily walking helps lift it.", "hi": "सफाई करने वाला कोलेस्ट्रॉल कम है, रोज टहलने से यह बढ़ता है।", "or": "ସଫା କରୁଥିବା ଚର୍ବି ଟିକେ କମ୍ ଅଛି, ଚାଲିଲେ ଏହା ବଢ଼େ।" },
+          "high": { "en": "Strong HDL cleaner is protecting your blood vessels.", "hi": "एचडीएल नसों की अच्छी सुरक्षा कर रहा है।", "or": "ଏଚଡିଏଲ୍ ରକ୍ତନଳୀକୁ ଭଲ ସୁରକ୍ଷା ଦେଉଛି।" },
+          "normal": { "en": "Healthy HDL is keeping blood pipes clean.", "hi": "एचडीएल नसों की सही सफाई कर रहा है।", "or": "ଏଚଡିଏଲ୍ ରକ୍ତନଳୀକୁ ସଫା ରଖୁଛି।" }
+        }
+      }
+    },
+    {
+      "id": "triglycerides",
+      "kind": "test",
+      "aliases": ["triglyceride", "triglycerides", "tg", "tgl"],
+      "analogyIcon": "pipe_flow",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Triglycerides (Stored Food Energy)",
+        "analogy": "Extra calories from sweets, rice, or fried snacks turn into triglycerides — like storing extra fuel cans in your blood.",
+        "whatItMeasures": "Measures extra food energy fats floating in your blood.",
+        "feelings": {
+          "low": ["Usually harmless"],
+          "high": ["Usually silent", "Can make blood thicker over time"],
+          "normal": ["Healthy balance of stored food fuel"],
+          "general": ["Checked for heart and pancreas safety"]
+        },
+        "doctorQuestion": "Which everyday foods should I cut down to lower triglycerides?"
+      },
+      "hi": {
+        "title": "ट्राइग्लिसराइड्स (खाने से बची चर्बी)",
+        "analogy": "मीठे, तले या ज्यादा अनाज से बची अतिरिक्त ऊर्जा खून में ट्राइग्लिसराइड्स बन जाती है।",
+        "whatItMeasures": "खून में मौजूद खाने से बनी ऊर्जा वाली चर्बी नापता है।",
+        "feelings": {
+          "low": ["आमतौर पर सामान्य"],
+          "high": ["अक्सर कोई लक्षण नहीं दिखता", "खून को थोड़ा गाढ़ा बना सकता है"],
+          "normal": ["खून में ऊर्जा चर्बी संतुलित है"],
+          "general": ["दिल और पैंक्रियास की सुरक्षा के लिए जांच"]
+        },
+        "doctorQuestion": "ट्राइग्लिसराइड्स कम करने के लिए किन चीजों से परहेज करूं?"
+      },
+      "or": {
+        "title": "ଟ୍ରାଇଗ୍ଲିସେରାଇଡ୍ସ (ଖାଦ୍ୟରୁ ଜମା ଚର୍ବି)",
+        "analogy": "ମିଠା, ଛଣା ବା ଅଧିକ ଭାତରୁ ବଳକା ଶକ୍ତି ରକ୍ତରେ ଟ୍ରାଇଗ୍ଲିସେରାଇଡ୍ସ ଭାବେ ଜମା ହୁଏ।",
+        "whatItMeasures": "ରକ୍ତରେ ଥିବା ଖାଦ୍ୟ ଜନିତ ଚର୍ବି ମାପେ।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ ସ୍ୱାଭାବିକ"],
+          "high": ["ସାଧାରଣତଃ ଲକ୍ଷଣ ନଥାଏ", "ରକ୍ତକୁ ଟିକେ ଗାଢ଼ କରିପାରେ"],
+          "normal": ["ଖାଦ୍ୟ ଶକ୍ତି ଚର୍ବି ସନ୍ତୁଳିତ ଅଛି"],
+          "general": ["ହୃଦୟ ସୁରକ୍ଷା ପାଇଁ ପରୀକ୍ଷା"]
+        },
+        "doctorQuestion": "ଟ୍ରାଇଗ୍ଲିସେରାଇଡ୍ସ କମାଇବା ପାଇଁ କେଉଁ ଖାଦ୍ୟ କମ୍ କରିବା ଉଚିତ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Sweets & Fried Food", "label_hi": "मीठा व तला भोजन", "label_or": "ମିଠା ଓ ଛଣା ଖାଦ୍ୟ" },
+          { "icon": "drop", "label_en": "Triglycerides", "label_hi": "ट्राइग्लिसराइड्स", "label_or": "ଟ୍ରାଇଗ୍ଲିସେରାଇଡ୍ସ" },
+          { "icon": "energy", "label_en": "Stored Fuel", "label_hi": "जमा ऊर्जा", "label_or": "ଜମା ଇନ୍ଧନ" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Stored blood fats are low.", "hi": "खून में यह चर्बी कम है।", "or": "ରକ୍ତରେ ଏହି ଚର୍ବି କମ୍ ଅଛି।" },
+          "high": { "en": "Extra food fuel is floating in the blood.", "hi": "खाने से बनी अतिरिक्त चर्बी खून में ज्यादा है।", "or": "ଖାଦ୍ୟରୁ ବଳକା ଚର୍ବି ରକ୍ତରେ ଅଧିକ ଅଛି।" },
+          "normal": { "en": "Triglycerides are within safe limits.", "hi": "ट्राइग्लिसराइड्स सुरक्षित सीमा में हैं।", "or": "ଟ୍ରାଇଗ୍ଲିସେରାଇଡ୍ସ ସୁରକ୍ଷିତ ସୀମାରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "vitamin_d",
+      "kind": "test",
+      "aliases": ["vitamin d", "25-oh", "25 hydroxy", "vit d", "cholecalciferol"],
+      "analogyIcon": "sun_bone",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Vitamin D (Sunshine Vitamin)",
+        "analogy": "Like morning sunlight helping cement set — Vitamin D helps calcium lock into your bones to keep them strong.",
+        "whatItMeasures": "Checks your body's reserve of the sunshine vitamin.",
+        "feelings": {
+          "low": ["Body or back ache", "Tiredness in legs", "Low mood or fatigue"],
+          "high": ["Nausea or strong thirst (rare, usually from high supplements)"],
+          "normal": ["Good support for bones and muscles"],
+          "general": ["Bone ache or tiredness"]
+        },
+        "doctorQuestion": "Do I need a Vitamin D supplement or just safe morning sunlight?"
+      },
+      "hi": {
+        "title": "विटामिन डी (धूप का विटामिन)",
+        "analogy": "जैसे सीमेंट को मजबूत करने में धूप मदद करती है, वैसे ही विटामिन डी कैल्शियम को हड्डियों में जोड़ता है।",
+        "whatItMeasures": "शरीर में धूप से मिलने वाले विटामिन डी की मात्रा जांचता है।",
+        "feelings": {
+          "low": ["कमर या हड्डियों में दर्द", "पैरों में थकान", "सुस्ती महसूस होना"],
+          "high": ["ज्यादा दवा लेने पर प्यास या मितली"],
+          "normal": ["हड्डियों और मांसपेशियों को अच्छा सहारा"],
+          "general": ["बदन दर्द या थकान"]
+        },
+        "doctorQuestion": "क्या मुझे विटामिन डी की खुराक या सुबह की धूप की जरूरत है?"
+      },
+      "or": {
+        "title": "ଭିଟାମିନ୍ ଡି (ସୂର୍ଯ୍ୟ କିରଣ ଭିଟାମିନ୍)",
+        "analogy": "ସିମେଣ୍ଟ ମଜବୁତ ହେବା ପରି, ଭିଟାମିନ୍ ଡି କ୍ୟାଲସିୟମ୍ କୁ ହାଡ଼ରେ ବାନ୍ଧି ଶକ୍ତ ରଖେ।",
+        "whatItMeasures": "ଶରୀରରେ ଭିଟାମିନ୍ ଡି ର ଭଣ୍ଡାର କେତେ ଅଛି ମାପେ।",
+        "feelings": {
+          "low": ["ଅଣ୍ଟା ବା ହାଡ଼ ବିନ୍ଧା", "ଗୋଡ଼ରେ ଥକାପଣ", "ଅଳସୁଆ ଲାଗିବା"],
+          "high": ["ଅଧିକ ଔଷଧ ଖାଇଲେ ଶୋଷ ବା ବାନ୍ତି ଲାଗିବା"],
+          "normal": ["ହାଡ଼ ଓ ମାଂସପେଶୀ ପାଇଁ ଭଲ ସହାୟତା"],
+          "general": ["ହାଡ଼ ବିନ୍ଧା ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ମୋତେ ଭିଟାମିନ୍ ଡି ଔଷଧ ନା ସକାଳ ଖରା ଦରକାର?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "sun", "label_en": "Sunlight / Food", "label_hi": "धूप / भोजन", "label_or": "ଖରା / ଖାଦ୍ୟ" },
+          { "icon": "drop", "label_en": "Vitamin D Reserve", "label_hi": "विटामिन डी भंडार", "label_or": "ଭିଟାମିନ୍ ଡି ଭଣ୍ଡାର" },
+          { "icon": "bone", "label_en": "Strong Bones", "label_hi": "मजबूत हड्डियां", "label_or": "ଶକ୍ତ ହାଡ଼" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Vitamin D reserve is low, so bones get less calcium support.", "hi": "विटामिन डी कम है, जिससे हड्डियों को कैल्शियम कम मिलता है।", "or": "ଭିଟାମିନ୍ ଡି କମ୍ ଥିବାରୁ ହାଡ଼କୁ କ୍ୟାଲସିୟମ୍ ସହାୟତା କମ୍ ମିଳୁଛି।" },
+          "high": { "en": "Vitamin D level is above normal, check any supplements.", "hi": "विटामिन डी सामान्य से ज्यादा है, अपनी गोलियों के बारे में पूछें।", "or": "ଭିଟାମିନ୍ ଡି ସାଧାରଣଠାରୁ ଅଧିକ ଅଛି, ଡାକ୍ତରଙ୍କୁ ପଚାରନ୍ତୁ।" },
+          "normal": { "en": "Vitamin D is helping keep your bones strong.", "hi": "विटामिन डी हड्डियों के लिए सही स्तर पर है।", "or": "ଭିଟାମିନ୍ ଡି ହାଡ଼ ପାଇଁ ସଠିକ୍ ସ୍ତରରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "vitamin_b12",
+      "kind": "test",
+      "aliases": ["vitamin b12", "b12", "cobalamin", "cyanocobalamin", "methylcobalamin"],
+      "analogyIcon": "battery_energy",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Vitamin B12 (Nerve & Blood Helper)",
+        "analogy": "Like the protective plastic cover on electric wires — Vitamin B12 keeps your nerves healthy and helps build blood cells.",
+        "whatItMeasures": "Measures your body's store of Vitamin B12.",
+        "feelings": {
+          "low": ["Tingling in hands or feet", "Tiredness or weakness", "Forgetfulness"],
+          "high": ["Usually harmless (often from vitamin tablets)"],
+          "normal": ["Nerves and blood building well"],
+          "general": ["Pins-and-needles or fatigue"]
+        },
+        "doctorQuestion": "Do I need B12 supplements or diet changes?"
+      },
+      "hi": {
+        "title": "विटामिन बी12 (नसों व खून की ताकत)",
+        "analogy": "बिजली के तार पर लगे प्लास्टिक कवर जैसा — विटामिन बी12 नसों को सुरक्षित रखता है और नया खून बनाता है।",
+        "whatItMeasures": "शरीर में विटामिन बी12 के भंडार की जांच करता है।",
+        "feelings": {
+          "low": ["हाथ-पैरों में झुनझुनी या सुन्नपन", "थकान व कमजोरी", "याददाश्त में हल्की कमी"],
+          "high": ["आमतौर पर विटामिन की गोली से होता है"],
+          "normal": ["नसें और खून का बनना सही है"],
+          "general": ["झुनझुनी या थकान"]
+        },
+        "doctorQuestion": "क्या मुझे विटामिन बी12 की दवा या खान-पान में सुधार चाहिए?"
+      },
+      "or": {
+        "title": "ଭିଟାମିନ୍ ବି୧୨ (ସ୍ନାୟୁ ଓ ରକ୍ତ ଶକ୍ତି)",
+        "analogy": "ବିଜୁଳି ତାର ଉପର ପ୍ଲାଷ୍ଟିକ୍ ଆବରଣ ପରି — ଭିଟାମିନ୍ ବି୧୨ ସ୍ନାୟୁକୁ ସୁରକ୍ଷା ଦିଏ ଏବଂ ନୂଆ ରକ୍ତ ଗଢ଼େ।",
+        "whatItMeasures": "ଶରୀରରେ ଭିଟାମିନ୍ ବି୧୨ ର ପରିମାଣ ମାପେ।",
+        "feelings": {
+          "low": ["ହାତ-ଗୋଡ଼ ଝିମଝିମ ବା କାଲୁଆ", "ଥକାପଣ ଓ ଦୁର୍ବଳତା", "ଭୁଲିଯିବା"],
+          "high": ["ସାଧାରଣତଃ ଭିଟାମିନ୍ ବଟିକାରୁ ହୋଇଥାଏ"],
+          "normal": ["ସ୍ନାୟୁ ଏବଂ ରକ୍ତ ଗଠନ ଭଲ ଅଛି"],
+          "general": ["ଝିମଝିମ ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ମୋତେ ଭିଟାମିନ୍ ବି୧୨ ବଟିକା କିମ୍ବା ଖାଦ୍ୟ ପରିବର୍ତ୍ତନ ଦରକାର କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Diet / Milk", "label_hi": "दूध / भोजन", "label_or": "ଦୁଧ / ଖାଦ୍ୟ" },
+          { "icon": "energy", "label_en": "Vitamin B12", "label_hi": "विटामिन बी12", "label_or": "ଭିଟାମିନ୍ ବି୧୨" },
+          { "icon": "shield", "label_en": "Healthy Nerves", "label_hi": "स्वस्थ नसें", "label_or": "ସୁସ୍ଥ ସ୍ନାୟୁ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": -1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "B12 stores are low, which can leave nerves feeling tingly.", "hi": "विटामिन बी12 कम है, जिससे नसों में झुनझुनी हो सकती है।", "or": "ଭିଟାମିନ୍ ବି୧୨ କମ୍ ଥିବାରୁ ସ୍ନାୟୁରେ ଝିମଝିମ ହୋଇପାରେ।" },
+          "high": { "en": "B12 level is high, commonly seen when taking supplements.", "hi": "विटामिन बी12 ज्यादा है, अक्सर सप्लीमेंट लेने से होता है।", "or": "ଭିଟାମିନ୍ ବି୧୨ ଅଧିକ ଅଛି, ସାଧାରଣତଃ ଔଷଧରୁ ହୋଇଥାଏ।" },
+          "normal": { "en": "Nerves and blood cells have plenty of B12.", "hi": "नसों और खून के लिए विटामिन बी12 सही मात्रा में है।", "or": "ସ୍ନାୟୁ ଏବଂ ରକ୍ତ ପାଇଁ ଭିଟାମିନ୍ ବି୧୨ ସଠିକ୍ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "calcium",
+      "kind": "test",
+      "aliases": ["calcium", "serum calcium", "ca", "ca++"],
+      "analogyIcon": "sun_bone",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Calcium (Bone & Muscle Mineral)",
+        "analogy": "Like bricks in a house wall — calcium builds strong bones and helps muscles squeeze smoothly.",
+        "whatItMeasures": "Measures calcium flowing in your blood.",
+        "feelings": {
+          "low": ["Muscle cramps or twitching", "Numbness around fingers"],
+          "high": ["Extra thirst", "Tiredness", "Stomach upset"],
+          "normal": ["Steady bone and muscle support"],
+          "general": ["Cramps or bone aches"]
+        },
+        "doctorQuestion": "Are my calcium and Vitamin D working well together?"
+      },
+      "hi": {
+        "title": "कैल्शियम (हड्डी व मांसपेशी खनिज)",
+        "analogy": "दीवार की मजबूत ईंटों जैसा — कैल्शियम हड्डियों को मजबूत रखता है और मांसपेशियों को काम करने में मदद करता है।",
+        "whatItMeasures": "खून में कैल्शियम की मात्रा नापता है।",
+        "feelings": {
+          "low": ["मांसपेशियों में खिंचाव या ऐंठन", "उंगलियों में सुन्नपन"],
+          "high": ["प्यास बढ़ना", "थकान", "पेट भारी लगना"],
+          "normal": ["हड्डियों और मांसपेशियों के लिए सही स्तर"],
+          "general": ["ऐंठन या हड्डी दर्द"]
+        },
+        "doctorQuestion": "क्या मेरा कैल्शियम और विटामिन डी दोनों सही संतुलन में हैं?"
+      },
+      "or": {
+        "title": "କ୍ୟାଲସିୟମ୍ (ହାଡ଼ ଓ ମାଂସପେଶୀ ଖଣିଜ)",
+        "analogy": "ଘର କାନ୍ଥର ଇଟା ପରି — କ୍ୟାଲସିୟମ୍ ହାଡ଼କୁ ମଜବୁତ ରଖେ ଏବଂ ମାଂସପେଶୀକୁ କାମ କରିବାରେ ସାହାଯ୍ୟ କରେ।",
+        "whatItMeasures": "ରକ୍ତରେ କ୍ୟାଲସିୟମ୍ ର ସ୍ତର ମାପେ।",
+        "feelings": {
+          "low": ["ମାଂସପେଶୀ ଟାଣିବା ବା କମ୍ପିବା", "ଆଙ୍ଗୁଠି କାଲୁଆ ଲାଗିବା"],
+          "high": ["ଅଧିକ ଶୋଷ", "ଥକାପଣ", "ପେଟ ଅସ୍ୱସ୍ତି"],
+          "normal": ["ହାଡ଼ ଓ ମାଂସପେଶୀ ପାଇଁ ସୁସ୍ଥ ସନ୍ତୁଳନ"],
+          "general": ["ମାଂସପେଶୀ ଟାଣିବା ବା ହାଡ଼ ଦରଜ"]
+        },
+        "doctorQuestion": "ମୋର କ୍ୟାଲସିୟମ୍ ଏବଂ ଭିଟାମିନ୍ ଡି ସନ୍ତୁଳିତ ଅଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Milk / Greens", "label_hi": "दूध / हरी सब्जी", "label_or": "ଦୁଧ / ଶାଗ" },
+          { "icon": "sun", "label_en": "Vitamin D Helps", "label_hi": "विटामिन डी मदद", "label_or": "ଭିଟାମିନ୍ ଡି ସାହାଯ୍ୟ" },
+          { "icon": "bone", "label_en": "Bones & Muscles", "label_hi": "हड्डी व मांसपेशी", "label_or": "ହାଡ଼ ଓ ମାଂସପେଶୀ" }
+        ],
+        "highlightIndexByStatus": { "low": 2, "high": 2, "critical": 2, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Blood calcium is slightly low.", "hi": "खून में कैल्शियम थोड़ा कम है।", "or": "ରକ୍ତରେ କ୍ୟାଲସିୟମ୍ ଟିକେ କମ୍ ଅଛି।" },
+          "high": { "en": "Blood calcium is higher than the usual range.", "hi": "खून में कैल्शियम सामान्य से ज्यादा है।", "or": "ରକ୍ତରେ କ୍ୟାଲସିୟମ୍ ସାଧାରଣଠାରୁ ଅଧିକ ଅଛି।" },
+          "normal": { "en": "Calcium levels are steady and healthy.", "hi": "कैल्शियम बिल्कुल सामान्य है।", "or": "କ୍ୟାଲସିୟମ୍ ସ୍ତର ସୁସ୍ଥ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "iron",
+      "kind": "test",
+      "aliases": ["iron", "serum iron", "fe", "tibc"],
+      "analogyIcon": "oxygen_truck",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Serum Iron (Blood Building Material)",
+        "analogy": "Iron is the steel used to build hemoglobin trucks that carry oxygen.",
+        "whatItMeasures": "Measures the iron currently circulating in your blood.",
+        "feelings": {
+          "low": ["Fatigue", "Feeling weak", "Pale nails or eyelids"],
+          "high": ["Usually needs checking with ferritin"],
+          "normal": ["Good building material for blood"],
+          "general": ["Tiredness or low stamina"]
+        },
+        "doctorQuestion": "Should we check ferritin (iron storage) along with serum iron?"
+      },
+      "hi": {
+        "title": "सीरम आयरन (खून बनाने का लोहा)",
+        "analogy": "आयरन वह मजबूत सामग्री है जिससे शरीर ऑक्सीजन ढोने वाले हीमोग्लोबिन ट्रक बनाता है।",
+        "whatItMeasures": "खून में बह रहे आयरन की मात्रा नापता है।",
+        "feelings": {
+          "low": ["थकान", "कमजोरी", "नाखून या आंख के नीचे फीकापन"],
+          "high": ["फेरिटिन के साथ मिलाकर देखा जाता है"],
+          "normal": ["खून बनाने के लिए आयरन पर्याप्त है"],
+          "general": ["थकान या कम ताकत"]
+        },
+        "doctorQuestion": "क्या आयरन के साथ फेरिटिन (भंडार) की जांच भी जरूरी है?"
+      },
+      "or": {
+        "title": "ସିରମ୍ ଆଇରନ୍ (ରକ୍ତ ତିଆରି ଉପାଦାନ)",
+        "analogy": "ଆଇରନ୍ ହେଉଛି ସେହି ସାମଗ୍ରୀ ଯାହା ଦ୍ୱାରା ଶରୀର ଅମ୍ଳଜାନ ବୋହିବା ହିମୋଗ୍ଲୋବିନ୍ ଟ୍ରକ୍ ଗଢ଼େ।",
+        "whatItMeasures": "ରକ୍ତରେ ପ୍ରବାହିତ ଆଇରନ୍ ର ପରିମାଣ ମାପେ।",
+        "feelings": {
+          "low": ["ଥକାପଣ", "ଦୁର୍ବଳତା", "ନଖ ବା ଆଖି ତଳ ଫିକା ଦିଶିବା"],
+          "high": ["ଫେରିଟିନ୍ ସହିତ ମିଶାଇ ଦେଖାଯାଏ"],
+          "normal": ["ରକ୍ତ ଗଢ଼ିବା ପାଇଁ ଯଥେଷ୍ଟ ଆଇରନ୍ ଅଛି"],
+          "general": ["ଥକାପଣ ବା କମ୍ ଶକ୍ତି"]
+        },
+        "doctorQuestion": "ଆଇରନ୍ ସହିତ ଫେରିଟିନ୍ (ଭଣ୍ଡାର) ପରୀକ୍ଷା କରିବା ଉଚିତ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Iron Food", "label_hi": "आयरन भोजन", "label_or": "ଆଇରନ୍ ଖାଦ୍ୟ" },
+          { "icon": "drop", "label_en": "Blood Iron", "label_hi": "खून में आयरन", "label_or": "ରକ୍ତରେ ଆଇରନ୍" },
+          { "icon": "truck", "label_en": "Builds Hemoglobin", "label_hi": "हीमोग्लोबिन निर्माण", "label_or": "ହିମୋଗ୍ଲୋବିନ୍ ଗଠନ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Less iron is available to build fresh hemoglobin.", "hi": "नया हीमोग्लोबिन बनाने के लिए आयरन कम है।", "or": "ନୂଆ ହିମୋଗ୍ଲୋବିନ୍ ଗଢ଼ିବା ପାଇଁ ଆଇରନ୍ କମ୍ ଅଛି।" },
+          "high": { "en": "Blood iron is higher than usual.", "hi": "खून में आयरन सामान्य से ज्यादा है।", "or": "ରକ୍ତରେ ଆଇରନ୍ ସାଧାରଣଠାରୁ ଅଧିକ ଅଛି।" },
+          "normal": { "en": "Iron supply for making blood is steady.", "hi": "खून बनाने के लिए आयरन सही है।", "or": "ରକ୍ତ ଗଢ଼ିବା ପାଇଁ ଆଇରନ୍ ସଠିକ୍ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "ferritin",
+      "kind": "test",
+      "aliases": ["ferritin", "serum ferritin"],
+      "analogyIcon": "oxygen_truck",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Ferritin (Iron Storehouse)",
+        "analogy": "Like your home's grain sack — ferritin shows how much extra iron is stored in reserve for later.",
+        "whatItMeasures": "Measures your body's stored iron reserve.",
+        "feelings": {
+          "low": ["Fatigue even before anemia shows", "Hair thinning", "Short breath"],
+          "high": ["Can rise during body swelling or liver strain"],
+          "normal": ["Iron storehouse is well stocked"],
+          "general": ["Low energy or hair fall"]
+        },
+        "doctorQuestion": "Is my iron storehouse full enough or should I rebuild it?"
+      },
+      "hi": {
+        "title": "फेरिटिन (आयरन का गोदाम)",
+        "analogy": "घर में रखे अनाज के बोरे जैसा — फेरिटिन बताता है कि शरीर में आगे के लिए कितना आयरन जमा है।",
+        "whatItMeasures": "शरीर में जमा आयरन के भंडार की जांच करता है।",
+        "feelings": {
+          "low": ["जल्दी थकान", "बाल झड़ना", "सांस फूलना"],
+          "high": ["शरीर में सूजन होने पर भी बढ़ सकता है"],
+          "normal": ["आयरन का भंडार अच्छी तरह भरा है"],
+          "general": ["कम ऊर्जा या बाल झड़ना"]
+        },
+        "doctorQuestion": "क्या आयरन का भंडार बढ़ाने के लिए मुझे कोई मदद लेनी चाहिए?"
+      },
+      "or": {
+        "title": "ଫେରିଟିନ୍ (ଆଇରନ୍ ଭଣ୍ଡାର)",
+        "analogy": "ଘରେ ସାଇତା ଧାନ ଅଖା ପରି — ଫେରିଟିନ୍ ଦେଖାଏ ଭବିଷ୍ୟତ ପାଇଁ ଶରୀରରେ କେତେ ଆଇରନ୍ ଜମା ଅଛି।",
+        "whatItMeasures": "ଶରୀରରେ ଜମା ଥିବା ଆଇରନ୍ ଭଣ୍ଡାର ମାପେ।",
+        "feelings": {
+          "low": ["ଶୀଘ୍ର ଥକାପଣ", "ଚୁଟି ଝଡ଼ିବା", "ଶ୍ୱାସ ଫୁଲିବା"],
+          "high": ["ଶରୀରରେ ଫୁଲା ଥିଲେ ମଧ୍ୟ ବଢ଼ିପାରେ"],
+          "normal": ["ଆଇରନ୍ ଭଣ୍ଡାର ଭଲ ଭାବେ ପୂର୍ଣ୍ଣ ଅଛି"],
+          "general": ["କମ୍ ଶକ୍ତି ବା ଚୁଟି ଝଡ଼ିବା"]
+        },
+        "doctorQuestion": "ମୋର ଆଇରନ୍ ଭଣ୍ଡାର ପୂରଣ କରିବା ପାଇଁ କିଛି ପଦକ୍ଷେପ ଦରକାର କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Iron Intake", "label_hi": "आयरन खुराक", "label_or": "ଆଇରନ୍ ଗ୍ରହଣ" },
+          { "icon": "liver", "label_en": "Ferritin Store", "label_hi": "फेरिटिन भंडार", "label_or": "ଫେରିଟିନ୍ ଭଣ୍ଡାର" },
+          { "icon": "truck", "label_en": "Ready for Blood", "label_hi": "खून के लिए तैयार", "label_or": "ରକ୍ତ ପାଇଁ ପ୍ରସ୍ତୁତ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "The iron storehouse is running low.", "hi": "शरीर में जमा आयरन का भंडार कम हो रहा है।", "or": "ଶରୀରର ଆଇରନ୍ ଭଣ୍ଡାର କମିଯାଉଛି।" },
+          "high": { "en": "Ferritin is high; doctors check if it is extra iron or body swelling.", "hi": "फेरिटिन बढ़ा है, डॉक्टर सूजन या अतिरिक्त आयरन की जांच करते हैं।", "or": "ଫେରିଟିନ୍ ବଢ଼ିଛି, ଡାକ୍ତର ପ୍ରଦାହ ବା ଅଧିକ ଆଇରନ୍ ଦେଖନ୍ତି।" },
+          "normal": { "en": "Your iron storehouse has a healthy reserve.", "hi": "आयरन का भंडार स्वस्थ स्तर पर है।", "or": "ଆଇରନ୍ ଭଣ୍ଡାର ସୁସ୍ଥ ସ୍ତରରେ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "crp",
+      "kind": "test",
+      "aliases": ["crp", "c-reactive protein", "c reactive protein", "hs-crp", "hscrp"],
+      "analogyIcon": "soldier_shield",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "CRP (Active Swelling Alarm)",
+        "analogy": "Like a quick alarm bell that rings whenever the body is actively fighting infection or swelling.",
+        "whatItMeasures": "Measures a liver protein that rises quickly during active inflammation.",
+        "feelings": {
+          "low": ["Calm body, no active alarm"],
+          "high": ["Fever or chills", "Pain or swelling", "Feeling unwell"],
+          "normal": ["No active swelling alarm"],
+          "general": ["Fever, pain, or tiredness"]
+        },
+        "doctorQuestion": "Does this CRP show an active infection or healing inflammation?"
+      },
+      "hi": {
+        "title": "सीआरपी (सूजन की घंटी)",
+        "analogy": "यह तुरंत बजने वाली घंटी जैसा है जो बताती है कि शरीर अभी किसी संक्रमण या सूजन से लड़ रहा है।",
+        "whatItMeasures": "शरीर में सक्रिय सूजन या संक्रमण के स्तर को नापता है।",
+        "feelings": {
+          "low": ["शरीर शांत है"],
+          "high": ["बुखार या ठंड लगना", "कहीं दर्द या सूजन", "तबीयत भारी लगना"],
+          "normal": ["सक्रिय सूजन का कोई संकेत नहीं"],
+          "general": ["बुखार या दर्द"]
+        },
+        "doctorQuestion": "क्या यह सीआरपी सक्रिय संक्रमण दिखा रहा है?"
+      },
+      "or": {
+        "title": "ସିଆରପି (ସକ୍ରିୟ ପ୍ରଦାହ ଘଣ୍ଟି)",
+        "analogy": "ଶରୀର କୌଣସି ସଂକ୍ରମଣ ବା ଫୁଲା ସହ ଲଢ଼ୁଥିଲେ ଏହା ତୁରନ୍ତ ସତର୍କ ଘଣ୍ଟି ପରି ସୂଚନା ଦିଏ।",
+        "whatItMeasures": "ଶରୀରରେ ସକ୍ରିୟ ପ୍ରଦାହ ବା ସଂକ୍ରମଣ ସ୍ତର ମାପେ।",
+        "feelings": {
+          "low": ["ଶରୀର ଶାନ୍ତ ଅଛି"],
+          "high": ["ଜ୍ୱର ବା ଶୀତ", "ଦରଜ ବା ଫୁଲା", "ଅସୁସ୍ଥ ଲାଗିବା"],
+          "normal": ["କୌଣସି ସକ୍ରିୟ ପ୍ରଦାହ ସଙ୍କେତ ନାହିଁ"],
+          "general": ["ଜ୍ୱର ବା ଦରଜ"]
+        },
+        "doctorQuestion": "ଏହି ସିଆରପି ସକ୍ରିୟ ସଂକ୍ରମଣ ସୂଚାଉଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "shield", "label_en": "Infection / Injury", "label_hi": "संक्रमण / चोट", "label_or": "ସଂକ୍ରମଣ / ଆଘାତ" },
+          { "icon": "liver", "label_en": "Liver Sends CRP", "label_hi": "लिवर से सीआरपी", "label_or": "ଲିଭର ରୁ ସିଆରପି" },
+          { "icon": "lab", "label_en": "Alert Rises", "label_hi": "अलर्ट स्तर", "label_or": "ସତର୍କ ସ୍ତର" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 2, "critical": 2, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "No active swelling signal.", "hi": "सूजन का कोई संकेत नहीं।", "or": "କୌଣସି ପ୍ରଦାହ ସଙ୍କେତ ନାହିଁ।" },
+          "high": { "en": "Active swelling or infection alarm is raised.", "hi": "सक्रिय सूजन या संक्रमण की घंटी बजी हुई है।", "or": "ସକ୍ରିୟ ପ୍ରଦାହ ବା ସଂକ୍ରମଣ ଘଣ୍ଟି ବାଜୁଛି।" },
+          "normal": { "en": "CRP is calm and normal.", "hi": "सीआरपी सामान्य और शांत है।", "or": "ସିଆରପି ସ୍ୱାଭାବିକ ଏବଂ ଶାନ୍ତ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "urine_routine",
+      "kind": "test",
+      "aliases": ["urine", "pus cells", "urine sugar", "urine protein", "urine albumin", "urine routine", "urinalysis"],
+      "analogyIcon": "water_filter",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Urine Check",
+        "analogy": "Like checking rainwater from a roof pipe — urine shows if the bladder path is clean and if kidneys are holding onto sugar and protein.",
+        "whatItMeasures": "Checks urine for infection cells, sugar, protein, and hydration.",
+        "feelings": {
+          "low": ["Clear and calm"],
+          "high": ["Burning while passing urine", "Frequent urge to urinate", "Lower belly discomfort"],
+          "normal": ["Urinary path is clean"],
+          "general": ["Burning or frequent urine"]
+        },
+        "doctorQuestion": "Do I need a urine culture or extra water intake?"
+      },
+      "hi": {
+        "title": "पेशाब जांच (यूरिन टेस्ट)",
+        "analogy": "पेशाब की जांच दिखाती है कि पेशाब का रास्ता साफ है या उसमें कोई संक्रमण, शुगर या प्रोटीन बाहर निकल रहा है।",
+        "whatItMeasures": "पेशाब में संक्रमण के कण, शुगर और प्रोटीन की जांच करता है।",
+        "feelings": {
+          "low": ["बिल्कुल साफ"],
+          "high": ["पेशाब में जलन", "बार-बार पेशाब लगना", "पेट के निचले हिस्से में भारीपन"],
+          "normal": ["पेशाब का रास्ता साफ है"],
+          "general": ["जलन या बार-बार पेशाब"]
+        },
+        "doctorQuestion": "क्या मुझे यूरिन कल्चर कराना चाहिए या ज्यादा पानी पीना चाहिए?"
+      },
+      "or": {
+        "title": "ପରିସ୍ରା ପରୀକ୍ଷା (ୟୁରିନ୍ ଟେଷ୍ଟ)",
+        "analogy": "ଏହା ଦେଖାଏ ଯେ ପରିସ୍ରା ବାଟ ସଫା ଅଛି କିମ୍ବା ସେଥିରେ ସଂକ୍ରମଣ, ଶର୍କରା କିମ୍ବା ପ୍ରୋଟିନ୍ ବାହାରୁଛି।",
+        "whatItMeasures": "ପରିସ୍ରାରେ ସଂକ୍ରମଣ କଣିକା, ଶର୍କରା ଏବଂ ପ୍ରୋଟିନ୍ ଯାଞ୍ଚ କରେ।",
+        "feelings": {
+          "low": ["ସମ୍ପୂର୍ଣ୍ଣ ସଫା"],
+          "high": ["ପରିସ୍ରାରେ ଜ୍ୱାଳା", "ବାରମ୍ବାର ପରିସ୍ରା ଲାଗିବା", "ତଳ ପେଟରେ ଅସ୍ୱସ୍ତି"],
+          "normal": ["ମୂତ୍ର ବାଟ ସଫା ଅଛି"],
+          "general": ["ଜ୍ୱାଳା ବା ବାରମ୍ବାର ପରିସ୍ରା"]
+        },
+        "doctorQuestion": "ମୋତେ ୟୁରିନ୍ କଲଚର କରିବା ଉଚିତ ନା ଅଧିକ ପାଣି ପିଇବା ଦରକାର?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "filter", "label_en": "Kidneys Filter", "label_hi": "किडनी छानती है", "label_or": "କିଡନୀ ଛାଣେ" },
+          { "icon": "drop", "label_en": "Bladder Path", "label_hi": "पेशाब मार्ग", "label_or": "ପରିସ୍ରା ବାଟ" },
+          { "icon": "lab", "label_en": "Urine Sample", "label_hi": "जांच सैंपल", "label_or": "ପରିସ୍ରା ନମୁନା" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Urine check looks clear.", "hi": "पेशाब जांच साफ है।", "or": "ପରିସ୍ରା ପରୀକ୍ଷା ସଫା ଅଛି।" },
+          "high": { "en": "Something extra (cells, protein, or sugar) appeared in the urine path.", "hi": "पेशाब में कुछ अतिरिक्त कण, शुगर या प्रोटीन दिखा है।", "or": "ପରିସ୍ରାରେ ଅଧିକ କଣିକା, ଶର୍କରା ବା ପ୍ରୋଟିନ୍ ଦେଖାଯାଇଛି।" },
+          "normal": { "en": "Urine check is clean and healthy.", "hi": "पेशाब की जांच सामान्य है।", "or": "ପରିସ୍ରା ପରୀକ୍ଷା ସ୍ୱାଭାବିକ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "ecg_troponin",
+      "kind": "test",
+      "aliases": ["troponin", "trop i", "trop t", "cpk", "ck-mb", "nt-probnp", "bnp"],
+      "analogyIcon": "heart_pump",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Heart Muscle Marker",
+        "analogy": "Like checking the walls of a busy water pump — when heart muscle feels sudden strain, this marker rises in blood.",
+        "whatItMeasures": "Checks if the heart muscle has recently felt heavy strain.",
+        "feelings": {
+          "low": ["Heart muscle looks calm"],
+          "high": ["Chest tightness or pain", "Shortness of breath", "Sweating or dizziness"],
+          "normal": ["No sign of recent heart muscle strain"],
+          "general": ["Chest discomfort or breathlessness"]
+        },
+        "doctorQuestion": "Should a doctor review this heart marker right away?"
+      },
+      "hi": {
+        "title": "दिल की मांसपेशी जांच",
+        "analogy": "पानी के पंप की दीवार जांचने जैसा — जब दिल की मांसपेशी पर अचानक भारी दबाव पड़ता है, तो यह तत्व खून में दिखता है।",
+        "whatItMeasures": "देखता है कि दिल की मांसपेशी पर हाल में कोई दबाव तो नहीं पड़ा।",
+        "feelings": {
+          "low": ["दिल की मांसपेशी शांत है"],
+          "high": ["सीने में जकड़न या दर्द", "सांस फूलना", "पसीना या चक्कर"],
+          "normal": ["दिल की मांसपेशी पर हालिया दबाव नहीं"],
+          "general": ["सीने में भारीपन या सांस फूलना"]
+        },
+        "doctorQuestion": "क्या मुझे यह दिल की रिपोर्ट तुरंत डॉक्टर को दिखानी चाहिए?"
+      },
+      "or": {
+        "title": "ହୃଦୟ ମାଂସପେଶୀ ପରୀକ୍ଷା",
+        "analogy": "ପାଣି ପମ୍ପ ର କାନ୍ଥ ଯାଞ୍ଚ କରିବା ପରି — ହୃଦୟ ମାଂସପେଶୀରେ ହଠାତ୍ ଚାପ ପଡ଼ିଲେ ଏହା ରକ୍ତରେ ଦେଖାଯାଏ।",
+        "whatItMeasures": "ହୃଦୟ ମାଂସପେଶୀରେ କୌଣସି ଚାପ ପଡ଼ିଛି କି ନାହିଁ ଯାଞ୍ଚ କରେ।",
+        "feelings": {
+          "low": ["ହୃଦୟ ମାଂସପେଶୀ ଶାନ୍ତ ଅଛି"],
+          "high": ["ଛାତିରେ ଯନ୍ତ୍ରଣା ବା ଟାଣ ଲାଗିବା", "ନିଶ୍ୱାସ ଫୁଲିବା", "ଝାଳ ବା ମୁଣ୍ଡ ବୁଲାଇବା"],
+          "normal": ["ହୃଦୟ ମାଂସପେଶୀରେ କୌଣସି ଚାପ ନାହିଁ"],
+          "general": ["ଛାତିରେ ଅସ୍ୱସ୍ତି ବା ନିଶ୍ୱାସ କଷ୍ଟ"]
+        },
+        "doctorQuestion": "ମୁଁ ଏହି ହୃଦୟ ପରୀକ୍ଷା ତୁରନ୍ତ ଡାକ୍ତରଙ୍କୁ ଦେଖାଇବା ଉଚିତ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "heart", "label_en": "Heart Muscle", "label_hi": "दिल की मांसपेशी", "label_or": "ହୃଦୟ ମାଂସପେଶୀ" },
+          { "icon": "drop", "label_en": "Blood Marker", "label_hi": "खून में संकेत", "label_or": "ରକ୍ତରେ ସଙ୍କେତ" },
+          { "icon": "check", "label_en": "Doctor Check", "label_hi": "डॉक्टर जांच", "label_or": "ଡାକ୍ତରୀ ଯାଞ୍ଚ" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 0, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Heart muscle shows no strain.", "hi": "दिल की मांसपेशी शांत है।", "or": "ହୃଦୟ ମାଂସପେଶୀ ଶାନ୍ତ ଅଛି।" },
+          "high": { "en": "Heart muscle shows strain — please see a doctor promptly.", "hi": "दिल की मांसपेशी पर दबाव दिखा है, तुरंत डॉक्टर से मिलें।", "or": "ହୃଦୟ ମାଂସପେଶୀରେ ଚାପ ଦେଖାଯାଇଛି, ତୁରନ୍ତ ଡାକ୍ତରଙ୍କୁ ଦେଖାନ୍ତୁ।" },
+          "normal": { "en": "Heart muscle marker is calm and normal.", "hi": "दिल की मांसपेशी की जांच सामान्य है।", "or": "ହୃଦୟ ମାଂସପେଶୀ ପରୀକ୍ଷା ସ୍ୱାଭାବିକ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "insulin",
+      "kind": "test",
+      "aliases": ["insulin", "fasting insulin", "serum insulin"],
+      "analogyIcon": "key_lock",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Insulin (Sugar Key)",
+        "analogy": "Insulin is the key made by your pancreas that unlocks body cells so sugar can enter for energy.",
+        "whatItMeasures": "Measures how much insulin key is circulating in your blood.",
+        "feelings": {
+          "low": ["Thirst", "Weight loss", "Tiredness"],
+          "high": ["Sleepiness after meals", "Cravings or weight gain"],
+          "normal": ["Sugar keys working smoothly"],
+          "general": ["Energy dips after meals"]
+        },
+        "doctorQuestion": "Are my insulin and blood sugar balanced together?"
+      },
+      "hi": {
+        "title": "इंसुलिन (शुगर की चाबी)",
+        "analogy": "इंसुलिन पैंक्रियास से बनने वाली वह चाबी है जो शरीर के कमरों को खोलकर शुगर को अंदर भेजती है।",
+        "whatItMeasures": "खून में मौजूद इंसुलिन की मात्रा नापता है।",
+        "feelings": {
+          "low": ["प्यास लगना", "वजन घटना", "थकान"],
+          "high": ["खाने के बाद नींद आना", "वजन बढ़ना"],
+          "normal": ["शुगर की चाबी सही काम कर रही है"],
+          "general": ["खाने के बाद सुस्ती"]
+        },
+        "doctorQuestion": "क्या मेरा इंसुलिन और ब्लड शुगर दोनों संतुलित हैं?"
+      },
+      "or": {
+        "title": "ଇନସୁଲିନ୍ (ଶର୍କରାର ଚାବି)",
+        "analogy": "ଇନସୁଲିନ୍ ହେଉଛି ପ୍ୟାନକ୍ରିଆସ୍ ତିଆରି କରୁଥିବା ଚାବି ଯାହା କୋଷର ତାଲା ଖୋଲି ଶର୍କରାକୁ ଭିତରକୁ ପଠାଏ।",
+        "whatItMeasures": "ରକ୍ତରେ ପ୍ରବାହିତ ଇନସୁଲିନ୍ ପରିମାଣ ମାପେ।",
+        "feelings": {
+          "low": ["ଶୋଷ ଲାଗିବା", "ଓଜନ କମିବା", "ଥକାପଣ"],
+          "high": ["ଖାଇବା ପରେ ନିଦ ଲାଗିବା", "ଓଜନ ବଢ଼ିବା"],
+          "normal": ["ଶର୍କରା ଚାବି ଭଲ କାମ କରୁଛି"],
+          "general": ["ଖାଇବା ପରେ ଅଳସୁଆ"]
+        },
+        "doctorQuestion": "ମୋର ଇନସୁଲିନ୍ ଏବଂ ରକ୍ତ ଶର୍କରା ସନ୍ତୁଳିତ ଅଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Blood Sugar", "label_hi": "खून की शुगर", "label_or": "ରକ୍ତ ଶର୍କରା" },
+          { "icon": "key", "label_en": "Insulin Key", "label_hi": "इंसुलिन चाबी", "label_or": "ଇନସୁଲିନ୍ ଚାବି" },
+          { "icon": "energy", "label_en": "Enters Cells", "label_hi": "अंदर ऊर्जा", "label_or": "ଭିତରେ ଶକ୍ତି" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Body is making less insulin key than usual.", "hi": "शरीर सामान्य से कम इंसुलिन बना रहा है।", "or": "ଶରୀର ସାଧାରଣଠାରୁ କମ୍ ଇନସୁଲିନ୍ ତିଆରି କରୁଛି।" },
+          "high": { "en": "Body is making extra insulin keys to push sugar into cells.", "hi": "शुगर अंदर भेजने के लिए शरीर ज्यादा इंसुलिन बना रहा है।", "or": "ଶର୍କରା ଭିତରକୁ ପଠାଇବାକୁ ଶରୀର ଅଧିକ ଇନସୁଲିନ୍ ତିଆରି କରୁଛି।" },
+          "normal": { "en": "Insulin keys are opening cells smoothly.", "hi": "इंसुलिन चाबी सही काम कर रही है।", "or": "ଇନସୁଲିନ୍ ଚାବି ସଠିକ୍ ଭାବେ କାମ କରୁଛି।" }
+        }
+      }
+    },
+    {
+      "id": "thyroid",
+      "kind": "organ",
+      "aliases": ["thyroid", "neck / thyroid", "thyroid gland"],
+      "analogyIcon": "bike_throttle",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Thyroid Gland",
+        "analogy": "A small butterfly-shaped gland in the front of your neck — it acts like your body's bike accelerator, setting your daily speed.",
+        "whatItMeasures": "Controls energy, warmth, heartbeat pace, and weight balance.",
+        "feelings": {
+          "low": ["Tiredness", "Feeling cold", "Weight creeping up"],
+          "high": ["Fast heartbeat", "Feeling warm or sweaty", "Weight dropping"],
+          "normal": ["Steady daily speed and warmth"],
+          "general": ["Tiredness, weight shift, or feeling too hot/cold"]
+        },
+        "doctorQuestion": "Are my thyroid hormones at the right pace for my body?"
+      },
+      "hi": {
+        "title": "थायरॉइड ग्रंथि",
+        "analogy": "गले के आगे तितली जैसी एक छोटी ग्रंथि — यह शरीर की बाइक के एक्सीलेटर जैसी है जो आपकी रफ्तार तय करती है।",
+        "whatItMeasures": "शरीर की ऊर्जा, तापमान, धड़कन और वजन का संतुलन संभालती है।",
+        "feelings": {
+          "low": ["थकान लगना", "ठंड लगना", "वजन बढ़ना"],
+          "high": ["तेज धड़कन", "गर्मी व पसीना", "वजन घटना"],
+          "normal": ["शरीर की रफ्तार संतुलित है"],
+          "general": ["ऊर्जा, वजन या गर्मी-ठंड में बदलाव"]
+        },
+        "doctorQuestion": "क्या मेरा थायरॉइड सही रफ्तार से काम कर रहा है?"
+      },
+      "or": {
+        "title": "ଥାଇରଏଡ୍ ଗ୍ରନ୍ଥି",
+        "analogy": "ବେକ ଆଗରେ ଥିବା ପ୍ରଜାପତି ଆକାରର ଛୋଟ ଗ୍ରନ୍ଥି — ଏହା ଶରୀରର ବାଇକ୍ ଆକ୍ସିଲେଟର ପରି ଗତି ନିୟନ୍ତ୍ରଣ କରେ।",
+        "whatItMeasures": "ଶରୀରର ଶକ୍ତି, ତାପମାତ୍ରା, ହୃଦସ୍ପନ୍ଦନ ଏବଂ ଓଜନ ନିୟନ୍ତ୍ରଣ କରେ।",
+        "feelings": {
+          "low": ["ଥକାପଣ", "ଶୀତ ଲାଗିବା", "ଓଜନ ବଢ଼ିବା"],
+          "high": ["ଦ୍ରୁତ ହୃଦସ୍ପନ୍ଦନ", "ଗରମ ବା ଝାଳ", "ଓଜନ କମିବା"],
+          "normal": ["ଶରୀରର ଗତି ସନ୍ତୁଳିତ ଅଛି"],
+          "general": ["ଶକ୍ତି, ଓଜନ ବା ଗରମ-ଶୀତ ପରିବର୍ତ୍ତନ"]
+        },
+        "doctorQuestion": "ମୋର ଥାଇରଏଡ୍ ସଠିକ୍ ବେଗରେ କାମ କରୁଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "head", "label_en": "Brain Signal", "label_hi": "दिमाग संकेत", "label_or": "ମସ୍ତିଷ୍କ ସଙ୍କେତ" },
+          { "icon": "throttle", "label_en": "Thyroid Pace", "label_hi": "थायरॉइड गति", "label_or": "ଥାଇରଏଡ୍ ଗତି" },
+          { "icon": "energy", "label_en": "Daily Energy", "label_hi": "दैनिक ऊर्जा", "label_or": "ଦୈନିକ ଶକ୍ତି" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "The thyroid is running a bit slower than usual.", "hi": "थायरॉइड थोड़ा धीमा चल रहा है।", "or": "ଥାଇରଏଡ୍ ଟିକେ ଧୀର ଚାଲୁଛି।" },
+          "high": { "en": "The thyroid accelerator is pressed a bit hard right now.", "hi": "थायरॉइड का एक्सीलेटर अभी थोड़ा ज्यादा दबा हुआ है।", "or": "ଥାଇରଏଡ୍ ର ଆକ୍ସିଲେଟର ଏବେ ଟିକେ ଅଧିକ ଦବା ଅଛି।" },
+          "normal": { "en": "The thyroid is running at a calm, steady pace.", "hi": "थायरॉइड शांत और संतुलित रफ्तार से चल रहा है।", "or": "ଥାଇରଏଡ୍ ଶାନ୍ତ ଏବଂ ସ୍ଥିର ଗତିରେ ଚାଲୁଛି।" }
+        }
+      }
+    },
+    {
+      "id": "kidney",
+      "kind": "organ",
+      "aliases": ["kidney", "kidneys", "renal", "गुर्दे", "किडनी"],
+      "analogyIcon": "water_filter",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Kidneys",
+        "analogy": "Two bean-shaped water filters in your lower back that clean waste from your blood every hour and balance body water.",
+        "whatItMeasures": "Keeps blood clean, balances salts, and sends waste out as urine.",
+        "feelings": {
+          "low": ["Usually quiet"],
+          "high": ["Ankle or foot swelling", "Changes in urine", "Tiredness"],
+          "normal": ["Clean filtering and water balance"],
+          "general": ["Foot puffiness or urine changes"]
+        },
+        "doctorQuestion": "Are my kidney filter tests healthy for my age?"
+      },
+      "hi": {
+        "title": "गुर्दे (किडनी)",
+        "analogy": "कमर के पीछे दो सेम जैसे पानी के फिल्टर, जो हर घंटे खून की गंदगी साफ करते हैं और पानी संतुलित रखते हैं।",
+        "whatItMeasures": "खून साफ रखना, नमक संतुलित करना और कचरा पेशाब से बाहर निकालना।",
+        "feelings": {
+          "low": ["आमतौर पर शांत"],
+          "high": ["टखनों या पैरों में सूजन", "पेशाब में बदलाव", "थकान"],
+          "normal": ["किडनी साफ काम कर रही है"],
+          "general": ["पैरों में सूजन या थकान"]
+        },
+        "doctorQuestion": "मेरी उम्र के अनुसार मेरी किडनी फिल्टर जांच कैसी है?"
+      },
+      "or": {
+        "title": "କିଡନୀ (ବୃକ୍କ)",
+        "analogy": "ପିଠି ତଳେ ଥିବା ଦୁଇଟି ପାଣି ଫିଲ୍ଟର ପରି ଅଙ୍ଗ, ଯାହା ପ୍ରତି ଘଣ୍ଟାରେ ରକ୍ତରୁ ବର୍ଜ୍ୟ ସଫା କରେ।",
+        "whatItMeasures": "ରକ୍ତ ସଫା ରଖିବା, ଲୁଣ ସନ୍ତୁଳନ ଏବଂ ପରିସ୍ରା ବାଟେ ବର୍ଜ୍ୟ ବାହାର କରିବା।",
+        "feelings": {
+          "low": ["ସାଧାରଣତଃ ଶାନ୍ତ"],
+          "high": ["ଗୋଇଠି ବା ପାଦ ଫୁଲିବା", "ପରିସ୍ରାରେ ପରିବର୍ତ୍ତନ", "ଥକାପଣ"],
+          "normal": ["କିଡନୀ ସଫା ଭାବେ କାମ କରୁଛି"],
+          "general": ["ପାଦ ଫୁଲା ବା ଥକାପଣ"]
+        },
+        "doctorQuestion": "ମୋ ବୟସ ଅନୁସାରେ ମୋ କିଡନୀ ଫିଲ୍ଟର ପରୀକ୍ଷା କିପରି ଅଛି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "drop", "label_en": "Blood With Waste", "label_hi": "गंदगी वाला खून", "label_or": "ବର୍ଜ୍ୟଯୁକ୍ତ ରକ୍ତ" },
+          { "icon": "filter", "label_en": "Kidney Filters", "label_hi": "किडनी फिल्टर", "label_or": "କିଡନୀ ଫିଲ୍ଟର" },
+          { "icon": "check", "label_en": "Clean Blood Kept", "label_hi": "साफ खून शरीर में", "label_or": "ସଫା ରକ୍ତ ଶରୀରରେ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Kidney filtering shows a slight change to discuss.", "hi": "किडनी के काम में हल्का बदलाव दिखा है।", "or": "କିଡନୀ କାମରେ ସାମାନ୍ୟ ପରିବର୍ତ୍ତନ ଦେଖାଯାଇଛି।" },
+          "high": { "en": "Kidney filters are working harder or clearing waste slower.", "hi": "किडनी फिल्टर अभी थोड़ा धीरे सफाई कर रहे हैं।", "or": "କିଡନୀ ଫିଲ୍ଟର ଏବେ ଟିକେ ଧୀରେ ସଫା କରୁଛି।" },
+          "normal": { "en": "Kidneys are filtering cleanly.", "hi": "किडनी साफ और स्वस्थ काम कर रही है।", "or": "କିଡନୀ ସୁସ୍ଥ ଭାବେ ସଫା କରୁଛି।" }
+        }
+      }
+    },
+    {
+      "id": "abdomen_liver",
+      "kind": "organ",
+      "aliases": ["liver", "abdomen_liver", "hepatic", "लिवर", "यकृत", "ଲିଭର"],
+      "analogyIcon": "kitchen_factory",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Liver",
+        "analogy": "Your body's big kitchen and clean-up factory under the right ribs — it processes food, stores energy, and clears medicines.",
+        "whatItMeasures": "Digests fats, clears toxins, and makes helpful blood proteins.",
+        "feelings": {
+          "low": ["Quiet and healthy"],
+          "high": ["Mild tiredness", "Poor appetite or nausea", "Heaviness on right upper belly"],
+          "normal": ["Kitchen factory running smoothly"],
+          "general": ["Tiredness or upper belly heaviness"]
+        },
+        "doctorQuestion": "What food habits help keep my liver light and healthy?"
+      },
+      "hi": {
+        "title": "लिवर (यकृत)",
+        "analogy": "दाहिनी पसलियों के नीचे शरीर की बड़ी रसोई और सफाई कारखाना — यह खाना पचाता है, ताकत जमा करता है और गंदगी साफ करता है।",
+        "whatItMeasures": "भोजन पचाना, गंदगी हटाना और जरूरी प्रोटीन बनाना।",
+        "feelings": {
+          "low": ["शांत और स्वस्थ"],
+          "high": ["हल्की थकान", "भूख कम लगना", "दाहिने ऊपर पेट में भारीपन"],
+          "normal": ["लिवर आराम से काम कर रहा है"],
+          "general": ["थकान या पेट भारी लगना"]
+        },
+        "doctorQuestion": "लिवर को हल्का और स्वस्थ रखने के लिए खाने में क्या ध्यान रखूं?"
+      },
+      "or": {
+        "title": "ଲିଭର (ଯକୃତ)",
+        "analogy": "ଡାହାଣ ପଞ୍ଜରା ତଳେ ଥିବା ଶରୀରର ବଡ଼ ରୋଷେଇ ଓ ସଫା କାରଖାନା — ଏହା ଖାଦ୍ୟ ହଜମ କରେ, ଶକ୍ତି ସାଇତେ ଓ ମଇଳା ସଫା କରେ।",
+        "whatItMeasures": "ଚର୍ବି ହଜମ କରିବା, ବିଷାକ୍ତ ପଦାର୍ଥ ସଫା କରିବା ଏବଂ ପ୍ରୋଟିନ୍ ତିଆରି କରିବା।",
+        "feelings": {
+          "low": ["ଶାନ୍ତ ଓ ସୁସ୍ଥ"],
+          "high": ["ସାମାନ୍ୟ ଥକାପଣ", "ଭୋକ କମିବା", "ଉପର ଡାହାଣ ପେଟରେ ଭାରି ଲାଗିବା"],
+          "normal": ["ଲିଭର କାରଖାନା ଭଲ ଭାବେ ଚାଲୁଛି"],
+          "general": ["ଥକାପଣ ବା ପେଟ ଭାରି"]
+        },
+        "doctorQuestion": "ଲିଭରକୁ ସୁସ୍ଥ ରଖିବା ପାଇଁ କେଉଁ ଖାଦ୍ୟ ଅଭ୍ୟାସ ଭଲ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Food & Medicines", "label_hi": "भोजन और दवा", "label_or": "ଖାଦ୍ୟ ଓ ଔଷଧ" },
+          { "icon": "liver", "label_en": "Liver Processes", "label_hi": "लिवर सफाई", "label_or": "ଲିଭର କାମ" },
+          { "icon": "energy", "label_en": "Clean Energy", "label_hi": "शुद्ध ऊर्जा", "label_or": "ସୁସ୍ଥ ଶକ୍ତି" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Liver numbers are calm.", "hi": "लिवर जांच शांत है।", "or": "ଲିଭର ପରୀକ୍ଷା ଶାନ୍ତ ଅଛି।" },
+          "high": { "en": "The liver factory is handling extra strain right now.", "hi": "लिवर कारखाने पर अभी कुछ अतिरिक्त बोझ है।", "or": "ଲିଭର କାରଖାନା ଉପରେ ଏବେ ଅଧିକ ଚାପ ଅଛି।" },
+          "normal": { "en": "Your liver factory is running smoothly.", "hi": "आपका लिवर सही काम कर रहा है।", "or": "ଆପଣଙ୍କ ଲିଭର ସୁସ୍ଥ ଭାବେ କାମ କରୁଛି।" }
+        }
+      }
+    },
+    {
+      "id": "heart",
+      "kind": "organ",
+      "aliases": ["heart", "heart & blood vessels", "cardiac", "coronary"],
+      "analogyIcon": "heart_pump",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Heart & Blood Vessels",
+        "analogy": "A steady pump and clean water pipes that carry fresh blood to every corner of your body day and night.",
+        "whatItMeasures": "Blood pressure, blood fats (cholesterol), and heart pump strength.",
+        "feelings": {
+          "low": ["Dizziness if flow drops"],
+          "high": ["Often silent in cholesterol checks", "Chest tightness or breathlessness if strained"],
+          "normal": ["Pump and blood pipes flowing freely"],
+          "general": ["Breathlessness, dizziness, or chest tightness"]
+        },
+        "doctorQuestion": "What simple daily habits keep my heart and blood pipes clear?"
+      },
+      "hi": {
+        "title": "दिल और खून की नसें",
+        "analogy": "दिन-रात चलने वाला मजबूत पंप और साफ पाइप, जो शरीर के हर हिस्से तक ताजा खून पहुंचाते हैं।",
+        "whatItMeasures": "खून का बहाव, नसों की चर्बी और दिल की पंपिंग जांचता है।",
+        "feelings": {
+          "low": ["चक्कर लगना"],
+          "high": ["कोलेस्ट्रॉल बढ़ने पर लक्षण नहीं दिखते", "दबाव बढ़ने पर सांस फूलना या सीने में जकड़न"],
+          "normal": ["दिल और नसें आराम से चल रही हैं"],
+          "general": ["सांस फूलना या सीने में जकड़न"]
+        },
+        "doctorQuestion": "दिल और नसों को साफ रखने के लिए रोज की कौन सी आदतें सबसे अच्छी हैं?"
+      },
+      "or": {
+        "title": "ହୃଦୟ ଏବଂ ରକ୍ତନଳୀ",
+        "analogy": "ଦିନରାତି ଚାଲୁଥିବା ଏକ ସ୍ଥିର ପମ୍ପ ଏବଂ ସଫା ପାଇପ୍, ଯାହା ଶରୀରର ସବୁ ଅଂଶକୁ ତାଜା ରକ୍ତ ପହଞ୍ଚାଏ।",
+        "whatItMeasures": "ରକ୍ତଚାପ, ରକ୍ତ ଚର୍ବି ଏବଂ ହୃଦୟ ପମ୍ପ ଶକ୍ତି।",
+        "feelings": {
+          "low": ["ମୁଣ୍ଡ ବୁଲାଇବା"],
+          "high": ["ଚର୍ବି ବଢ଼ିଲେ ଲକ୍ଷଣ ନଥାଏ", "ଚାପ ପଡ଼ିଲେ ଛାତି ଟାଣିବା ବା ନିଶ୍ୱାସ କଷ୍ଟ"],
+          "normal": ["ପମ୍ପ ଏବଂ ରକ୍ତନଳୀ ସୁସ୍ଥ ଭାବେ ଚାଲୁଛି"],
+          "general": ["ନିଶ୍ୱାସ କଷ୍ଟ ବା ଛାତିରେ ଚାପ"]
+        },
+        "doctorQuestion": "ମୋର ହୃଦୟ ଏବଂ ରକ୍ତନଳୀକୁ ସଫା ରଖିବା ପାଇଁ କେଉଁ ଦୈନନ୍ଦିନ ଅଭ୍ୟାସ ଭଲ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "heart", "label_en": "Heart Pump", "label_hi": "दिल का पंप", "label_or": "ହୃଦୟ ପମ୍ପ" },
+          { "icon": "pipe", "label_en": "Blood Pipes", "label_hi": "खून की नसें", "label_or": "ରକ୍ତନଳୀ" },
+          { "icon": "energy", "label_en": "Whole Body", "label_hi": "पूरा शरीर", "label_or": "ସାରା ଶରୀର" }
+        ],
+        "highlightIndexByStatus": { "low": 0, "high": 1, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Heart pump area shows a value to review.", "hi": "दिल से जुड़ा एक मान देखने लायक है।", "or": "ହୃଦୟ ସହିତ ଜଡ଼ିତ ଗୋଟିଏ ମାନ ଦେଖିବା ଉଚିତ।" },
+          "high": { "en": "Blood pipes or pump markers need routine care.", "hi": "नसों की चर्बी या दिल की जांच पर ध्यान देना चाहिए।", "or": "ରକ୍ତନଳୀ ବା ପମ୍ପ ପରୀକ୍ଷା ପ୍ରତି ଯତ୍ନ ଦରକାର।" },
+          "normal": { "en": "Heart pump and vessels look healthy.", "hi": "दिल और नसें स्वस्थ दिख रही हैं।", "or": "ହୃଦୟ ଏବଂ ରକ୍ତନଳୀ ସୁସ୍ଥ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "pancreas",
+      "kind": "organ",
+      "aliases": ["pancreas", "amylase", "lipase"],
+      "analogyIcon": "key_lock",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Pancreas (Sugar & Digestion Helper)",
+        "analogy": "A quiet helper tucked behind your stomach — it makes digestion juices and the insulin key for blood sugar.",
+        "whatItMeasures": "Helps digest food and keeps blood sugar balanced.",
+        "feelings": {
+          "low": ["Quiet"],
+          "high": ["Upper belly pain moving to the back", "Nausea", "Thirst if sugar rises"],
+          "normal": ["Making digestion juices and insulin smoothly"],
+          "general": ["Upper belly ache or sugar shifts"]
+        },
+        "doctorQuestion": "Are my sugar and digestion helpers working well?"
+      },
+      "hi": {
+        "title": "पैंक्रियास (अग्न्याशय)",
+        "analogy": "पेट के पीछे छिपा एक शांत अंग — यह खाना पचाने के रस और शुगर संभालने वाली इंसुलिन चाबी बनाता है।",
+        "whatItMeasures": "पाचन में मदद और ब्लड शुगर का संतुलन।",
+        "feelings": {
+          "low": ["शांत"],
+          "high": ["ऊपरी पेट में दर्द", "मितली", "शुगर बढ़ने पर प्यास"],
+          "normal": ["पाचन रस और इंसुलिन सही बन रहे हैं"],
+          "general": ["ऊपरी पेट दर्द या शुगर बदलाव"]
+        },
+        "doctorQuestion": "क्या मेरा पैंक्रियास और शुगर नियंत्रण ठीक काम कर रहा है?"
+      },
+      "or": {
+        "title": "ପ୍ୟାନକ୍ରିଆସ୍ (ଅଗ୍ନ୍ୟାଶୟ)",
+        "analogy": "ପାକସ୍ଥଳୀ ପଛରେ ଥିବା ଏକ ଶାନ୍ତ ଅଙ୍ଗ — ଏହା ଖାଦ୍ୟ ହଜମ ରସ ଏବଂ ଶର୍କରା ନିୟନ୍ତ୍ରଣ କରୁଥିବା ଇନସୁଲିନ୍ ଚାବି ତିଆରି କରେ।",
+        "whatItMeasures": "ଖାଦ୍ୟ ହଜମ ଏବଂ ରକ୍ତ ଶର୍କରା ସନ୍ତୁଳନ।",
+        "feelings": {
+          "low": ["ଶାନ୍ତ"],
+          "high": ["ଉପର ପେଟ ଯନ୍ତ୍ରଣା", "ବାନ୍ତି ଲାଗିବା", "ଶର୍କରା ବଢ଼ିଲେ ଶୋଷ"],
+          "normal": ["ହଜମ ରସ ଓ ଇନସୁଲିନ୍ ଭଲ ତିଆରି ହେଉଛି"],
+          "general": ["ଉପର ପେଟ ଦରଜ ବା ଶର୍କରା ପରିବର୍ତ୍ତନ"]
+        },
+        "doctorQuestion": "ମୋର ପ୍ୟାନକ୍ରିଆସ୍ ଏବଂ ଶର୍କରା ନିୟନ୍ତ୍ରଣ ଭଲ କାମ କରୁଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Meal Eaten", "label_hi": "खाना खाया", "label_or": "ଖାଦ୍ୟ ଖାଇବା" },
+          { "icon": "key", "label_en": "Pancreas Helpers", "label_hi": "पैंक्रियास मदद", "label_or": "ପ୍ୟାନକ୍ରିଆସ୍ ସାହାଯ୍ୟ" },
+          { "icon": "energy", "label_en": "Digestion & Sugar", "label_hi": "पाचन व शुगर", "label_or": "ହଜମ ଓ ଶର୍କରା" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Pancreas helper output is low.", "hi": "पैंक्रियास का काम थोड़ा कम है।", "or": "ପ୍ୟାନକ୍ରିଆସ୍ କାମ ଟିକେ କମ୍ ଅଛି।" },
+          "high": { "en": "Pancreas shows signs of extra irritation or sugar strain.", "hi": "पैंक्रियास या शुगर नियंत्रण पर थोड़ा दबाव है।", "or": "ପ୍ୟାନକ୍ରିଆସ୍ ଉପରେ ଅଧିକ ଚାପ ଦେଖାଯାଇଛି।" },
+          "normal": { "en": "Pancreas is helping digestion and sugar smoothly.", "hi": "पैंक्रियास सही काम कर रहा है।", "or": "ପ୍ୟାନକ୍ରିଆସ୍ ସୁସ୍ଥ ଭାବେ କାମ କରୁଛି।" }
+        }
+      }
+    },
+    {
+      "id": "chest_lungs",
+      "kind": "organ",
+      "aliases": ["chest_lungs", "lungs", "lungs & chest", "chest", "pleural", "bronchial", "pneumonia", "infiltrate"],
+      "analogyIcon": "air_bellows",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Lungs & Chest",
+        "analogy": "Like two soft sponges inside your ribs that fill with fresh air on every breath and pass oxygen into your blood.",
+        "whatItMeasures": "Brings fresh oxygen in and breathes stale air out.",
+        "feelings": {
+          "low": ["Breathing feels easy"],
+          "high": ["Cough or phlegm", "Shortness of breath", "Chest heaviness or fever"],
+          "normal": ["Lungs are clear and breathing smoothly"],
+          "general": ["Cough, breathlessness, or chest ache"]
+        },
+        "doctorQuestion": "Are my lung air spaces clear, or is there an infection to treat?"
+      },
+      "hi": {
+        "title": "फेफड़े और छाती",
+        "analogy": "पसलियों के अंदर दो नरम स्पंज जैसे — हर सांस के साथ ताजी हवा भरते हैं और खून में ऑक्सीजन पहुंचाते हैं।",
+        "whatItMeasures": "ताजी ऑक्सीजन अंदर लेना और खराब हवा बाहर निकालना।",
+        "feelings": {
+          "low": ["सांस आसान है"],
+          "high": ["खांसी या बलगम", "सांस फूलना", "छाती में भारीपन या बुखार"],
+          "normal": ["फेफड़े साफ हैं"],
+          "general": ["खांसी या सांस फूलना"]
+        },
+        "doctorQuestion": "क्या मेरे फेफड़े साफ हैं या किसी संक्रमण का इलाज चाहिए?"
+      },
+      "or": {
+        "title": "ଫୁସଫୁସ ଏବଂ ଛାତି",
+        "analogy": "ପଞ୍ଜରା ଭିତରେ ଥିବା ଦୁଇଟି ନରମ ସ୍ପଞ୍ଜ ପରି — ପ୍ରତି ନିଶ୍ୱାସରେ ତାଜା ବାୟୁ ଭରି ରକ୍ତକୁ ଅମ୍ଳଜାନ ଦିଏ।",
+        "whatItMeasures": "ତାଜା ଅମ୍ଳଜାନ ଭିତରକୁ ନେବା ଏବଂ ନିଶ୍ୱାସ ବାହାର କରିବା।",
+        "feelings": {
+          "low": ["ନିଶ୍ୱାସ ସହଜ ଅଛି"],
+          "high": ["କାଶ ବା କଫ", "ନିଶ୍ୱାସ ଫୁଲିବା", "ଛାତି ଭାରି ବା ଜ୍ୱର"],
+          "normal": ["ଫୁସଫୁସ ସଫା ଅଛି"],
+          "general": ["କାଶ ବା ନିଶ୍ୱାସ କଷ୍ଟ"]
+        },
+        "doctorQuestion": "ମୋର ଫୁସଫୁସ ସଫା ଅଛି ନା କୌଣସି ସଂକ୍ରମଣ ଚିକିତ୍ସା ଦରକାର?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "lungs", "label_en": "Fresh Breath In", "label_hi": "ताजी सांस", "label_or": "ତାଜା ନିଶ୍ୱାସ" },
+          { "icon": "truck", "label_en": "Passes to Blood", "label_hi": "खून में ऑक्सीजन", "label_or": "ରକ୍ତକୁ ଅମ୍ଳଜାନ" },
+          { "icon": "energy", "label_en": "Body Stamina", "label_hi": "शरीर की ताकत", "label_or": "ଶରୀର ଶକ୍ତି" }
+        ],
+        "highlightIndexByStatus": { "low": 0, "high": 0, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Lung air spaces look calm.", "hi": "फेफड़ों की हवा साफ है।", "or": "ଫୁସଫୁସ ବାୟୁ ସ୍ଥାନ ଶାନ୍ତ ଅଛି।" },
+          "high": { "en": "Lungs show a spot, fluid, or irritation to check with a doctor.", "hi": "फेफड़ों में थोड़ा कफ, सूजन या निशान दिखा है, डॉक्टर से दिखाएं।", "or": "ଫୁସଫୁସରେ ସାମାନ୍ୟ କଫ ବା ପ୍ରଦାହ ଦେଖାଯାଇଛି, ଡାକ୍ତରଙ୍କୁ ଦେଖାନ୍ତୁ।" },
+          "normal": { "en": "Air moves cleanly through both lungs.", "hi": "दोनों फेफड़ों में हवा साफ जा रही है।", "or": "ଦୁଇଟି ଯାକ ଫୁସଫୁସରେ ବାୟୁ ସଫା ଭାବେ ଯାଉଛି।" }
+        }
+      }
+    },
+    {
+      "id": "stomach_intestines",
+      "kind": "organ",
+      "aliases": ["stomach_intestines", "stomach", "stomach & intestines", "gastric", "bowel", "appendix", "gallbladder"],
+      "analogyIcon": "kitchen_factory",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Stomach & Intestines",
+        "analogy": "Like a slow-cooking pot and winding tube that breaks down food and pulls nutrients into your blood.",
+        "whatItMeasures": "Digestive comfort, food absorption, and gut health.",
+        "feelings": {
+          "low": ["Comfortable digestion"],
+          "high": ["Acidity or burning", "Gas, bloating, or belly ache", "Loose motion or constipation"],
+          "normal": ["Calm, smooth digestion"],
+          "general": ["Acidity, gas, or stomach ache"]
+        },
+        "doctorQuestion": "What simple meal changes would help settle my stomach?"
+      },
+      "hi": {
+        "title": "पेट और आंतें",
+        "analogy": "भोजन को नरम कर पचाने वाली हांडी और नलियां — जो खाने से ताकत निकालकर शरीर को देती हैं।",
+        "whatItMeasures": "खाना पचने, एसिडिटी और आंतों की सेहत की स्थिति।",
+        "feelings": {
+          "low": ["पाचन आरामदायक है"],
+          "high": ["खट्टी डकार या जलन", "गैस, पेट फूलना या दर्द", "दस्त या कब्ज"],
+          "normal": ["पेट और पाचन शांत हैं"],
+          "general": ["गैस, एसिडिटी या पेट दर्द"]
+        },
+        "doctorQuestion": "पेट आराम रखने के लिए मुझे खाने में क्या आसान बदलाव करने चाहिए?"
+      },
+      "or": {
+        "title": "ପାକସ୍ଥଳୀ ଏବଂ ଅନ୍ତନଳୀ",
+        "analogy": "ଖାଦ୍ୟ ରାନ୍ଧି ହଜମ କରୁଥିବା ପାତ୍ର ଏବଂ ନଳୀ ପରି — ଯାହା ଖାଦ୍ୟରୁ ପୋଷଣ ଟାଣି ଶରୀରକୁ ଦିଏ।",
+        "whatItMeasures": "ହଜମ ଶକ୍ତି, ଏସିଡିଟି ଏବଂ ପେଟର ସୁସ୍ଥତା।",
+        "feelings": {
+          "low": ["ହଜମ ଆରାମଦାୟକ ଅଛି"],
+          "high": ["ଏସିଡିଟି ବା ପୋଡ଼ା", "ଗ୍ୟାସ୍, ପେଟ ଫୁଲିବା ବା ଦରଜ", "ଝାଡ଼ା ବା କୋଷ୍ଠକାଠିନ୍ୟ"],
+          "normal": ["ପେଟ ଏବଂ ହଜମ ଶାନ୍ତ ଅଛି"],
+          "general": ["ଗ୍ୟାସ୍, ଏସିଡିଟି ବା ପେଟ ଦରଜ"]
+        },
+        "doctorQuestion": "ପେଟ ସୁସ୍ଥ ରଖିବା ପାଇଁ ଖାଦ୍ୟରେ କଣ ସହଜ ପରିବର୍ତ୍ତନ କରିବି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "food", "label_en": "Food Enters", "label_hi": "भोजन आता है", "label_or": "ଖାଦ୍ୟ ଆସେ" },
+          { "icon": "liver", "label_en": "Broken Down", "label_hi": "हजम होता है", "label_or": "ହଜମ ହୁଏ" },
+          { "icon": "energy", "label_en": "Nutrients Absorbed", "label_hi": "ताकत मिलती है", "label_or": "ପୋଷଣ ମିଳେ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Digestion path is quiet.", "hi": "पाचन मार्ग शांत है।", "or": "ହଜମ ବାଟ ଶାନ୍ତ ଅଛି।" },
+          "high": { "en": "Part of the stomach or gut shows irritation to check.", "hi": "पेट या आंत के हिस्से में हल्की सूजन या तकलीफ दिखी है।", "or": "ପାକସ୍ଥଳୀ ବା ଅନ୍ତନଳୀରେ ସାମାନ୍ୟ ଅସ୍ୱସ୍ତି ଦେଖାଯାଇଛି।" },
+          "normal": { "en": "Stomach and gut look healthy.", "hi": "पेट और आंतें स्वस्थ हैं।", "or": "ପାକସ୍ଥଳୀ ଏବଂ ଅନ୍ତନଳୀ ସୁସ୍ଥ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "neck_cervical",
+      "kind": "organ",
+      "aliases": ["neck_cervical", "cervical", "cervical spine", "c3", "c4", "c5", "c6", "c7", "c3-c4", "c4-c5", "c5-c6"],
+      "analogyIcon": "spine_cushion",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Neck Spine (Cervical Bones & Cushions)",
+        "analogy": "Neck bones are stacked like building blocks with soft jelly cushions between them, protecting a cable of nerves going to your arms.",
+        "whatItMeasures": "Shows bone spacing, soft cushions (discs), and nerve space in the neck.",
+        "feelings": {
+          "low": ["Neck moves easily"],
+          "high": ["Neck stiffness or ache", "Pain going to shoulder or arm", "Finger tingling"],
+          "normal": ["Neck bones and cushions have good space"],
+          "general": ["Neck ache or arm tingling"]
+        },
+        "doctorQuestion": "Are gentle neck stretches or physiotherapy safe for this neck finding?"
+      },
+      "hi": {
+        "title": "गर्दन की रीढ़ (हड्डी व गद्दी)",
+        "analogy": "गर्दन की हड्डियां एक के ऊपर एक ईंटों जैसी हैं, जिनके बीच नरम गद्देदार तकिया है जो हाथ की नसों को बचाता है।",
+        "whatItMeasures": "गर्दन की हड्डियों, बीच की गद्दी (डिस्क) और नसों की जगह देखता है।",
+        "feelings": {
+          "low": ["गर्दन आराम से घूमती है"],
+          "high": ["गर्दन में अकड़न या दर्द", "कंधे या हाथ में उतरता दर्द", "उंगलियों में झुनझुनी"],
+          "normal": ["गर्दन की हड्डियों में पूरी जगह है"],
+          "general": ["गर्दन दर्द या हाथ में झुनझुनी"]
+        },
+        "doctorQuestion": "क्या इस गर्दन की रिपोर्ट के लिए हल्की एक्सरसाइज या फिजियोथेरेपी सुरक्षित है?"
+      },
+      "or": {
+        "title": "ବେକ ମେରୁଦଣ୍ଡ (ହାଡ଼ ଓ ଗଦି)",
+        "analogy": "ବେକ ହାଡ଼ଗୁଡ଼ିକ ଗୋଟିଏ ଉପରେ ଗୋଟିଏ ସଜା ହୋଇଥିବା ଇଟା ପରି, ମଝିରେ ନରମ ତକିଆ ଅଛି ଯାହା ହାତର ସ୍ନାୟୁକୁ ରକ୍ଷା କରେ।",
+        "whatItMeasures": "ବେକ ହାଡ଼, ମଝି ଗଦି (ଡିସ୍କ) ଏବଂ ସ୍ନାୟୁ ସ୍ଥାନ ଯାଞ୍ଚ କରେ।",
+        "feelings": {
+          "low": ["ବେକ ସହଜରେ ଘୂରୁଛି"],
+          "high": ["ବେକ ଟାଣିବା ବା ଦରଜ", "କାନ୍ଧ ବା ହାତକୁ ଯାଉଥିବା ଦରଜ", "ଆଙ୍ଗୁଠି ଝିମଝିମ"],
+          "normal": ["ବେକ ହାଡ଼ ଓ ଗଦିରେ ଭଲ ସ୍ଥାନ ଅଛି"],
+          "general": ["ବେକ ଦରଜ ବା ହାତ ଝିମଝିମ"]
+        },
+        "doctorQuestion": "ଏହି ବେକ ରିପୋର୍ଟ ପାଇଁ ହାଲୁକା ବ୍ୟାୟାମ ବା ଫିଜିଓଥେରାପି ସୁରକ୍ଷିତ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "bone", "label_en": "Neck Bones", "label_hi": "गर्दन की हड्डी", "label_or": "ବେକ ହାଡ଼" },
+          { "icon": "cushion", "label_en": "Soft Cushion", "label_hi": "नरम गद्दी", "label_or": "ନରମ ଗଦି" },
+          { "icon": "signal", "label_en": "Arm Nerves", "label_hi": "हाथ की नसें", "label_or": "ହାତ ସ୍ନାୟୁ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 2, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Mild cushion wear or tightness in neck spine.", "hi": "गर्दन की गद्दी में हल्का बदलाव दिखा है।", "or": "ବେକ ଗଦିରେ ସାମାନ୍ୟ ପରିବର୍ତ୍ତନ ଦେଖାଯାଇଛି।" },
+          "high": { "en": "A neck cushion is bulging slightly near the nerve cable.", "hi": "गर्दन की गद्दी थोड़ा बाहर उभरी है जिससे नस के पास जगह कम हुई है।", "or": "ବେକ ଗଦି ଟିକେ ବାହାରକୁ ଆସି ସ୍ନାୟୁ ପାଖ ଜାଗା କମାଇଛି।" },
+          "normal": { "en": "Neck cushions and nerve spaces look clear.", "hi": "गर्दन की रीढ़ में नसों के लिए जगह साफ है।", "or": "ବେକ ମେରୁଦଣ୍ଡରେ ସ୍ନାୟୁ ସ୍ଥାନ ସଫା ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "spine_thoracic",
+      "kind": "organ",
+      "aliases": ["spine_thoracic", "thoracic spine", "dorsal spine", "upper back", "mid back", "t1", "t12"],
+      "analogyIcon": "spine_cushion",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Upper / Mid Back Spine",
+        "analogy": "The sturdy middle backbone pillar that joins your ribs and keeps your chest upright.",
+        "whatItMeasures": "Alignment and bone health of the middle back.",
+        "feelings": {
+          "low": ["Comfortable posture"],
+          "high": ["Upper back stiffness", "Ache between shoulder blades"],
+          "normal": ["Middle spine is aligned cleanly"],
+          "general": ["Mid-back stiffness or ache"]
+        },
+        "doctorQuestion": "Do posture adjustments or gentle stretching help my upper back?"
+      },
+      "hi": {
+        "title": "पीठ के बीच की रीढ़",
+        "analogy": "पसलियों को जोड़ने वाला पीठ का मजबूत खंभा जो शरीर को सीधा रखता है।",
+        "whatItMeasures": "पीठ के ऊपरी और मध्य हिस्से की हड्डियों की स्थिति।",
+        "feelings": {
+          "low": ["कमर सीधी और आरामदायक"],
+          "high": ["पीठ में जकड़न", "कंधों के बीच दर्द"],
+          "normal": ["बीच की रीढ़ सीधी और स्वस्थ है"],
+          "general": ["पीठ दर्द या अकड़न"]
+        },
+        "doctorQuestion": "क्या बैठने के तरीके और हल्की स्ट्रेचिंग से मेरी पीठ को आराम मिलेगा?"
+      },
+      "or": {
+        "title": "ମଝି ପିଠି ମେରୁଦଣ୍ଡ",
+        "analogy": "ପଞ୍ଜରା ହାଡ଼କୁ ଯୋଡ଼ି ରଖୁଥିବା ପିଠିର ମଜବୁତ ସ୍ତମ୍ଭ ଯାହା ଶରୀରକୁ ସିଧା ରଖେ।",
+        "whatItMeasures": "ଉପର ଏବଂ ମଝି ପିଠି ହାଡ଼ର ସ୍ଥିତି।",
+        "feelings": {
+          "low": ["ଆରାମଦାୟକ ଅବସ୍ଥା"],
+          "high": ["ପିଠି ଟାଣିବା", "କାନ୍ଧ ମଝିରେ ଦରଜ"],
+          "normal": ["ମଝି ମେରୁଦଣ୍ଡ ସିଧା ଓ ସୁସ୍ଥ ଅଛି"],
+          "general": ["ପିଠି ଦରଜ ବା ଟାଣିବା"]
+        },
+        "doctorQuestion": "ବସିବା ଭଙ୍ଗୀ ସୁଧାରିବା ବା ହାଲୁକା ବ୍ୟାୟାମ ମୋ ପିଠିକୁ ସାହାଯ୍ୟ କରିବ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "bone", "label_en": "Back Bones", "label_hi": "रीढ़ की हड्डी", "label_or": "ପିଠି ହାଡ଼" },
+          { "icon": "cushion", "label_en": "Disc Cushions", "label_hi": "बीच की गद्दी", "label_or": "ମଝି ଗଦି" },
+          { "icon": "check", "label_en": "Upright Support", "label_hi": "सीधा सहारा", "label_or": "ସିଧା ସହାୟତା" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Minor mid-back wear noted.", "hi": "पीठ में हल्का बदलाव दिखा है।", "or": "ମଝି ପିଠିରେ ସାମାନ୍ୟ ପରିବର୍ତ୍ତନ ଅଛି।" },
+          "high": { "en": "Upper/mid back shows stiffness or cushion strain.", "hi": "पीठ की हड्डी या गद्दी में थोड़ा दबाव दिखा है।", "or": "ପିଠି ହାଡ଼ ବା ଗଦିରେ ଚାପ ଦେଖାଯାଇଛି।" },
+          "normal": { "en": "Mid-back spine is well aligned.", "hi": "पीठ की रीढ़ बिल्कुल ठीक है।", "or": "ମଝି ପିଠି ମେରୁଦଣ୍ଡ ସଠିକ୍ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "spine_lumbar",
+      "kind": "organ",
+      "aliases": ["spine_lumbar", "lumbar", "lumbar spine", "lower back", "l4", "l5", "s1", "l4-l5", "l5-s1", "sciatica"],
+      "analogyIcon": "spine_cushion",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Lower Back Spine (Lumbar)",
+        "analogy": "The heavy-lifting base of your spine — soft cushions sit between bones so you can bend without nerves getting pinched.",
+        "whatItMeasures": "Lower back bones, cushion discs, and nerves heading down to your legs.",
+        "feelings": {
+          "low": ["Easy bending and walking"],
+          "high": ["Lower back ache", "Pain or tingling going down one leg", "Stiffness after sitting"],
+          "normal": ["Lower back cushions and nerves look clear"],
+          "general": ["Lower back ache or leg tingling"]
+        },
+        "doctorQuestion": "Should I avoid heavy lifting while my lower back settles?"
+      },
+      "hi": {
+        "title": "कमर की निचली रीढ़ (लम्बर)",
+        "analogy": "रीढ़ की सबसे मजबूत नींव — हड्डियों के बीच नरम गद्दी होती है ताकि झुकते समय पैर की नसें न दबें।",
+        "whatItMeasures": "कमर की हड्डियां, बीच की गद्दी और पैरों में जाने वाली नसों की स्थिति।",
+        "feelings": {
+          "low": ["झुकना और चलना आसान"],
+          "high": ["कमर के निचले हिस्से में दर्द", "एक पैर में जाता दर्द या झुनझुनी", "बैठने के बाद अकड़न"],
+          "normal": ["कमर की गद्दी और नसें साफ हैं"],
+          "general": ["कमर दर्द या पैर में झुनझुनी"]
+        },
+        "doctorQuestion": "जब तक कमर ठीक न हो, क्या मुझे भारी वजन उठाने से बचना चाहिए?"
+      },
+      "or": {
+        "title": "ତଳ ଅଣ୍ଟା ମେରୁଦଣ୍ଡ (ଲମ୍ବାର୍)",
+        "analogy": "ମେରୁଦଣ୍ଡର ମୁଖ୍ୟ ଆଧାର — ହାଡ଼ ମଝିରେ ନରମ ଗଦି ଥାଏ ଯେପରି ନଇଁଲା ବେଳେ ଗୋଡ଼ର ସ୍ନାୟୁ ଚାପି ନହୁଏ।",
+        "whatItMeasures": "ଅଣ୍ଟା ହାଡ଼, ମଝି ଗଦି ଏବଂ ଗୋଡ଼କୁ ଯାଉଥିବା ସ୍ନାୟୁର ସ୍ଥିତି।",
+        "feelings": {
+          "low": ["ନଇଁବା ଏବଂ ଚାଲିବା ସହଜ"],
+          "high": ["ଅଣ୍ଟା ତଳ ଦରଜ", "ଗୋଟିଏ ଗୋଡ଼କୁ ଯାଉଥିବା ଦରଜ ବା ଝିମଝିମ", "ବସିବା ପରେ ଟାଣିବା"],
+          "normal": ["ଅଣ୍ଟା ଗଦି ଓ ସ୍ନାୟୁ ସଫା ଅଛି"],
+          "general": ["ଅଣ୍ଟା ଦରଜ ବା ଗୋଡ଼ ଝିମଝିମ"]
+        },
+        "doctorQuestion": "ଅଣ୍ଟା ଭଲ ହେବା ପର୍ଯ୍ୟନ୍ତ ମୁଁ ଭାରି ଜିନିଷ ଉଠାଇବାରୁ ଦୂରେଇ ରହିବା ଉଚିତ କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "bone", "label_en": "Lower Bones", "label_hi": "कमर हड्डी", "label_or": "ଅଣ୍ଟା ହାଡ଼" },
+          { "icon": "cushion", "label_en": "Soft Cushion", "label_hi": "नरम गद्दी", "label_or": "ନରମ ଗଦି" },
+          { "icon": "signal", "label_en": "Leg Nerves", "label_hi": "पैर की नसें", "label_or": "ଗୋଡ଼ ସ୍ନାୟୁ" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 2, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Minor lower back disc wear noted.", "hi": "कमर की गद्दी में हल्का बदलाव दिखा है।", "or": "ଅଣ୍ଟା ଗଦିରେ ସାମାନ୍ୟ ପରିବର୍ତ୍ତନ ଅଛି।" },
+          "high": { "en": "A lower back cushion is pressing slightly near the leg nerve.", "hi": "कमर की गद्दी थोड़ा उभरकर पैर की नस के पास आ गई है।", "or": "ଅଣ୍ଟା ଗଦି ଟିକେ ବାହାରକୁ ଆସି ଗୋଡ଼ ସ୍ନାୟୁ ପାଖରେ ଚାପ ଦେଉଛି।" },
+          "normal": { "en": "Lower back cushions and nerve paths are clear.", "hi": "कमर की गद्दी और नसें बिल्कुल साफ हैं।", "or": "ଅଣ୍ଟା ଗଦି ଏବଂ ସ୍ନାୟୁ ବାଟ ସଫା ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "blood_system",
+      "kind": "organ",
+      "aliases": ["blood_system", "blood / general", "blood", "cbc", "complete blood count", "hemogram"],
+      "analogyIcon": "oxygen_truck",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Blood & Whole Body",
+        "analogy": "Blood is your body's river — carrying oxygen trucks, guard soldiers, and repair patches everywhere at once.",
+        "whatItMeasures": "Red cells (oxygen), white cells (guards), platelets (patches), and sugar.",
+        "feelings": {
+          "low": ["Tiredness if oxygen trucks are low"],
+          "high": ["Fever or tiredness if fighting germs"],
+          "normal": ["Your blood river is carrying supplies smoothly"],
+          "general": ["Fatigue, mild fever, or dizziness"]
+        },
+        "doctorQuestion": "Which part of my blood test needs attention first?"
+      },
+      "hi": {
+        "title": "खून / संपूर्ण शरीर",
+        "analogy": "खून शरीर की नदी जैसा है — यह एक साथ ऑक्सीजन के ट्रक, रक्षक सिपाही और मरम्मत पट्टियां हर जगह पहुंचाता है।",
+        "whatItMeasures": "लाल कण (ऑक्सीजन), सफेद कण (रक्षक), प्लेटलेट्स (पट्टी) और शुगर।",
+        "feelings": {
+          "low": ["ऑक्सीजन कण कम होने पर थकान"],
+          "high": ["कीटाणुओं से लड़ने पर बुखार या सुस्ती"],
+          "normal": ["खून की नदी सही तरीके से बह रही है"],
+          "general": ["थकान, बुखार या चक्कर"]
+        },
+        "doctorQuestion": "मेरी खून की जांच के किस हिस्से पर सबसे पहले ध्यान देना चाहिए?"
+      },
+      "or": {
+        "title": "ରକ୍ତ / ସମଗ୍ର ଶରୀର",
+        "analogy": "ରକ୍ତ ହେଉଛି ଶରୀରର ନଦୀ ପରି — ଏହା ଏକାଥରକେ ଅମ୍ଳଜାନ ଟ୍ରକ୍, ରକ୍ଷକ ସୈନିକ ଏବଂ ମରାମତି ପଟି ସବୁଠି ପହଞ୍ଚାଏ।",
+        "whatItMeasures": "ଲାଲ୍ କଣିକା (ଅମ୍ଳଜାନ), ଶ୍ୱେତ କଣିକା (ରକ୍ଷକ), ପ୍ଲେଟଲେଟ୍ (ପଟି) ଏବଂ ଶର୍କରା।",
+        "feelings": {
+          "low": ["ଅମ୍ଳଜାନ ଟ୍ରକ୍ କମ୍ ଥିଲେ ଥକାପଣ"],
+          "high": ["ଜୀବାଣୁ ସହ ଲଢ଼ିଲେ ଜ୍ୱର ବା ଅଳସୁଆ"],
+          "normal": ["ରକ୍ତ ନଦୀ ସୁସ୍ଥ ଭାବେ ପ୍ରବାହିତ ହେଉଛି"],
+          "general": ["ଥକାପଣ, ଜ୍ୱର ବା ମୁଣ୍ଡ ବୁଲାଇବା"]
+        },
+        "doctorQuestion": "ମୋ ରକ୍ତ ପରୀକ୍ଷାର କେଉଁ ଅଂଶ ପ୍ରତି ପ୍ରଥମେ ଧ୍ୟାନ ଦେବା ଉଚିତ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "truck", "label_en": "Oxygen Trucks", "label_hi": "ऑक्सीजन ट्रक", "label_or": "ଅମ୍ଳଜାନ ଟ୍ରକ୍" },
+          { "icon": "soldier", "label_en": "Guard Cells", "label_hi": "रक्षक सिपाही", "label_or": "ରକ୍ଷକ ସୈନିକ" },
+          { "icon": "patch", "label_en": "Repair Patches", "label_hi": "मरम्मत पट्टी", "label_or": "ମରାମତି ପଟି" }
+        ],
+        "highlightIndexByStatus": { "low": 0, "high": 1, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "One blood carrier team is slightly lower than usual.", "hi": "खून का एक हिस्सा सामान्य से थोड़ा कम है।", "or": "ରକ୍ତର ଗୋଟିଏ ଅଂଶ ସାଧାରଣଠାରୁ କମ୍ ଅଛି।" },
+          "high": { "en": "Blood shows an active shift that needs a doctor's review.", "hi": "खून में कुछ मान बढ़े हुए हैं, डॉक्टर को दिखाएं।", "or": "ରକ୍ତରେ କିଛି ମାନ ବଢ଼ିଛି, ଡାକ୍ତରଙ୍କୁ ଦେଖାନ୍ତୁ।" },
+          "normal": { "en": "All blood teams look steady and healthy.", "hi": "खून के सभी हिस्से स्वस्थ हैं।", "or": "ରକ୍ତର ସମସ୍ତ ଅଂଶ ସୁସ୍ଥ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "bones_joints",
+      "kind": "organ",
+      "aliases": ["bones_joints", "bones & muscles", "knee", "shoulder", "knee_left", "knee_right", "shoulder_left", "shoulder_right", "arms_hands", "feet", "ankle", "wrist", "joint", "arthritis", "fracture", "meniscus", "rotator cuff"],
+      "analogyIcon": "sun_bone",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Bones & Joints",
+        "analogy": "Like well-oiled door hinges and strong wooden beams — bones hold you up and smooth cushions inside joints let you bend without rubbing.",
+        "whatItMeasures": "Bone strength, joint cushion space, and nearby tendons.",
+        "feelings": {
+          "low": ["Smooth bending and walking"],
+          "high": ["Joint pain or stiffness", "Swelling after walking or lifting", "Clicking feeling"],
+          "normal": ["Bones and joint cushions look strong"],
+          "general": ["Joint ache, stiffness, or swelling"]
+        },
+        "doctorQuestion": "What gentle exercises or rest will protect this joint?"
+      },
+      "hi": {
+        "title": "हड्डियां और जोड़",
+        "analogy": "तेल लगे दरवाजे के कब्जों जैसा — हड्डियां सहारा देती हैं और जोड़ों के बीच की नरम परत बिना रगड़ के मोड़ने देती है।",
+        "whatItMeasures": "हड्डियों की मजबूती, जोड़ों की जगह और नसों का हाल।",
+        "feelings": {
+          "low": ["आसानी से मुड़ना और चलना"],
+          "high": ["जोड़ में दर्द या अकड़न", "चलने या उठाने पर सूजन", "चटकने जैसा लगना"],
+          "normal": ["हड्डियां और जोड़ मजबूत हैं"],
+          "general": ["जोड़ दर्द या अकड़न"]
+        },
+        "doctorQuestion": "इस जोड़ को सुरक्षित रखने के लिए आराम या कौन सी हल्की कसरत सही रहेगी?"
+      },
+      "or": {
+        "title": "ହାଡ଼ ଏବଂ ଗଣ୍ଠି",
+        "analogy": "ଭଲ ତେଲ ଦିଆ କବାଟ କବ୍ଜା ପରି — ହାଡ଼ ଶରୀରକୁ ଧରିରଖେ ଏବଂ ଗଣ୍ଠି ଭିତରର ନରମ ଆସ୍ତରଣ ବିନା ଘଷାରେ ମୋଡ଼ିବାକୁ ଦିଏ।",
+        "whatItMeasures": "ହାଡ଼ର ଶକ୍ତି, ଗଣ୍ଠିର ସ୍ଥାନ ଏବଂ ମାଂସପେଶୀ ବନ୍ଧନ।",
+        "feelings": {
+          "low": ["ସହଜରେ ଚଲାବୁଲା"],
+          "high": ["ଗଣ୍ଠି ଦରଜ ବା ଟାଣିବା", "ଚାଲିବା ପରେ ଫୁଲା", "କଟକଟ ଶବ୍ଦ ଲାଗିବା"],
+          "normal": ["ହାଡ଼ ଏବଂ ଗଣ୍ଠି ଶକ୍ତ ଅଛି"],
+          "general": ["ଗଣ୍ଠି ଦରଜ ବା ଫୁଲା"]
+        },
+        "doctorQuestion": "ଏହି ଗଣ୍ଠିକୁ ସୁରକ୍ଷିତ ରଖିବା ପାଇଁ କେଉଁ ବିଶ୍ରାମ ବା ବ୍ୟାୟାମ ଠିକ୍ ହେବ?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "bone", "label_en": "Strong Bone", "label_hi": "मजबूत हड्डी", "label_or": "ଶକ୍ତ ହାଡ଼" },
+          { "icon": "cushion", "label_en": "Joint Cushion", "label_hi": "जोड़ की गद्दी", "label_or": "ଗଣ୍ଠି ଗଦି" },
+          { "icon": "check", "label_en": "Smooth Bending", "label_hi": "आसान हरकत", "label_or": "ସହଜ ଚଳନ" }
+        ],
+        "highlightIndexByStatus": { "low": 0, "high": 1, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Bone strength reserves like Vitamin D or calcium are lower.", "hi": "हड्डी मजबूत रखने वाले तत्व कुछ कम हैं।", "or": "ହାଡ଼ ଶକ୍ତି ରଖୁଥିବା ଉପାଦାନ ଟିକେ କମ୍ ଅଛି।" },
+          "high": { "en": "The joint cushion or bone shows wear, tear, or swelling.", "hi": "जोड़ की गद्दी या हड्डी में हल्का घिसाव या सूजन दिखी है।", "or": "ଗଣ୍ଠି ଗଦି ବା ହାଡ଼ରେ ଘଷା ବା ଫୁଲା ଦେଖାଯାଇଛି।" },
+          "normal": { "en": "Bones and joint spaces look healthy.", "hi": "हड्डियां और जोड़ स्वस्थ दिख रहे हैं।", "or": "ହାଡ଼ ଏବଂ ଗଣ୍ଠି ସୁସ୍ଥ ଦେଖାଯାଉଛି।" }
+        }
+      }
+    },
+    {
+      "id": "urinary_system",
+      "kind": "organ",
+      "aliases": ["urinary_system", "urinary system", "bladder", "prostate", "ureter"],
+      "analogyIcon": "water_filter",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Urinary System",
+        "analogy": "Like a clean holding tank and outlet pipe that stores filtered water from kidneys until you go to the toilet.",
+        "whatItMeasures": "Bladder emptying, urine cleanliness, and urinary passage comfort.",
+        "feelings": {
+          "low": ["Comfortable urination"],
+          "high": ["Burning or stinging", "Going often at night", "Lower belly fullness"],
+          "normal": ["Clean and comfortable urinary path"],
+          "general": ["Burning or frequent urination"]
+        },
+        "doctorQuestion": "Is there an infection or blockage to check in my urinary tract?"
+      },
+      "hi": {
+        "title": "मूत्र प्रणाली (पेशाब मार्ग)",
+        "analogy": "साफ टंकी और नली जैसा जो किडनी से छने हुए पानी को जमा रखकर बाहर निकालती है।",
+        "whatItMeasures": "मूत्राशय की सफाई और पेशाब निकलने की आसानी।",
+        "feelings": {
+          "low": ["पेशाब में कोई तकलीफ नहीं"],
+          "high": ["पेशाब में जलन", "रात में बार-बार जाना", "पेट के नीचे भारीपन"],
+          "normal": ["मूत्र मार्ग साफ है"],
+          "general": ["जलन या बार-बार पेशाब"]
+        },
+        "doctorQuestion": "क्या मूत्र मार्ग में कोई संक्रमण या रुकावट की जांच करनी चाहिए?"
+      },
+      "or": {
+        "title": "ମୂତ୍ର ପ୍ରଣାଳୀ",
+        "analogy": "ସଫା ଟାଙ୍କି ଏବଂ ପାଇପ୍ ପରି, ଯାହା କିଡନୀ ଛାଣିଥିବା ପାଣିକୁ ରଖି ବାହାର କରେ।",
+        "whatItMeasures": "ମୂତ୍ରାଶୟ ସଫା ରହିବା ଏବଂ ପରିସ୍ରା ବାଟର ସୁସ୍ଥତା।",
+        "feelings": {
+          "low": ["ଆରାମଦାୟକ ପରିସ୍ରା"],
+          "high": ["ପରିସ୍ରାରେ ଜ୍ୱାଳା", "ରାତିରେ ବାରମ୍ବାର ଯିବା", "ତଳ ପେଟ ଭାରି ଲାଗିବା"],
+          "normal": ["ମୂତ୍ର ବାଟ ସଫା ଓ ସୁସ୍ଥ ଅଛି"],
+          "general": ["ଜ୍ୱାଳା ବା ବାରମ୍ବାର ପରିସ୍ରା"]
+        },
+        "doctorQuestion": "ମୋର ମୂତ୍ର ବାଟରେ କୌଣସି ସଂକ୍ରମଣ ବା ଅବରୋଧ ଅଛି କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "filter", "label_en": "Kidneys", "label_hi": "किडनी", "label_or": "କିଡନୀ" },
+          { "icon": "drop", "label_en": "Bladder Tank", "label_hi": "मूत्राशय", "label_or": "ମୂତ୍ରାଶୟ" },
+          { "icon": "check", "label_en": "Clear Outlet", "label_hi": "साफ मार्ग", "label_or": "ସଫା ବାଟ" }
+        ],
+        "highlightIndexByStatus": { "low": -1, "high": 1, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Urinary tract looks quiet.", "hi": "मूत्र मार्ग शांत है।", "or": "ମୂତ୍ର ବାଟ ଶାନ୍ତ ଅଛି।" },
+          "high": { "en": "Bladder or urinary path shows irritation or extra residue.", "hi": "मूत्र मार्ग में जलन, संक्रमण या कुछ रुकावट का संकेत है।", "or": "ମୂତ୍ର ବାଟରେ ସଂକ୍ରମଣ ବା ଅବରୋଧର ସଙ୍କେତ ଅଛି।" },
+          "normal": { "en": "Urinary system is clean and clear.", "hi": "मूत्र प्रणाली साफ और सामान्य है।", "or": "ମୂତ୍ର ପ୍ରଣାଳୀ ସଫା ଏବଂ ସ୍ୱାଭାବିକ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "head",
+      "kind": "organ",
+      "aliases": ["head", "head / brain", "brain", "ct brain", "mri brain", "sinus"],
+      "analogyIcon": "battery_energy",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Head & Brain",
+        "analogy": "Your body's control room — sending quiet signals down nerves and keeping balance, memory, and senses working.",
+        "whatItMeasures": "Brain spaces, blood flow, and sinus pockets inside the head.",
+        "feelings": {
+          "low": ["Head feels clear"],
+          "high": ["Headache or heaviness", "Dizziness or sinus pressure", "Blurred vision"],
+          "normal": ["Head and brain structures look clear"],
+          "general": ["Headache, dizziness, or sinus pressure"]
+        },
+        "doctorQuestion": "Are these head scan notes routine or needing follow-up?"
+      },
+      "hi": {
+        "title": "सिर और मस्तिष्क",
+        "analogy": "शरीर का मुख्य नियंत्रण कक्ष — जो याददाश्त, संतुलन और शरीर के हर संकेत को संभालता है।",
+        "whatItMeasures": "सिर की हड्डी, मस्तिष्क, नसों और साइनस की स्थिति।",
+        "feelings": {
+          "low": ["सिर हल्का और साफ"],
+          "high": ["सिरदर्द या भारीपन", "चक्कर आना या साइनस दबाव", "आंखों में धुंधलापन"],
+          "normal": ["सिर और मस्तिष्क की जांच साफ है"],
+          "general": ["सिरदर्द या चक्कर"]
+        },
+        "doctorQuestion": "क्या सिर की इस रिपोर्ट में कोई खास बात है जिस पर ध्यान देना चाहिए?"
+      },
+      "or": {
+        "title": "ମୁଣ୍ଡ ଏବଂ ମସ୍ତିଷ୍କ",
+        "analogy": "ଶରୀରର ମୁଖ୍ୟ ନିୟନ୍ତ୍ରଣ କକ୍ଷ — ଯାହା ସ୍ମୃତି, ସନ୍ତୁଳନ ଏବଂ ସମସ୍ତ ସ୍ନାୟୁ ସଙ୍କେତକୁ ସମ୍ଭାଳେ।",
+        "whatItMeasures": "ମସ୍ତିଷ୍କ, ରକ୍ତ ପ୍ରବାହ ଏବଂ ସାଇନସ୍ ର ସ୍ଥିତି।",
+        "feelings": {
+          "low": ["ମୁଣ୍ଡ ହାଲୁକା ଲାଗିବା"],
+          "high": ["ମୁଣ୍ଡବିନ୍ଧା ବା ଭାରି", "ମୁଣ୍ଡ ବୁଲାଇବା ବା ସାଇନସ୍ ଚାପ", "ଝାପସା ଦେଖାଯିବା"],
+          "normal": ["ମୁଣ୍ଡ ଓ ମସ୍ତିଷ୍କ ସଫା ଅଛି"],
+          "general": ["ମୁଣ୍ଡବିନ୍ଧା ବା ମୁଣ୍ଡ ବୁଲାଇବା"]
+        },
+        "doctorQuestion": "ଏହି ମୁଣ୍ଡ ସ୍କାନ୍ ରିପୋର୍ଟ ସାଧାରଣ ନା ଅଧିକ ଦେଖାଇବା ଦରକାର?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "head", "label_en": "Control Room", "label_hi": "मस्तिष्क कक्ष", "label_or": "ନିୟନ୍ତ୍ରଣ କକ୍ଷ" },
+          { "icon": "signal", "label_en": "Nerve Signals", "label_hi": "नसों के संकेत", "label_or": "ସ୍ନାୟୁ ସଙ୍କେତ" },
+          { "icon": "check", "label_en": "Body Balance", "label_hi": "शरीर संतुलन", "label_or": "ଶରୀର ସନ୍ତୁଳନ" }
+        ],
+        "highlightIndexByStatus": { "low": 0, "high": 0, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Head scan looks calm.", "hi": "सिर की जांच शांत है।", "or": "ମୁଣ୍ଡ ପରୀକ୍ଷା ଶାନ୍ତ ଅଛି।" },
+          "high": { "en": "An area in the head scan is noted for your doctor to review.", "hi": "सिर के स्कैन में एक बदलाव दिखा है, इसे डॉक्टर को दिखाएं।", "or": "ମୁଣ୍ଡ ସ୍କାନ୍ ରେ ଗୋଟିଏ ପରିବର୍ତ୍ତନ ଦେଖାଯାଇଛି, ଡାକ୍ତରଙ୍କୁ ଦେଖାନ୍ତୁ।" },
+          "normal": { "en": "Head and brain report looks clear.", "hi": "सिर और मस्तिष्क की रिपोर्ट साफ है।", "or": "ମୁଣ୍ଡ ଓ ମସ୍ତିଷ୍କ ରିପୋର୍ଟ ସଫା ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "pelvis",
+      "kind": "organ",
+      "aliases": ["pelvis", "hips / pelvis", "hip", "uterus", "ovary", "pelvic"],
+      "analogyIcon": "spine_cushion",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Hips / Pelvis",
+        "analogy": "Like a strong bowl of bone holding your lower organs and connecting your legs so you can stand and walk.",
+        "whatItMeasures": "Hip joints, pelvic bones, and lower belly organs.",
+        "feelings": {
+          "low": ["Comfortable movement"],
+          "high": ["Hip or groin ache", "Lower belly heaviness", "Stiffness on standing"],
+          "normal": ["Pelvic area looks balanced and clear"],
+          "general": ["Hip pain or lower belly discomfort"]
+        },
+        "doctorQuestion": "Do these pelvic findings need follow-up or gentle rest?"
+      },
+      "hi": {
+        "title": "कूल्हा / पेल्विस",
+        "analogy": "हड्डियों का एक मजबूत कटोरा जो पेट के निचले अंगों को संभालता है और पैरों को चलने की ताकत देता है।",
+        "whatItMeasures": "कूल्हे के जोड़, हड्डी और निचले अंगों की स्थिति।",
+        "feelings": {
+          "low": ["चलने-फिरने में आराम"],
+          "high": ["कूल्हे में दर्द", "पेट के निचले हिस्से में भारीपन", "उठने में अकड़न"],
+          "normal": ["पेल्विस क्षेत्र सामान्य दिख रहा है"],
+          "general": ["कूल्हे या निचले पेट में दर्द"]
+        },
+        "doctorQuestion": "क्या इस पेल्विस रिपोर्ट के लिए आराम या आगे किसी जांच की जरूरत है?"
+      },
+      "or": {
+        "title": "କଟି / ପେଲଭିସ୍",
+        "analogy": "ହାଡ଼ର ଏକ ମଜବୁତ ପାତ୍ର ପରି, ଯାହା ତଳ ଅଙ୍ଗଗୁଡ଼ିକୁ ଧରିରଖେ ଏବଂ ଗୋଡ଼କୁ ଚାଲିବା ପାଇଁ ଯୋଡ଼ି ରଖେ।",
+        "whatItMeasures": "କଟି ଗଣ୍ଠି, ହାଡ଼ ଏବଂ ତଳ ପେଟର ଅଙ୍ଗ।",
+        "feelings": {
+          "low": ["ଆରାମରେ ଚଲାବୁଲା"],
+          "high": ["କଟି ଦରଜ", "ତଳ ପେଟ ଭାରି ଲାଗିବା", "ଉଠିବା ବେଳେ ଟାଣିବା"],
+          "normal": ["ପେଲଭିସ୍ ଅଂଶ ସୁସ୍ଥ ଏବଂ ସଫା ଅଛି"],
+          "general": ["କଟି ଦରଜ ବା ତଳ ପେଟ ଅସ୍ୱସ୍ତି"]
+        },
+        "doctorQuestion": "ଏହି ପେଲଭିସ୍ ରିପୋର୍ଟ ପାଇଁ ବିଶ୍ରାମ ନା ଆଉ କିଛି ପରୀକ୍ଷା ଦରକାର?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "bone", "label_en": "Pelvic Bowl", "label_hi": "पेल्विस हड्डी", "label_or": "ପେଲଭିସ୍ ହାଡ଼" },
+          { "icon": "cushion", "label_en": "Hip Joints", "label_hi": "कूल्हे के जोड़", "label_or": "କଟି ଗଣ୍ଠି" },
+          { "icon": "check", "label_en": "Steady Support", "label_hi": "मजबूत सहारा", "label_or": "ସ୍ଥିର ସହାୟତା" }
+        ],
+        "highlightIndexByStatus": { "low": 1, "high": 1, "critical": 0, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Pelvic findings look mild.", "hi": "पेल्विस में हल्का बदलाव दिखा है।", "or": "ପେଲଭିସ୍ ରେ ସାମାନ୍ୟ ପରିବର୍ତ୍ତନ ଅଛି।" },
+          "high": { "en": "Hip or pelvic area shows a finding for your doctor to review.", "hi": "कूल्हे या पेल्विस क्षेत्र में बदलाव दिखा है, डॉक्टर को दिखाएं।", "or": "କଟି ବା ପେଲଭିସ୍ ଅଂଶରେ ପରିବର୍ତ୍ତନ ଦେଖାଯାଇଛି, ଡାକ୍ତରଙ୍କୁ ଦେଖାନ୍ତୁ।" },
+          "normal": { "en": "Pelvic bones and organs look healthy.", "hi": "पेल्विस क्षेत्र सामान्य है।", "or": "ପେଲଭିସ୍ ଅଂଶ ସ୍ୱାଭାବିକ ଅଛି।" }
+        }
+      }
+    },
+    {
+      "id": "eyes_ears",
+      "kind": "organ",
+      "aliases": ["eyes_ears", "eyes & ears", "eye", "ear", "vision", "hearing", "retina", "audiometry"],
+      "analogyIcon": "battery_energy",
+      "review_status": "needs_doctor_or_medical_student_review",
+      "en": {
+        "title": "Eyes & Ears",
+        "analogy": "Like your body's camera lens and microphone — tiny clear parts gather light and sound and send them to your brain.",
+        "whatItMeasures": "Vision sharpness, eye pressure, or hearing balance.",
+        "feelings": {
+          "low": ["Clear sight and hearing"],
+          "high": ["Blurred vision", "Ear ringing or fullness", "Mild dizziness"],
+          "normal": ["Sight and hearing pathways look clear"],
+          "general": ["Blurred sight or ear ringing"]
+        },
+        "doctorQuestion": "Do I need an eye or ear specialist check for this finding?"
+      },
+      "hi": {
+        "title": "आंखें और कान",
+        "analogy": "शरीर के कैमरे और माइक जैसे — छोटे साफ हिस्से रोशनी और आवाज पकड़कर दिमाग तक भेजते हैं।",
+        "whatItMeasures": "नजर की सफाई, आंख का दबाव या सुनने का संतुलन।",
+        "feelings": {
+          "low": ["साफ दिखाई और सुनाई देना"],
+          "high": ["धुंधला दिखना", "कान में गूंज या भारीपन", "हल्का चक्कर"],
+          "normal": ["आंख और कान की जांच ठीक है"],
+          "general": ["धुंधला दिखना या कान में भारीपन"]
+        },
+        "doctorQuestion": "क्या इस जांच के लिए आंख या कान के डॉक्टर को दिखाना चाहिए?"
+      },
+      "or": {
+        "title": "ଆଖି ଏବଂ କାନ",
+        "analogy": "ଶରୀରର କ୍ୟାମେରା ଏବଂ ମାଇକ୍ ପରି — ଛୋଟ ସଫା ଅଂଶ ଆଲୋକ ଓ ଶବ୍ଦ ଧରି ମସ୍ତିଷ୍କକୁ ପଠାଏ।",
+        "whatItMeasures": "ଦୃଷ୍ଟି ସ୍ପଷ୍ଟତା, ଆଖି ଚାପ କିମ୍ବା ଶ୍ରବଣ ଶକ୍ତି।",
+        "feelings": {
+          "low": ["ସ୍ପଷ୍ଟ ଦେଖା ଓ ଶୁଣା"],
+          "high": ["ଝାପସା ଦେଖାଯିବା", "କାନ ଭାରି ଲାଗିବା", "ସାମାନ୍ୟ ମୁଣ୍ଡ ବୁଲାଇବା"],
+          "normal": ["ଆଖି ଓ କାନ ସ୍ୱାଭାବିକ ଅଛି"],
+          "general": ["ଝାପସା ଦେଖାଯିବା ବା କାନ ଅସ୍ୱସ୍ତି"]
+        },
+        "doctorQuestion": "ଏହି ପରୀକ୍ଷା ପାଇଁ ଆଖି ବା କାନ ଡାକ୍ତରଙ୍କୁ ଦେଖାଇବା ଦରକାର କି?"
+      },
+      "flowDiagram": {
+        "steps": [
+          { "icon": "head", "label_en": "Light / Sound", "label_hi": "रोशनी / आवाज", "label_or": "ଆଲୋକ / ଶବ୍ଦ" },
+          { "icon": "signal", "label_en": "Nerve Path", "label_hi": "नस का रास्ता", "label_or": "ସ୍ନାୟୁ ବାଟ" },
+          { "icon": "check", "label_en": "Brain Reads", "label_hi": "दिमाग समझे", "label_or": "ମସ୍ତିଷ୍କ ବୁଝେ" }
+        ],
+        "highlightIndexByStatus": { "low": 0, "high": 0, "critical": 1, "normal": -1 },
+        "captionByStatus": {
+          "low": { "en": "Eye and ear findings look calm.", "hi": "आंख और कान की जांच शांत है।", "or": "ଆଖି ଏବଂ କାନ ପରୀକ୍ଷା ଶାନ୍ତ ଅଛି।" },
+          "high": { "en": "An eye or ear note is marked for follow-up.", "hi": "आंख या कान की जांच में एक बात देखने लायक है।", "or": "ଆଖି ବା କାନ ପରୀକ୍ଷାରେ ଗୋଟିଏ କଥା ଦେଖିବା ଦରକାର।" },
+          "normal": { "en": "Eyes and ears look clear.", "hi": "आंख और कान साफ हैं।", "or": "ଆଖି ଏବଂ କାନ ସଫା ଅଛି।" }
+        }
+      }
+    }
+  ]
+}

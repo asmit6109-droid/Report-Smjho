@@ -13,10 +13,21 @@ import {
 } from '../utils/storage';
 import { buildBodyRegionSummaries } from '../utils/bodyMapper';
 import { buildFullPdfPayload, PdfReportPayload } from '../utils/pdfReportData';
+import { getClientDeviceId } from '../utils/uploadJob';
+import {
+  computeTranslationCacheKey,
+  getCachedTranslation,
+  setCachedTranslation,
+} from '../utils/cache';
 import { BodyMap } from './BodyMap';
 import { FindingGauge } from './FindingGauge';
 import { ReportExportModal } from './ReportExportModal';
 import { PrintReportSheet } from './PrintReportSheet';
+import {
+  ExplainerTarget,
+  TopicExplainerSheet,
+} from './explainer/TopicExplainerSheet';
+import { ReportQuestionBox } from './ReportQuestionBox';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -93,6 +104,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [showMore, setShowMore] = useState(false);
   const [openRow, setOpenRow] = useState<ReportMoreRowId | null>(null);
   const [focusedFindingId, setFocusedFindingId] = useState<string | null>(null);
+  const [explainerTarget, setExplainerTarget] = useState<ExplainerTarget | null>(null);
 
   // Report Group save / rename UI states
   const [showSaveGroupInput, setShowSaveGroupInput] = useState(false);
@@ -201,15 +213,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
       if (!needsTranslation()) return;
       setIsTranslating(true);
       try {
-        const res = await fetch('/api/translate-report', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ report: activeViewReport, targetLanguage: currentLanguage }),
-        });
-        const raw = await res.text();
-        const data = JSON.parse(raw);
-        if (!cancelled && res.ok && data.success && data.translation) {
-          const tr = data.translation;
+        const cacheKey = await computeTranslationCacheKey(
+          'report',
+          {
+            report_type: activeViewReport.report_type,
+            severity_reason: activeViewReport.severity_reason,
+            findings: activeViewReport.findings.map((f) => ({
+              id: f.id,
+              name: f.name,
+              short_explanation: f.short_explanation,
+            })),
+          },
+          currentLanguage
+        );
+
+        const applyTranslation = (tr: any) => {
           const findingMap = new Map<string, { name?: string; short_explanation?: string }>();
           if (Array.isArray(tr.findings)) {
             for (const f of tr.findings) {
@@ -246,6 +264,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           updateReportInStorage(updatedReport);
           onReportUpdated?.(updatedReport);
+        };
+
+        const cached = getCachedTranslation<any>(cacheKey);
+        if (cached) {
+          if (!cancelled) applyTranslation(cached);
+          return;
+        }
+
+        const res = await fetch('/api/translate-report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Device-Id': getClientDeviceId(),
+          },
+          body: JSON.stringify({ report: activeViewReport, targetLanguage: currentLanguage }),
+        });
+        const raw = await res.text();
+        const data = JSON.parse(raw);
+        if (!cancelled && res.ok && data.success && data.translation) {
+          setCachedTranslation(cacheKey, data.translation);
+          applyTranslation(data.translation);
         }
       } catch (err) {
         console.warn('On-demand translation skipped:', err);
@@ -777,7 +816,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* 3. BETTER BODY VISUALIZATION (Deterministic table + tap interaction) */}
+      {/* 3. BETTER BODY VISUALIZATION (Deterministic table + tap interaction + explainer sheet) */}
       <BodyMap
         affectedRegions={activeViewReport.body_regions_affected}
         findings={activeViewReport.findings}
@@ -785,6 +824,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
         reportType={activeViewReport.report_type}
         language={currentLanguage}
         onViewFinding={handleViewFindingFromBodyMap}
+        onExplainRegion={(regionId, areaLabel, findings, severity, shortNote) =>
+          setExplainerTarget({
+            kind: 'region',
+            regionId,
+            areaLabel,
+            findings,
+            severity,
+            shortNote,
+          })
+        }
+        onExplainFinding={(f) => setExplainerTarget({ kind: 'finding', finding: f })}
       />
 
       {/* 4. ABNORMAL FINDINGS (Mapped first, then unmapped under "Other findings") */}
@@ -796,6 +846,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               finding={finding}
               language={currentLanguage}
               isFocused={focusedFindingId === finding.id}
+              onExplain={(f) => setExplainerTarget({ kind: 'finding', finding: f })}
             />
           ))}
         </div>
@@ -812,6 +863,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               finding={finding}
               language={currentLanguage}
               isFocused={focusedFindingId === finding.id}
+              onExplain={(f) => setExplainerTarget({ kind: 'finding', finding: f })}
             />
           ))}
         </div>
@@ -914,6 +966,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       finding={finding}
                       language={currentLanguage}
                       isFocused={focusedFindingId === finding.id}
+                      onExplain={(f) => setExplainerTarget({ kind: 'finding', finding: f })}
                     />
                   ))}
                 </div>
@@ -1145,11 +1198,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* Permanent Footer */}
-      <p className="text-center text-sm font-medium text-[var(--color-text-secondary)] pt-2">
-        {t.permanentFooter}
+      {/* Ask a Question About This Report (typing or voice) */}
+      <ReportQuestionBox report={activeViewReport} language={currentLanguage} />
+
+      {/* Always-visible calm safety line */}
+      <p className="text-center text-sm font-medium text-[var(--color-text-secondary)] pt-1">
+        {currentLanguage === 'hi'
+          ? 'यह आपकी रिपोर्ट समझने में मदद के लिए है। यह कोई बीमारी तय नहीं करता।'
+          : currentLanguage === 'or'
+          ? 'ଏହା ଆପଣଙ୍କ ରିପୋର୍ଟ ବୁଝିବାରେ ସାହାଯ୍ୟ କରେ। ଏହା କୌଣସି ରୋଗ ନିର୍ଣ୍ଣୟ ନୁହେଁ।'
+          : 'This helps you understand your report. It is not a diagnosis.'}
       </p>
     </div>
+
+    {/* "What is this?" Explainer Bottom Sheet */}
+    {explainerTarget && (
+      <TopicExplainerSheet
+        target={explainerTarget}
+        language={currentLanguage}
+        onClose={() => setExplainerTarget(null)}
+      />
+    )}
 
     {/* Dedicated Full-Report A4 Print View (used by window.print() / Print button) */}
     <PrintReportSheet payload={effectivePrintPayload} />

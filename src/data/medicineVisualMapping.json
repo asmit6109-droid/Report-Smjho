@@ -1,0 +1,299 @@
+{
+  "version": "1.0.0",
+  "description": "Editable static lookup table mapping medicine active ingredients (salts) to either a highlighted body region or a neutral category icon. The AI never invents visual mappings; the app reads only this file. Mark every entry as verified after doctor/pharmacist review.",
+  "categories": {
+    "pain_fever": {
+      "icon": "pain_fever",
+      "body_region": null,
+      "show_body_map": false,
+      "label_en": "Pain or fever relief",
+      "label_hi": "दर्द या बुखार में आराम",
+      "label_or": "ବ୍ୟଥା କିମ୍ବା ଜ୍ୱର ଉପଶମ",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "infection": {
+      "icon": "infection",
+      "body_region": null,
+      "show_body_map": false,
+      "label_en": "Fighting bacterial infections",
+      "label_hi": "कीटाणु (संक्रमण) से लड़ने के लिए",
+      "label_or": "ଜୀବାଣୁ ସଂକ୍ରମଣ କମାଇବା ପାଇଁ",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "vitamin_supplement": {
+      "icon": "vitamin_supplement",
+      "body_region": null,
+      "show_body_map": false,
+      "label_en": "Vitamin or nutrition support",
+      "label_hi": "विटामिन या पोषण की पूर्ति",
+      "label_or": "ଭିଟାମିନ୍ କିମ୍ବା ପୋଷଣ ସହାୟତା",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "stomach_acidity": {
+      "icon": "stomach_acidity",
+      "body_region": "stomach_intestines",
+      "show_body_map": true,
+      "label_en": "Stomach & acidity",
+      "label_hi": "पेट और एसिडिटी",
+      "label_or": "ପାକସ୍ଥଳୀ ଏବଂ ଏସିଡିଟି",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "blood_pressure": {
+      "icon": "blood_pressure",
+      "body_region": "heart",
+      "show_body_map": false,
+      "include_related_region": true,
+      "label_en": "Blood pressure (heart & vessels)",
+      "label_hi": "ब्लड प्रेशर (दिल और नसें)",
+      "label_or": "ରକ୍ତଚାପ (ହୃଦୟ ଏବଂ ରକ୍ତନଳୀ)",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "blood_sugar": {
+      "icon": "blood_sugar",
+      "body_region": null,
+      "show_body_map": false,
+      "label_en": "Blood sugar control",
+      "label_hi": "ब्लड शुगर नियंत्रण",
+      "label_or": "ରକ୍ତ ଶର୍କରା ନିୟନ୍ତ୍ରଣ",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "allergy_cold": {
+      "icon": "allergy_cold",
+      "body_region": null,
+      "show_body_map": false,
+      "label_en": "Allergy, sneezing, or cold",
+      "label_hi": "एलर्जी, छींक या जुकाम",
+      "label_or": "ଆଲର୍ଜି, ଛିଙ୍କ କିମ୍ବା ଥଣ୍ଡା",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "lungs_breathing": {
+      "icon": "lungs_breathing",
+      "body_region": "chest_lungs",
+      "show_body_map": true,
+      "label_en": "Lungs & breathing",
+      "label_hi": "फेफड़े और सांस",
+      "label_or": "ଫୁସଫୁସ ଏବଂ ନିଶ୍ୱାସ",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "bones_joints": {
+      "icon": "bones_joints",
+      "body_region": "bones_joints",
+      "show_body_map": false,
+      "label_en": "Bones & joints (general)",
+      "label_hi": "हड्डियां और जोड़ (सामान्य)",
+      "label_or": "ହାଡ଼ ଏବଂ ଗଣ୍ଠି (ସାଧାରଣ)",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "skin": {
+      "icon": "skin",
+      "body_region": null,
+      "show_body_map": false,
+      "label_en": "Skin care",
+      "label_hi": "त्वचा की देखभाल",
+      "label_or": "ଚର୍ମ ଯତ୍ନ",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "thyroid": {
+      "icon": "general",
+      "body_region": "thyroid",
+      "show_body_map": true,
+      "label_en": "Neck / thyroid hormone balance",
+      "label_hi": "गला / थायरॉइड संतुलन",
+      "label_or": "ବେକ / ଥାଇରଏଡ୍ ସନ୍ତୁଳନ",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "general": {
+      "icon": "general",
+      "body_region": null,
+      "show_body_map": false,
+      "label_en": "General medicine",
+      "label_hi": "सामान्य दवा",
+      "label_or": "ସାଧାରଣ ଔଷଧ",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    "neutral": {
+      "icon": "neutral",
+      "body_region": null,
+      "show_body_map": false,
+      "label_en": "General medicine",
+      "label_hi": "सामान्य दवा",
+      "label_or": "ସାଧାରଣ ଔଷଧ",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    }
+  },
+  "salt_mappings": [
+    {
+      "id": "levothyroxine_thyroid",
+      "salts": ["levothyroxine", "levothyroxine sodium", "thyroxine", "thyroxine sodium"],
+      "category": "thyroid",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "blood_pressure_agents",
+      "salts": [
+        "amlodipine",
+        "amlodipine besylate",
+        "telmisartan",
+        "losartan",
+        "losartan potassium",
+        "atenolol",
+        "metoprolol",
+        "metoprolol succinate",
+        "metoprolol tartrate",
+        "olmesartan",
+        "olmesartan medoxomil",
+        "ramipril",
+        "enalapril"
+      ],
+      "category": "blood_pressure",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "blood_sugar_agents",
+      "salts": [
+        "metformin",
+        "metformin hydrochloride",
+        "glimepiride",
+        "gliclazide",
+        "sitagliptin",
+        "vildagliptin",
+        "teneligliptin",
+        "dapagliflozin",
+        "empagliflozin",
+        "insulin",
+        "insulin glargine",
+        "insulin regular",
+        "insulin lispro",
+        "insulin aspart"
+      ],
+      "category": "blood_sugar",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "stomach_acid_ppi",
+      "salts": [
+        "pantoprazole",
+        "pantoprazole sodium",
+        "omeprazole",
+        "rabeprazole",
+        "rabeprazole sodium",
+        "esomeprazole",
+        "lansoprazole",
+        "ranitidine",
+        "famotidine"
+      ],
+      "category": "stomach_acidity",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "lungs_breathing_agents",
+      "salts": ["salbutamol", "albuterol", "salbutamol sulfate", "albuterol sulfate", "montelukast", "montelukast sodium", "theophylline", "doxofylline"],
+      "category": "lungs_breathing",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "bones_joints_supplements",
+      "salts": [
+        "vitamin d",
+        "vitamin d3",
+        "cholecalciferol",
+        "ergocalciferol",
+        "calcitriol",
+        "calcium",
+        "calcium carbonate",
+        "calcium citrate"
+      ],
+      "category": "bones_joints",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "vitamin_nutrition_supplements",
+      "salts": [
+        "vitamin b12",
+        "methylcobalamin",
+        "cyanocobalamin",
+        "folic acid",
+        "ferrous sulfate",
+        "ferrous ascorbate",
+        "vitamin c",
+        "ascorbic acid",
+        "multivitamin",
+        "zinc sulfate"
+      ],
+      "category": "vitamin_supplement",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "pain_fever_agents",
+      "salts": [
+        "paracetamol",
+        "acetaminophen",
+        "ibuprofen",
+        "diclofenac",
+        "diclofenac sodium",
+        "diclofenac potassium",
+        "aceclofenac",
+        "naproxen",
+        "naproxen sodium"
+      ],
+      "category": "pain_fever",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "infection_antibiotics",
+      "salts": [
+        "amoxicillin",
+        "amoxicillin trihydrate",
+        "clavulanic acid",
+        "clavulanate",
+        "clavulanate potassium",
+        "potassium clavulanate",
+        "azithromycin",
+        "azithromycin dihydrate",
+        "cefixime",
+        "cefixime trihydrate",
+        "ciprofloxacin",
+        "levofloxacin",
+        "ofloxacin",
+        "doxycycline",
+        "cephalexin",
+        "cefuroxime"
+      ],
+      "category": "infection",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "allergy_antihistamines",
+      "salts": [
+        "cetirizine",
+        "cetirizine hydrochloride",
+        "levocetirizine",
+        "levocetirizine dihydrochloride",
+        "fexofenadine",
+        "fexofenadine hydrochloride",
+        "loratadine",
+        "desloratadine",
+        "chlorpheniramine"
+      ],
+      "category": "allergy_cold",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    },
+    {
+      "id": "steroids_neutral",
+      "salts": [
+        "prednisolone",
+        "prednisone",
+        "dexamethasone",
+        "methylprednisolone",
+        "hydrocortisone",
+        "betamethasone",
+        "deflazacort",
+        "triamcinolone",
+        "steroid",
+        "corticosteroid"
+      ],
+      "category": "neutral",
+      "review_status": "needs_doctor_or_pharmacist_review"
+    }
+  ]
+}

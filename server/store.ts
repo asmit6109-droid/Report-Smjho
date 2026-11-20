@@ -114,10 +114,10 @@ export async function storeGetJson<T>(key: string): Promise<T | null> {
       }
       return wrapped.data;
     }
-  } catch (err) {
+  } catch {
     logJobEvent('warn', {
       step: 'store_get_fallback',
-      details: err instanceof Error ? err.message : 'external store unavailable',
+      details: 'external store unavailable',
     });
   }
 
@@ -152,10 +152,10 @@ export async function storeSetJson<T>(key: string, data: T, ttlSeconds: number):
       await replitDbSet(key, JSON.stringify({ expiresAt, data }));
       return;
     }
-  } catch (err) {
+  } catch {
     logJobEvent('warn', {
       step: 'store_set_fallback',
-      details: err instanceof Error ? err.message : 'external store unavailable',
+      details: 'external store unavailable',
     });
   }
 }

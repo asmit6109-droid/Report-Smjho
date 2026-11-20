@@ -11,6 +11,7 @@ import {
   wrapMixedScriptLines,
 } from './pdfFonts';
 import { PdfReportPayload } from './pdfReportData';
+import { MedicineCategoryIconId } from './medicineVisualMapper';
 
 const PAGE_W = 210;
 const PAGE_H = 297;
@@ -64,6 +65,8 @@ function collectPayloadTextCorpus(payload: PdfReportPayload): string {
       m.salt,
       m.whoCanGive,
       m.usedFor,
+      m.visualUsedForLine,
+      m.visualRelatedNote || '',
       ...m.commonSideEffects,
       ...m.seeDoctorSideEffects,
       ...m.warnings,
@@ -253,6 +256,114 @@ function drawVectorBodySilhouette(
       [103, 362, 9.5],
       [137, 362, 9.5],
     ]);
+  }
+}
+
+function drawVectorMedicineIcon(
+  doc: jsPDF,
+  iconId: MedicineCategoryIconId,
+  cx: number,
+  cy: number
+) {
+  doc.setDrawColor(17, 24, 39);
+  doc.setFillColor(243, 244, 246);
+  doc.setLineWidth(0.55);
+
+  switch (iconId) {
+    case 'pain_fever': {
+      // Thermometer
+      doc.roundedRect(cx - 1.3, cy - 5, 2.6, 7.5, 1.2, 1.2, 'D');
+      doc.setFillColor(17, 24, 39);
+      doc.circle(cx, cy + 3.2, 2.1, 'FD');
+      doc.line(cx, cy - 2.5, cx, cy + 2);
+      break;
+    }
+    case 'blood_pressure': {
+      // Heart outline + pulse line
+      doc.circle(cx - 1.8, cy - 1.5, 2.1, 'D');
+      doc.circle(cx + 1.8, cy - 1.5, 2.1, 'D');
+      doc.triangle(cx - 3.7, cy - 0.5, cx + 3.7, cy - 0.5, cx, cy + 4.2, 'D');
+      doc.line(cx - 3.5, cy + 0.2, cx - 1, cy + 0.2);
+      doc.line(cx - 1, cy + 0.2, cx, cy - 2.2);
+      doc.line(cx, cy - 2.2, cx + 1.2, cy + 1.6);
+      doc.line(cx + 1.2, cy + 1.6, cx + 3.5, cy + 0.2);
+      break;
+    }
+    case 'blood_sugar': {
+      // Droplet
+      doc.circle(cx, cy + 1.5, 3.1, 'D');
+      doc.triangle(cx - 2.9, cy + 0.4, cx + 2.9, cy + 0.4, cx, cy - 4.5, 'D');
+      break;
+    }
+    case 'infection': {
+      // Shield + small cross/target
+      doc.roundedRect(cx - 3.6, cy - 4.2, 7.2, 7.8, 1.5, 1.5, 'D');
+      doc.circle(cx, cy - 0.3, 1.8, 'D');
+      break;
+    }
+    case 'allergy_cold': {
+      // Flower petals
+      doc.circle(cx, cy - 2.8, 1.6, 'D');
+      doc.circle(cx + 2.8, cy, 1.6, 'D');
+      doc.circle(cx, cy + 2.8, 1.6, 'D');
+      doc.circle(cx - 2.8, cy, 1.6, 'D');
+      doc.circle(cx, cy, 1.2, 'FD');
+      break;
+    }
+    case 'vitamin_supplement': {
+      // Sun rays
+      doc.circle(cx, cy, 2.5, 'D');
+      doc.line(cx, cy - 5, cx, cy - 3.5);
+      doc.line(cx, cy + 3.5, cx, cy + 5);
+      doc.line(cx - 5, cy, cx - 3.5, cy);
+      doc.line(cx + 3.5, cy, cx + 5, cy);
+      break;
+    }
+    case 'bones_joints': {
+      // Bone shape
+      doc.circle(cx - 3.2, cy - 1.2, 1.3, 'D');
+      doc.circle(cx - 3.2, cy + 1.2, 1.3, 'D');
+      doc.circle(cx + 3.2, cy - 1.2, 1.3, 'D');
+      doc.circle(cx + 3.2, cy + 1.2, 1.3, 'D');
+      doc.line(cx - 2.2, cy, cx + 2.2, cy);
+      break;
+    }
+    case 'stomach_acidity': {
+      // Stomach / curved flame arc
+      doc.ellipse(cx + 0.5, cy + 0.5, 3.2, 4, 'D');
+      doc.line(cx - 1.5, cy - 4, cx + 1, cy - 2);
+      break;
+    }
+    case 'lungs_breathing': {
+      // Two lung lobes + airway
+      doc.line(cx, cy - 4.5, cx, cy - 1);
+      doc.ellipse(cx - 2.4, cy + 1, 1.8, 3.2, 'D');
+      doc.ellipse(cx + 2.4, cy + 1, 1.8, 3.2, 'D');
+      break;
+    }
+    case 'skin': {
+      // Layered diamond
+      doc.triangle(cx, cy - 4.2, cx - 4, cy, cx + 4, cy, 'D');
+      doc.line(cx - 3.5, cy + 2, cx, cy + 4.2);
+      doc.line(cx + 3.5, cy + 2, cx, cy + 4.2);
+      break;
+    }
+    case 'general': {
+      // Pulse line
+      doc.line(cx - 5, cy, cx - 2.2, cy);
+      doc.line(cx - 2.2, cy, cx - 0.8, cy - 3.5);
+      doc.line(cx - 0.8, cy - 3.5, cx + 1.2, cy + 3.5);
+      doc.line(cx + 1.2, cy + 3.5, cx + 2.6, cy);
+      doc.line(cx + 2.6, cy, cx + 5, cy);
+      break;
+    }
+    case 'neutral':
+    default: {
+      // Neutral capsule/pill icon
+      doc.roundedRect(cx - 4.2, cy - 2, 8.4, 4, 2, 2, 'D');
+      doc.line(cx, cy - 2, cx, cy + 2);
+      break;
+    }
   }
 }
 
@@ -766,12 +877,24 @@ export async function generateFullReportPdf(
     drawSectionHeading(payload.labels.sectionMedicines);
 
     for (const med of payload.medicines) {
-      const blockLines: { label: string; value: string; bold?: boolean; warn?: boolean }[] = [
+      const hasPackPhoto = Boolean(med.packThumbnail);
+      const visualBoxW = 16;
+      const visualBoxH = 22;
+      const thumbSize = 14;
+      const textColW = CONTENT_W - visualBoxW - (hasPackPhoto ? thumbSize + 16 : 12);
+
+      const blockLines: { label: string; value: string; bold?: boolean; warn?: boolean; teal?: boolean }[] = [
         { label: '', value: `${med.brand} (${med.strength})`, bold: true },
+        { label: '', value: med.visualUsedForLine, bold: true, teal: true },
+      ];
+      if (med.visualRelatedNote) {
+        blockLines.push({ label: '', value: med.visualRelatedNote });
+      }
+      blockLines.push(
         { label: `${payload.labels.medSalt}: `, value: med.salt },
         { label: `${payload.labels.medWhoCanGive}: `, value: med.whoCanGive, bold: true },
-        { label: `${payload.labels.medUsedFor}: `, value: med.usedFor },
-      ];
+        { label: `${payload.labels.medUsedFor}: `, value: med.usedFor }
+      );
       if (med.commonSideEffects.length > 0) {
         blockLines.push({
           label: `${payload.labels.medSideEffectsCommon}: `,
@@ -800,13 +923,13 @@ export async function generateFullReportPdf(
       }
 
       const wrappedEntries = blockLines.map((bl) => ({
-        lines: wrapMixedScriptLines(doc, `${bl.label}${bl.value}`, CONTENT_W - 8, 10.2, bl.bold ? 'bold' : 'normal'),
+        lines: wrapMixedScriptLines(doc, `${bl.label}${bl.value}`, textColW, 10, bl.bold ? 'bold' : 'normal'),
         style: (bl.bold ? 'bold' : 'normal') as PdfFontStyle,
-        color: (bl.warn ? [185, 28, 28] : TEXT_BLACK) as [number, number, number],
+        color: (bl.warn ? [185, 28, 28] : bl.teal ? TEAL : TEXT_BLACK) as [number, number, number],
       }));
 
       const totalLines = wrappedEntries.reduce((acc, e) => acc + e.lines.length, 0);
-      const cardH = totalLines * 4.5 + 8;
+      const cardH = Math.max(visualBoxH + 6, totalLines * 4.4 + 8);
       ensureSpace(cardH + 3);
 
       doc.setFillColor(255, 255, 255);
@@ -814,9 +937,45 @@ export async function generateFullReportPdf(
       doc.setLineWidth(0.4);
       doc.roundedRect(MARGIN_X, y, CONTENT_W, cardH, 2.5, 2.5, 'FD');
 
+      // Left B&W-safe static vector visual box
+      const vBoxX = MARGIN_X + 3;
+      const vBoxY = y + 3;
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(LINE_GRAY[0], LINE_GRAY[1], LINE_GRAY[2]);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(vBoxX, vBoxY, visualBoxW, visualBoxH, 1.8, 1.8, 'FD');
+
+      if (med.visual.preferMiniBodyOnCard && med.visual.bodyRegion) {
+        const regMap = new Map<
+          BodyRegionId,
+          { index: number; sev: 'normal' | 'caution' | 'danger' }
+        >([[med.visual.bodyRegion, { index: 1, sev: 'normal' }]]);
+        drawVectorBodySilhouette(doc, vBoxX + 2, vBoxY + 1, 12, 19.5, 'front', regMap);
+      } else {
+        drawVectorMedicineIcon(doc, med.visual.iconId, vBoxX + visualBoxW / 2, vBoxY + visualBoxH / 2);
+      }
+
+      // Optional medicine pack thumbnail on top-right when photo exists
+      if (med.packThumbnail) {
+        try {
+          const fmtMatch = med.packThumbnail.match(/^data:image\/(jpeg|jpg|png|webp);base64,/i);
+          const fmtRaw = fmtMatch?.[1]?.toUpperCase();
+          const imgFormat = fmtRaw === 'PNG' ? 'PNG' : fmtRaw === 'WEBP' ? 'WEBP' : 'JPEG';
+          const thumbX = MARGIN_X + CONTENT_W - thumbSize - 3;
+          const thumbY = y + 3;
+          doc.addImage(med.packThumbnail, imgFormat, thumbX, thumbY, thumbSize, thumbSize);
+          doc.setDrawColor(LINE_GRAY[0], LINE_GRAY[1], LINE_GRAY[2]);
+          doc.setLineWidth(0.25);
+          doc.rect(thumbX, thumbY, thumbSize, thumbSize, 'S');
+        } catch {
+          // Ignore malformed thumbnail without breaking PDF generation
+        }
+      }
+
       let cy = y + 5.5;
+      const textX = MARGIN_X + visualBoxW + 7;
       for (const entry of wrappedEntries) {
-        cy = drawMixedScriptLines(doc, entry.lines, MARGIN_X + 4, cy, 10.2, 4.5, entry.style, entry.color);
+        cy = drawMixedScriptLines(doc, entry.lines, textX, cy, 10, 4.4, entry.style, entry.color);
       }
       y += cardH + 3;
     }

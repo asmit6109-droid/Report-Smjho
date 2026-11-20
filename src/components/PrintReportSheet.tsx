@@ -3,6 +3,7 @@ import { BodyRegionId } from '../types/report';
 import { SYSTEMIC_REGION_IDS } from '../utils/bodyMapper';
 import { PdfReportPayload } from '../utils/pdfReportData';
 import { CheckCircle2, AlertTriangle, AlertOctagon } from 'lucide-react';
+import { MedicineVisualBadge } from './medicine/MedicineVisual';
 
 interface PrintReportSheetProps {
   payload: PdfReportPayload;
@@ -399,41 +400,55 @@ export const PrintReportSheet: React.FC<PrintReportSheetProps> = ({ payload }) =
           {payload.medicines.map((med) => (
             <div
               key={med.id}
-              className="rs-print-avoid-break rounded border border-gray-300 p-3 text-xs space-y-1"
+              className="rs-print-avoid-break rounded border border-gray-300 p-3 text-xs flex items-start gap-3"
             >
-              <p className="text-sm font-extrabold text-black">
-                {med.brand} ({med.strength})
-              </p>
-              <p>
-                <strong>{labels.medSalt}:</strong> {med.salt}
-              </p>
-              <p>
-                <strong>{labels.medWhoCanGive}:</strong> {med.whoCanGive}
-              </p>
-              <p>
-                <strong>{labels.medUsedFor}:</strong> {med.usedFor}
-              </p>
-              {med.commonSideEffects.length > 0 && (
+              <MedicineVisualBadge visual={med.visual} bwPrint />
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-sm font-extrabold text-black">
+                  {med.brand} ({med.strength})
+                </p>
+                <p className="font-bold text-[#0F766E]">{med.visualUsedForLine}</p>
+                {med.visualRelatedNote && (
+                  <p className="text-[11px] text-gray-600">{med.visualRelatedNote}</p>
+                )}
                 <p>
-                  <strong>{labels.medSideEffectsCommon}:</strong>{' '}
-                  {med.commonSideEffects.join(', ')}
+                  <strong>{labels.medSalt}:</strong> {med.salt}
                 </p>
-              )}
-              {med.seeDoctorSideEffects.length > 0 && (
-                <p className="text-[#991B1B]">
-                  <strong>{labels.medSideEffectsDoctor}:</strong>{' '}
-                  {med.seeDoctorSideEffects.join(', ')}
+                <p>
+                  <strong>{labels.medWhoCanGive}:</strong> {med.whoCanGive}
                 </p>
-              )}
-              {med.warnings.length > 0 && (
-                <p className="text-[#991B1B] font-bold">
-                  <strong>{labels.medWarnings}:</strong> {med.warnings.join(' | ')}
+                <p>
+                  <strong>{labels.medUsedFor}:</strong> {med.usedFor}
                 </p>
-              )}
+                {med.commonSideEffects.length > 0 && (
+                  <p>
+                    <strong>{labels.medSideEffectsCommon}:</strong>{' '}
+                    {med.commonSideEffects.join(', ')}
+                  </p>
+                )}
+                {med.seeDoctorSideEffects.length > 0 && (
+                  <p className="text-[#991B1B]">
+                    <strong>{labels.medSideEffectsDoctor}:</strong>{' '}
+                    {med.seeDoctorSideEffects.join(', ')}
+                  </p>
+                )}
+                {med.warnings.length > 0 && (
+                  <p className="text-[#991B1B] font-bold">
+                    <strong>{labels.medWarnings}:</strong> {med.warnings.join(' | ')}
+                  </p>
+                )}
               {med.whyGiven && (
-                <p>
-                  <strong>{labels.medWhyGiven}:</strong> {med.whyGiven}
-                </p>
+                  <p>
+                    <strong>{labels.medWhyGiven}:</strong> {med.whyGiven}
+                  </p>
+                )}
+              </div>
+              {med.packThumbnail && (
+                <img
+                  src={med.packThumbnail}
+                  alt={med.brand}
+                  className="w-12 h-12 rounded object-cover border border-gray-300 shrink-0"
+                />
               )}
             </div>
           ))}

@@ -25,7 +25,7 @@ export interface JobProgressUpdate {
 
 export function getLocalizedUploadText(
   lang: SupportedLanguage,
-  kind: 'uploading' | 'queued' | 'timeout' | 'failed',
+  kind: 'uploading' | 'queued' | 'still_working' | 'timeout' | 'failed',
   percent?: number
 ): string {
   if (kind === 'uploading') {
@@ -38,6 +38,11 @@ export function getLocalizedUploadText(
     if (lang === 'hi') return 'कतार में प्रतीक्षा हो रही है...';
     if (lang === 'or') return 'ଧାଡ଼ିରେ ଅପେକ୍ଷା କରାଯାଉଛି...';
     return 'Waiting in line...';
+  }
+  if (kind === 'still_working') {
+    if (lang === 'hi') return 'अभी काम चल रहा है, कृपया थोड़ा रुकें...';
+    if (lang === 'or') return 'ଏବେବି କାମ ଚାଲିଛି, ଦୟାକରି ଅପେକ୍ଷା କରନ୍ତୁ...';
+    return 'Still working on this, please wait...';
   }
   if (kind === 'timeout') {
     if (lang === 'hi') return 'समय समाप्त हो गया। कृपया "दोबारा प्रयास करें" दबाएं।';
@@ -120,19 +125,42 @@ export async function submitScanJobWithPolling<TResult>(params: {
     title: getLocalizedUploadText(language, 'uploading', 0),
   });
 
-  let startResponse: { status: number; data: any };
-  try {
-    startResponse = await uploadJsonWithProgress(
-      endpoint,
-      payload,
-      (pct) => {
+  // Automatic retry on transient upload/5xx glitches with friendly "still working" feedback
+  let startResponse: { status: number; data: any } | null = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const resp = await uploadJsonWithProgress(
+        endpoint,
+        payload,
+        (pct) => {
+          onProgress({
+            title: getLocalizedUploadText(language, 'uploading', pct),
+          });
+        },
+        35000
+      );
+      if (resp.status >= 500 && attempt === 0) {
         onProgress({
-          title: getLocalizedUploadText(language, 'uploading', pct),
+          title: getLocalizedUploadText(language, 'still_working'),
         });
-      },
-      35000
-    );
-  } catch {
+        await sleep(1800);
+        continue;
+      }
+      startResponse = resp;
+      break;
+    } catch {
+      if (attempt === 0) {
+        onProgress({
+          title: getLocalizedUploadText(language, 'still_working'),
+        });
+        await sleep(1800);
+        continue;
+      }
+      throw new Error(getLocalizedUploadText(language, 'failed'));
+    }
+  }
+
+  if (!startResponse) {
     throw new Error(getLocalizedUploadText(language, 'failed'));
   }
 
@@ -160,7 +188,8 @@ export async function submitScanJobWithPolling<TResult>(params: {
         : startData.progressText || getLocalizedUploadText(language, 'uploading', 100),
   });
 
-  const deadline = Date.now() + overallTimeoutMs;
+  const startedWaitAt = Date.now();
+  const deadline = startedWaitAt + overallTimeoutMs;
   let consecutivePollFailures = 0;
 
   while (Date.now() < deadline) {
@@ -195,15 +224,20 @@ export async function submitScanJobWithPolling<TResult>(params: {
         if (consecutivePollFailures >= 4) {
           throw new Error(getLocalizedUploadText(language, 'failed'));
         }
+        onProgress({
+          title: getLocalizedUploadText(language, 'still_working'),
+        });
         continue;
       }
 
       consecutivePollFailures = 0;
       const job = pollJson.job;
+      const waitedMs = Date.now() - startedWaitAt;
 
       if (job.status === 'queued') {
         onProgress({
           title: job.progressText || getLocalizedUploadText(language, 'queued'),
+          subtitle: waitedMs > 12000 ? getLocalizedUploadText(language, 'still_working') : undefined,
         });
         continue;
       }
@@ -215,6 +249,8 @@ export async function submitScanJobWithPolling<TResult>(params: {
           subtitle:
             job.totalPages > 1
               ? `${Math.min(job.completedPages || 0, job.totalPages)} / ${job.totalPages}`
+              : waitedMs > 12000
+              ? getLocalizedUploadText(language, 'still_working')
               : undefined,
         });
         continue;
@@ -244,6 +280,9 @@ export async function submitScanJobWithPolling<TResult>(params: {
       if (consecutivePollFailures >= 4) {
         throw new Error(getLocalizedUploadText(language, 'failed'));
       }
+      onProgress({
+        title: getLocalizedUploadText(language, 'still_working'),
+      });
     }
   }
 

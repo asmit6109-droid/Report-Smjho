@@ -7,6 +7,7 @@ import {
   detectSameSaltPairs,
   getStoredMedicines,
 } from '../utils/storage';
+import { getClientDeviceId } from '../utils/uploadJob';
 import {
   Pill,
   Trash2,
@@ -69,7 +70,10 @@ export const MyMedicines: React.FC<MyMedicinesProps> = ({
     try {
       const res = await fetch('/api/check-medicine-interactions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Id': getClientDeviceId(),
+        },
         body: JSON.stringify({
           medicines: medicines.map((m) => ({
             id: m.id,
@@ -199,9 +203,13 @@ export const MyMedicines: React.FC<MyMedicinesProps> = ({
                 className="rs-card px-4 py-4 hover:bg-[var(--color-brand-soft)]/40 cursor-pointer flex items-center justify-between gap-3 transition"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-11 h-11 rounded-[12px] bg-[var(--color-brand-soft)] text-[var(--color-brand)] flex items-center justify-center shrink-0">
-                    <Pill className="w-5 h-5" />
-                  </div>
+                  {med.pack_thumbnail && (
+                    <img
+                      src={med.pack_thumbnail}
+                      alt={med.medicine.brand}
+                      className="w-11 h-11 rounded-[12px] object-cover border border-[var(--color-divider)] shrink-0"
+                    />
+                  )}
 
                   <div className="min-w-0">
                     <h4 className="font-bold text-base text-[var(--color-text)] truncate">

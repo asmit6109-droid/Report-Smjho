@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import http from 'http';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -25,6 +25,14 @@ import {
   mergePrescriptionDrafts,
   runParallelPagePipeline,
 } from './server/jobs.js';
+import {
+  apiCorsMiddleware,
+  sanitizeStringArray,
+  sanitizeUntrustedText,
+  UNTRUSTED_DATA_SECURITY_RULE,
+  validateImageArray,
+  wrapUntrustedData,
+} from './server/security.js';
 
 dotenv.config();
 
@@ -34,14 +42,23 @@ const __dirname = path.dirname(__filename);
 const MAX_SCAN_PAGES = 5;
 const MEDICINE_CACHE_TTL_SEC = 24 * 60 * 60; // 24 hours
 const TRANSLATION_CACHE_TTL_SEC = 6 * 60 * 60; // 6 hours
+const DAILY_WINDOW_SEC = 24 * 60 * 60;
+const DAILY_DEVICE_CAP = Math.max(
+  10,
+  Number.parseInt(process.env.DAILY_DEVICE_CAP || '60', 10) || 60
+);
+const DAILY_IP_CAP = Math.max(30, DAILY_DEVICE_CAP * 3);
 const l1MedicineCache = new Map<string, { value: any; expiresAt: number }>();
 
 const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-// Sensible request size limit for up to 5 compressed JPEGs (<= ~5MB total)
-app.use(express.json({ limit: '20mb' }));
+// Restrict CORS on /api/* and set defensive headers
+app.use('/api', apiCorsMiddleware);
+
+// Sensible request size limit for up to 5 compressed JPEGs (~16MB JSON ceiling)
+app.use(express.json({ limit: '16mb' }));
 
 // Global per-request server timeout guard (excluding long-lived SSE/static)
 app.use('/api', (req, res, next) => {
@@ -70,8 +87,33 @@ function getClientBucketId(req: Request): { ip: string; deviceId: string } {
   return { ip, deviceId: rawDevice || 'anon' };
 }
 
+// Daily cap per device (and IP safety ceiling) across AI & scan endpoints
+const dailyDeviceLimiter = async (req: Request, res: Response, next: NextFunction) => {
+  const { ip, deviceId } = getClientBucketId(req);
+  const devBucket = deviceId !== 'anon' ? `rl:day:dev:${deviceId}` : `rl:day:anon:${ip}`;
+  const devCheck = await checkAndIncrementRateLimit(devBucket, DAILY_WINDOW_SEC, DAILY_DEVICE_CAP);
+  const ipCheck = await checkAndIncrementRateLimit(`rl:day:ip:${ip}`, DAILY_WINDOW_SEC, DAILY_IP_CAP);
+
+  if (!devCheck.allowed || !ipCheck.allowed) {
+    logJobEvent('warn', {
+      step: 'daily_cap_blocked',
+      status: 'rate_limited',
+      errorType: 'rate_limit_429',
+      details: req.path,
+    });
+    res.status(429).json({
+      success: false,
+      error: 'Daily scan limit reached for today. Please try again tomorrow.',
+      isRetryable: false,
+    });
+    return;
+  }
+
+  next();
+};
+
 // Per-IP + per-device rate limiter (protects AI endpoints from overload)
-const rateLimiter = async (req: Request, res: Response, next: () => void) => {
+const rateLimiter = async (req: Request, res: Response, next: NextFunction) => {
   const { ip, deviceId } = getClientBucketId(req);
   const ipCheck = await checkAndIncrementRateLimit(`rl:ip:${ip}`, 60, 40);
   const devCheck =
@@ -94,11 +136,11 @@ const rateLimiter = async (req: Request, res: Response, next: () => void) => {
     return;
   }
 
-  next();
+  dailyDeviceLimiter(req, res, next);
 };
 
 // Dedicated tighter limiter for heavy multi-page scan job creation (polling GET /api/jobs/:id is separate)
-const scanRateLimiter = async (req: Request, res: Response, next: () => void) => {
+const scanRateLimiter = async (req: Request, res: Response, next: NextFunction) => {
   const { ip, deviceId } = getClientBucketId(req);
   const ipCheck = await checkAndIncrementRateLimit(`rl:scan:ip:${ip}`, 60, 15);
   const devCheck =
@@ -121,6 +163,20 @@ const scanRateLimiter = async (req: Request, res: Response, next: () => void) =>
     return;
   }
 
+  dailyDeviceLimiter(req, res, next);
+};
+
+const jobPollLimiter = async (req: Request, res: Response, next: NextFunction) => {
+  const { ip } = getClientBucketId(req);
+  const pollCheck = await checkAndIncrementRateLimit(`rl:poll:ip:${ip}`, 60, 120);
+  if (!pollCheck.allowed) {
+    res.status(429).json({
+      success: false,
+      error: 'Too many status checks. Please wait a moment.',
+      isRetryable: true,
+    });
+    return;
+  }
   next();
 };
 
@@ -244,13 +300,14 @@ async function analyzeSingleReportPage(params: {
       : 'very simple Class 6 English';
 
   const inlineParts = toInlineParts([imageBase64], 1);
-  const userProfileContext = `
-Patient Context provided by user:
-- Age: ${age ? `${age} years old` : 'Not specified'}
-- Gender: ${gender ? gender : 'Not specified'}
-- Output Language: ${targetLanguageName}
-- Page: ${pageNumber} of ${totalPages}
-`;
+  const safeAge = age ? sanitizeUntrustedText(age, 12) : 'Not specified';
+  const safeGender = gender ? sanitizeUntrustedText(gender, 20) : 'Not specified';
+  const userProfileContext = wrapUntrustedData('patient_context', {
+    age: safeAge,
+    gender: safeGender,
+    output_language: targetLanguageName,
+    page: `${pageNumber} of ${totalPages}`,
+  });
 
   const systemInstruction = `
 You are ReportSamjho, a medical report explainer for patients in India.
@@ -263,7 +320,7 @@ STRICT RULES:
    - For abnormal findings (low/high/critical), keep short_explanation to 1 short sentence starting with "Your report shows..." (or equivalent in ${targetLanguageName}), NEVER "You have...".
 4. Reference ranges:
    - ALWAYS prioritize the range printed on the report and set range_source = 'lab'.
-   - Only if NO range is printed on the report, use standard Indian adult reference ranges (AIIMS/ICMR) adjusted for age (${age || 'adult'}) and gender (${gender || 'adult'}), and set range_source = 'general'.
+   - Only if NO range is printed on the report, use standard Indian adult reference ranges (AIIMS/ICMR) adjusted for age (${safeAge}) and gender (${safeGender}), and set range_source = 'general'.
 5. Image Quality & Raw Scans:
    - If blurry, dark, unreadable, or not a medical document: set image_quality = 'poor', overall_severity = 'yellow', and quality_notes = 'Photo is not clear. Please retake a clearer photo.' (in ${targetLanguageName}).
    - If raw scan image (X-ray film / MRI / Ultrasound image) with NO written report text: set is_raw_scan_without_text = true, image_quality = 'poor', and quality_notes = 'I can read written reports. Please upload the doctor\\'s report.' (in ${targetLanguageName}).
@@ -276,6 +333,7 @@ STRICT RULES:
 8. Safe steps & Doctor questions:
    - 3-4 short safe steps (water, rest, avoid heavy lifting, show report to doctor; NO medicines/dosages).
    - 3-4 short simple questions to ask the doctor.
+${UNTRUSTED_DATA_SECURITY_RULE}
 `;
 
   const promptText = `
@@ -404,18 +462,14 @@ app.post('/api/jobs/scan-report', scanRateLimiter, async (req: Request, res: Res
   try {
     const { age, gender, language } = req.body || {};
 
-    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
-      res.status(400).json({ success: false, error: 'At least one report photo is required.' });
-      return;
-    }
-    if (imagesRaw.length > MAX_SCAN_PAGES) {
-      res.status(400).json({
-        success: false,
-        error: `Maximum ${MAX_SCAN_PAGES} pages allowed per scan.`,
-      });
+    const checked = validateImageArray(imagesRaw, { minCount: 1, maxCount: MAX_SCAN_PAGES });
+    if (!checked.ok) {
+      clearImageArray(imagesRaw);
+      res.status(400).json({ success: false, error: checked.error });
       return;
     }
     if (!ai) {
+      clearImageArray(imagesRaw);
       res.status(503).json({
         success: false,
         error: 'Service is temporarily unavailable. Please try again later.',
@@ -426,8 +480,9 @@ app.post('/api/jobs/scan-report', scanRateLimiter, async (req: Request, res: Res
     const langCode: 'en' | 'hi' | 'or' =
       language === 'hi' || language === 'or' ? language : 'en';
 
-    const payloadContainer = { images: imagesRaw.slice(0, MAX_SCAN_PAGES) as string[] };
-    req.body.images = [];
+    const payloadContainer = { images: checked.images };
+    clearImageArray(imagesRaw);
+    if (req.body) req.body.images = [];
 
     const job = await createScanJob({
       type: 'scan_report',
@@ -473,9 +528,18 @@ app.post('/api/jobs/scan-report', scanRateLimiter, async (req: Request, res: Res
   }
 });
 
-app.get('/api/jobs/:jobId', async (req: Request, res: Response) => {
+app.get('/api/jobs/:jobId', jobPollLimiter, async (req: Request, res: Response) => {
   res.setHeader('Cache-Control', 'no-store');
-  const job = await getScanJob(String(req.params.jobId || ''));
+  const jobId = String(req.params.jobId || '');
+  if (!/^job-[a-zA-Z0-9_-]{4,64}$/.test(jobId)) {
+    res.status(400).json({
+      success: false,
+      error: 'Invalid scan job reference.',
+      isRetryable: false,
+    });
+    return;
+  }
+  const job = await getScanJob(jobId);
   if (!job) {
     res.status(404).json({
       success: false,
@@ -507,15 +571,9 @@ app.post('/api/analyze-report', scanRateLimiter, async (req: Request, res: Respo
   try {
     const { age, gender, language } = req.body || {};
 
-    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
-      res.status(400).json({ success: false, error: 'At least one report image is required.' });
-      return;
-    }
-    if (imagesRaw.length > MAX_SCAN_PAGES) {
-      res.status(400).json({
-        success: false,
-        error: `Maximum ${MAX_SCAN_PAGES} pages allowed per scan.`,
-      });
+    const checked = validateImageArray(imagesRaw, { minCount: 1, maxCount: MAX_SCAN_PAGES });
+    if (!checked.ok) {
+      res.status(400).json({ success: false, error: checked.error });
       return;
     }
     if (!ai) {
@@ -528,7 +586,7 @@ app.post('/api/analyze-report', scanRateLimiter, async (req: Request, res: Respo
 
     const langCode: 'en' | 'hi' | 'or' =
       language === 'hi' || language === 'or' ? language : 'en';
-    const pages = imagesRaw.slice(0, MAX_SCAN_PAGES) as string[];
+    const pages = checked.images;
 
     const pageResults = await Promise.all(
       pages.map((img, idx) =>
@@ -614,7 +672,7 @@ app.post('/api/translate-report', rateLimiter, async (req: Request, res: Respons
     }
 
     const translateConfig = {
-      systemInstruction: `Translate this medical report explanation JSON into ${langLabel}. Keep sentences short, simple, and natural for patients. Never diagnose or prescribe. Return strictly matching JSON.`,
+      systemInstruction: `Translate the JSON fields inside <untrusted_input> into ${langLabel}. Keep sentences short, simple, and natural for patients. Never diagnose or prescribe. Return strictly matching JSON.\n${UNTRUSTED_DATA_SECURITY_RULE}`,
       responseMimeType: 'application/json',
       responseSchema: {
         type: Type.OBJECT,
@@ -643,7 +701,12 @@ app.post('/api/translate-report', rateLimiter, async (req: Request, res: Respons
 
     const text = await runQueuedAiTask(() =>
       withExponentialBackoff(
-        () => callGeminiWithFallback(JSON.stringify(payloadToTranslate), translateConfig, 22000),
+        () =>
+          callGeminiWithFallback(
+            wrapUntrustedData('report_to_translate', payloadToTranslate),
+            translateConfig,
+            22000
+          ),
         { jobType: 'translate_report', step: 'translate_report' }
       )
     );
@@ -668,20 +731,17 @@ app.post('/api/translate-report', rateLimiter, async (req: Request, res: Respons
   }
 });
 
-// Helper: Convert base64 images to Gemini inlineData parts
-function toInlineParts(images: string[], maxCount = 6) {
+// Helper: Convert validated base64 images (JPEG/PNG/WebP only) to Gemini inlineData parts
+function toInlineParts(images: string[], maxCount = 5) {
   return images.slice(0, maxCount).map((imgBase64: string) => {
-    const match = imgBase64.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-    let mimeType = 'image/jpeg';
-    let data = imgBase64;
-    if (match) {
-      mimeType = match[1];
-      data = match[2];
+    const match = imgBase64.match(/^data:(image\/(?:jpeg|png|webp));base64,(.+)$/i);
+    if (!match) {
+      throw new Error('Invalid image format');
     }
     return {
       inlineData: {
-        mimeType,
-        data,
+        mimeType: match[1].toLowerCase(),
+        data: match[2],
       },
     };
   });
@@ -758,7 +818,7 @@ STRICT STEP 1 RULES:
 1. Read ONLY text actually printed on the medicine strip, box, or bottle. NEVER guess or fill from memory.
 2. NEVER identify a medicine by tablet/pill shape or color alone. If the photo shows ONLY loose tablets/pills with NO pack/label, set is_loose_tablet_only = true, image_quality = 'poor', confidence = 'low', and quality_notes = "${phrases.looseTablet}".
 3. If the photo is blurry, too dark, or partial with no readable medicine name, set image_quality = 'poor', confidence = 'low', and quality_notes = "${phrases.unclearPhoto}".
-4. Return null for any field NOT clearly printed on the pack: brand, salt, strength, manufacturer, batch, expiry, mrp. Add missing field names to unreadable_fields.
+4. Read the printed active composition / generic salt carefully (e.g., look for "Each tablet/capsule contains:", "Composition:", or small generic salt line printed under the brand name). Return null for any field NOT clearly printed on the pack: brand, salt, strength, manufacturer, batch, expiry, mrp. Add missing field names to unreadable_fields.
 5. Set expiry_reliable = true ONLY if the printed expiry date is clearly legible. Compare against 2026-11-13 and set is_expired = true ONLY if clearly before November 2026.
 6. printed_warnings: list short exact warnings printed on pack (e.g. "Schedule H", "Red Line", "Do not exceed dose") translated to ${targetLanguageName}.
 7. access_level:
@@ -768,6 +828,7 @@ STRICT STEP 1 RULES:
 8. risk_flags: include tags from ['steroid', 'strong_antibiotic', 'sleeping_anxiety', 'painkiller_steroid_mix'] ONLY if printed/known class matches.
 9. suspicious_flags: include tags from ['missing_batch', 'missing_manufacturer', 'missing_expiry', 'blurry_print'] if pack appears missing legal print.
 10. confidence: 'high' (brand + salt clearly printed), 'medium' (only brand or slightly blurry), 'low' (hard to read).
+${UNTRUSTED_DATA_SECURITY_RULE}
 `;
 
   const schemaConfig = {
@@ -841,23 +902,71 @@ function truncateFdaText(val: unknown, maxLen = 900): string | null {
   return cleaned.length > maxLen ? cleaned.slice(0, maxLen) + '...' : cleaned;
 }
 
+const INN_TO_USAN_SALT_ALIASES: Record<string, string> = {
+  paracetamol: 'acetaminophen',
+  salbutamol: 'albuterol',
+  'salbutamol sulfate': 'albuterol sulfate',
+  'clavulanic acid': 'clavulanate potassium',
+  clavulanate: 'clavulanate potassium',
+  lignocaine: 'lidocaine',
+  adrenaline: 'epinephrine',
+  noradrenaline: 'norepinephrine',
+  frusemide: 'furosemide',
+  'vitamin d3': 'cholecalciferol',
+  'vitamin b12': 'cyanocobalamin',
+  methylcobalamin: 'cyanocobalamin',
+  thyroxine: 'levothyroxine sodium',
+  'thyroxine sodium': 'levothyroxine sodium',
+  levothyroxine: 'levothyroxine sodium',
+  pantoprazole: 'pantoprazole sodium',
+  rabeprazole: 'rabeprazole sodium',
+  esomeprazole: 'esomeprazole magnesium',
+  omeprazole: 'omeprazole',
+  atorvastatin: 'atorvastatin calcium',
+  metformin: 'metformin hydrochloride',
+  glimepiride: 'glimepiride',
+  amlodipine: 'amlodipine besylate',
+  losartan: 'losartan potassium',
+  clopidogrel: 'clopidogrel bisulfate',
+  azithromycin: 'azithromycin',
+  levocetirizine: 'levocetirizine dihydrochloride',
+  cetirizine: 'cetirizine hydrochloride',
+  montelukast: 'montelukast sodium',
+  diclofenac: 'diclofenac sodium',
+  amoxycillin: 'amoxicillin',
+  amoxicillin: 'amoxicillin',
+};
+
 function cleanSaltTokens(saltInput: string): string[] {
   return saltInput
     .replace(/\(.*?\)/g, ' ')
-    .split(/[+,/&]|\band\b/i)
-    .map((part) =>
-      part
-        .replace(/\d+(\.\d+)?\s*(mg|mcg|g|ml|iu|%|w\/v|w\/w)/gi, '')
-        .replace(/\b(ip|bp|usp|sr|xr|er|cr|mr|dt|md|plus|duo|forte|tablet|tablets|capsule|syrup)\b/gi, '')
-        .trim()
-    )
+    .split(/[+,/&]|\b(?:and|with)\b/i)
+    .map((part) => {
+      let cleaned = part
+        .toLowerCase()
+        .replace(/\b(?:i\.p\.|b\.p\.|u\.s\.p\.|ph\.eur\.?)\b/gi, ' ')
+        .replace(/\d+(?:\.\d+)?\s*(?:mg|mcg|ug|g|gm|ml|l|iu|%|w\/v|w\/w|v\/v)\b/gi, ' ')
+        .replace(/\d+(?:\.\d+)?\s*%/gi, ' ')
+        .replace(
+          /\b(?:ip|bp|usp|sr|xr|er|cr|mr|dt|md|dr|ds|xl|forte|plus|duo|extra|tablet|tablets|tab|tabs|capsule|capsules|cap|caps|syrup|injection|inj|drops|gel|cream|ointment|suspension|solution|equivalent|to|eq)\b/gi,
+          ' '
+        )
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (INN_TO_USAN_SALT_ALIASES[cleaned]) {
+        cleaned = INN_TO_USAN_SALT_ALIASES[cleaned];
+      }
+      return cleaned;
+    })
     .filter((p) => p.length >= 3);
 }
 
 async function normalizeSaltViaRxNorm(saltTerm: string): Promise<string> {
+  const mappedAlias = INN_TO_USAN_SALT_ALIASES[saltTerm.toLowerCase().trim()] || saltTerm;
   try {
     const rxRes = await fetch(
-      `https://rxnav.nlm.nih.gov/REST/rxcui.json?name=${encodeURIComponent(saltTerm)}`,
+      `https://rxnav.nlm.nih.gov/REST/rxcui.json?name=${encodeURIComponent(mappedAlias)}`,
       { signal: AbortSignal.timeout(4500) }
     );
     if (rxRes.ok) {
@@ -876,10 +985,10 @@ async function normalizeSaltViaRxNorm(saltTerm: string): Promise<string> {
         }
       }
     }
-  } catch (err) {
-    console.warn('RxNorm lookup note:', err instanceof Error ? err.message : err);
+  } catch {
+    logJobEvent('info', { step: 'rxnorm_lookup_fallback', status: 'skipped' });
   }
-  return saltTerm;
+  return mappedAlias;
 }
 
 async function queryOpenFdaBySalt(saltName: string): Promise<any | null> {
@@ -907,12 +1016,12 @@ async function queryOpenFdaBySalt(saltName: string): Promise<any | null> {
 }
 
 async function verifySaltInDatabase(saltInput: string | null | undefined, brandInput?: string | null) {
-  const targetRaw = (saltInput || '').trim();
+  const targetRaw = sanitizeUntrustedText(saltInput || '', 200);
   if (!targetRaw) {
     return {
       verified: false,
       database_name: 'openFDA + RxNorm',
-      normalized_salt: brandInput || 'Unknown',
+      normalized_salt: sanitizeUntrustedText(brandInput || 'Unknown', 120),
       uses: null,
       warnings: null,
       side_effects: null,
@@ -926,7 +1035,7 @@ async function verifySaltInDatabase(saltInput: string | null | undefined, brandI
   }
 
   const normalizedSlug = targetRaw.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 80);
-  const cacheKey = `medcache:v1:${normalizedSlug}`;
+  const cacheKey = `medcache:v2:${normalizedSlug}`;
 
   const memCached = l1MedicineCache.get(cacheKey);
   if (memCached && memCached.expiresAt > Date.now()) {
@@ -954,13 +1063,19 @@ async function verifySaltInDatabase(saltInput: string | null | undefined, brandI
   const normalizedList = await Promise.all(tokens.slice(0, 2).map(normalizeSaltViaRxNorm));
   const combinedNorm = normalizedList.join(' and ');
 
-  // Try combined first (for combos), then primary normalized ingredient
+  // Try combined first (for combos), then primary normalized ingredient, then secondary token
   let label =
     normalizedList.length > 1
       ? await queryOpenFdaBySalt(combinedNorm)
       : null;
   if (!label) {
     label = await queryOpenFdaBySalt(normalizedList[0] || primaryToken);
+  }
+  if (!label && tokens[0] && tokens[0] !== normalizedList[0]) {
+    label = await queryOpenFdaBySalt(tokens[0]);
+  }
+  if (!label && normalizedList.length > 1) {
+    label = await queryOpenFdaBySalt(normalizedList[1]);
   }
 
   const result = !label
@@ -1060,6 +1175,7 @@ async function explainVerifiedMedicineData(params: {
   // STRICT SAFETY: If database had NO match, do NOT fill gap with AI memory!
   if (!verifiedFacts.verified) {
     let howToTakePrinted = phrases.takeAsDoctor;
+    const safeBrandLabel = sanitizeUntrustedText(step1.medicine?.brand || '', 120);
     if (extraDocParts.length > 0 && ai) {
       try {
         const rxTxt = await callGeminiWithFallback(
@@ -1067,11 +1183,14 @@ async function explainVerifiedMedicineData(params: {
             parts: [
               ...extraDocParts,
               {
-                text: `Read ONLY written food/timing instructions for "${step1.medicine.brand}" if clearly written. Otherwise reply "${phrases.takeAsDoctor}". Max 12 words in ${targetLanguageName}.`,
+                text: `Read ONLY written food/timing instructions for the medicine named inside <untrusted_input> if clearly written. Otherwise reply "${phrases.takeAsDoctor}". Max 12 words in ${targetLanguageName}.\n${wrapUntrustedData('medicine_brand', safeBrandLabel)}`,
               },
             ],
           },
-          { responseMimeType: 'text/plain' },
+          {
+            systemInstruction: UNTRUSTED_DATA_SECURITY_RULE,
+            responseMimeType: 'text/plain',
+          },
           10000
         );
         if (rxTxt?.trim()) howToTakePrinted = rxTxt.trim();
@@ -1122,17 +1241,18 @@ async function explainVerifiedMedicineData(params: {
         storage: 'not_verified',
         dos_donts: printedWarningsList.length > 0 ? 'printed_on_pack' : 'not_verified',
       },
-      user_problem: problem || undefined,
+      user_problem: sanitizeUntrustedText(problem, 120) || undefined,
     };
     return analysis;
   }
 
   // Verified database match exists -> rewrite ONLY verified facts in ultra-simple 12-year-old language
-  const allergyText = allergies.length > 0 ? allergies.join(', ') : 'None';
-  const conditionText = [
-    ...conditions,
-    ...(isPregnant ? ['Pregnant or Breastfeeding'] : []),
-  ].join(', ') || 'None';
+  const safeAllergies = sanitizeStringArray(allergies, 12, 60);
+  const safeConditions = sanitizeStringArray(conditions, 12, 60);
+  const safeProblem = sanitizeUntrustedText(problem, 120) || 'None';
+  const allergyText = safeAllergies.length > 0 ? safeAllergies.join(', ') : 'None';
+  const conditionText =
+    [...safeConditions, ...(isPregnant ? ['Pregnant or Breastfeeding'] : [])].join(', ') || 'None';
 
   const systemInstruction = `
 You are Step 3 (Plain-Language Translator) for ReportSamjho.
@@ -1140,7 +1260,7 @@ Audience: 12-year-old / rural user with zero medical background.
 Output strictly in ${targetLanguageName}.
 
 CRITICAL GROUNDING RULES:
-1. Rewrite ONLY from the VERIFIED DATABASE FACTS and PRINTED PACK INFO provided below.
+1. Rewrite ONLY from the VERIFIED DATABASE FACTS and PRINTED PACK INFO provided inside <untrusted_input>.
 2. NEVER invent or add medical facts that are not in the verified facts!
 3. If a section in the verified facts is null/missing (e.g. storage = null, interactions = null), set that output text to "${phrases.notVerified}" (or empty array []) AND set its field_sources entry to "not_verified".
 4. Max 10 words per bullet or line! Use very simple words. Explain any medical word in brackets e.g. "germs (bacteria)".
@@ -1148,22 +1268,23 @@ CRITICAL GROUNDING RULES:
 6. "time_to_feel_better": General safe range only, MUST include "can be different for you" and if antibiotic include "finish the full course if your doctor said so". Never promise a cure.
 7. "allergy_condition_warning": Check verified warnings/precautions against Patient Allergies (${allergyText}) & Conditions (${conditionText}). Only warn if supported by verified facts! Otherwise "".
 8. "field_sources": mark each field as "verified_database", "printed_on_pack", or "not_verified".
+${UNTRUSTED_DATA_SECURITY_RULE}
 `;
 
   const promptParts: any[] = [
     {
       text: `
-PRINTED PACK INFO (Step 1):
-${JSON.stringify(step1.medicine)}
+${wrapUntrustedData('printed_pack_info', step1.medicine)}
 
-VERIFIED DATABASE FACTS (${verifiedFacts.database_name} - Salt: ${verifiedFacts.normalized_salt}):
-${JSON.stringify(verifiedFacts)}
+${wrapUntrustedData(`verified_database_facts_${verifiedFacts.database_name}`, verifiedFacts)}
 
-USER CONTEXT:
-- Age: ${age || 'Unknown'}, Gender: ${gender || 'Unknown'}
-- Problem: ${problem || 'None'}
-- Allergies: ${allergyText}
-- Conditions / Pregnant: ${conditionText}
+${wrapUntrustedData('user_context', {
+  age: age ? sanitizeUntrustedText(age, 12) : 'Unknown',
+  gender: gender ? sanitizeUntrustedText(gender, 20) : 'Unknown',
+  problem: safeProblem,
+  allergies: allergyText,
+  conditions_or_pregnant: conditionText,
+})}
 ${extraDocParts.length > 0 ? '- Attached prescription/report photo(s) below for "how to take" instructions:' : ''}
 `,
     },
@@ -1308,25 +1429,22 @@ app.post('/api/jobs/medicine-identify', scanRateLimiter, async (req: Request, re
   const imagesRaw = req.body?.images;
   try {
     const { language } = req.body || {};
-    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
-      res.status(400).json({ success: false, error: 'At least one medicine photo is required.' });
-      return;
-    }
-    if (imagesRaw.length > MAX_SCAN_PAGES) {
-      res.status(400).json({
-        success: false,
-        error: `Maximum ${MAX_SCAN_PAGES} photos allowed per scan.`,
-      });
+    const checked = validateImageArray(imagesRaw, { minCount: 1, maxCount: MAX_SCAN_PAGES });
+    if (!checked.ok) {
+      clearImageArray(imagesRaw);
+      res.status(400).json({ success: false, error: checked.error });
       return;
     }
     if (!ai) {
+      clearImageArray(imagesRaw);
       res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
     const { langCode } = getLangDetails(language);
-    const payloadContainer = { images: imagesRaw.slice(0, MAX_SCAN_PAGES) as string[] };
-    req.body.images = [];
+    const payloadContainer = { images: checked.images };
+    clearImageArray(imagesRaw);
+    if (req.body) req.body.images = [];
 
     const job = await createScanJob({
       type: 'medicine_identify',
@@ -1368,15 +1486,9 @@ app.post('/api/medicine/identify', scanRateLimiter, async (req: Request, res: Re
   const imagesRaw = req.body?.images;
   try {
     const { language } = req.body;
-    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
-      res.status(400).json({ success: false, error: 'At least one medicine photo is required.' });
-      return;
-    }
-    if (imagesRaw.length > MAX_SCAN_PAGES) {
-      res.status(400).json({
-        success: false,
-        error: `Maximum ${MAX_SCAN_PAGES} photos allowed per scan.`,
-      });
+    const checked = validateImageArray(imagesRaw, { minCount: 1, maxCount: MAX_SCAN_PAGES });
+    if (!checked.ok) {
+      res.status(400).json({ success: false, error: checked.error });
       return;
     }
     if (!ai) {
@@ -1385,7 +1497,7 @@ app.post('/api/medicine/identify', scanRateLimiter, async (req: Request, res: Re
     }
 
     const { langCode } = getLangDetails(language);
-    const photos = imagesRaw.slice(0, MAX_SCAN_PAGES) as string[];
+    const photos = checked.images;
     const perPhoto = await Promise.all(
       photos.map((img, idx) =>
         runQueuedAiTask(() =>
@@ -1429,10 +1541,21 @@ app.post('/api/medicine/verify-and-explain', rateLimiter, async (req: Request, r
       isPregnant,
     } = req.body;
 
-    if (!step1 || !step1.medicine) {
+    if (!step1 || !step1.medicine || !step1.medicine.brand) {
       res.status(400).json({ success: false, error: 'Confirmed medicine details are required.' });
       return;
     }
+
+    let validDocImages: string[] | undefined;
+    if (Array.isArray(docImagesRaw) && docImagesRaw.length > 0) {
+      const checkedDocs = validateImageArray(docImagesRaw, { minCount: 1, maxCount: 3 });
+      if (!checkedDocs.ok) {
+        res.status(400).json({ success: false, error: checkedDocs.error });
+        return;
+      }
+      validDocImages = checkedDocs.images;
+    }
+
     if (!ai) {
       res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
@@ -1447,8 +1570,8 @@ app.post('/api/medicine/verify-and-explain', rateLimiter, async (req: Request, r
           explainVerifiedMedicineData({
             step1,
             verifiedFacts,
-            problem,
-            docImages: Array.isArray(docImagesRaw) ? docImagesRaw.slice(0, 3) : undefined,
+            problem: sanitizeUntrustedText(problem, 120),
+            docImages: validDocImages,
             langCode,
             age,
             gender,
@@ -1483,17 +1606,22 @@ app.post('/api/analyze-medicine', scanRateLimiter, async (req: Request, res: Res
   const docImagesRaw = req.body?.docImages;
   try {
     const { problem, language, age, gender, allergies, conditions, isPregnant } = req.body;
-    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
-      res.status(400).json({ success: false, error: 'At least one medicine photo is required.' });
+    const checked = validateImageArray(imagesRaw, { minCount: 1, maxCount: MAX_SCAN_PAGES });
+    if (!checked.ok) {
+      res.status(400).json({ success: false, error: checked.error });
       return;
     }
-    if (imagesRaw.length > MAX_SCAN_PAGES) {
-      res.status(400).json({
-        success: false,
-        error: `Maximum ${MAX_SCAN_PAGES} photos allowed per scan.`,
-      });
-      return;
+
+    let validDocImages: string[] | undefined;
+    if (Array.isArray(docImagesRaw) && docImagesRaw.length > 0) {
+      const checkedDocs = validateImageArray(docImagesRaw, { minCount: 1, maxCount: 3 });
+      if (!checkedDocs.ok) {
+        res.status(400).json({ success: false, error: checkedDocs.error });
+        return;
+      }
+      validDocImages = checkedDocs.images;
     }
+
     if (!ai) {
       res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
@@ -1502,7 +1630,7 @@ app.post('/api/analyze-medicine', scanRateLimiter, async (req: Request, res: Res
     const { langCode } = getLangDetails(language);
     const step1 = await runQueuedAiTask(() =>
       withExponentialBackoff(
-        () => identifyMedicineFromImages(imagesRaw.slice(0, MAX_SCAN_PAGES), langCode),
+        () => identifyMedicineFromImages(checked.images, langCode),
         { jobType: 'unified_medicine', step: 'step1_identify' }
       )
     );
@@ -1536,8 +1664,8 @@ app.post('/api/analyze-medicine', scanRateLimiter, async (req: Request, res: Res
           explainVerifiedMedicineData({
             step1,
             verifiedFacts,
-            problem,
-            docImages: Array.isArray(docImagesRaw) ? docImagesRaw.slice(0, 3) : undefined,
+            problem: sanitizeUntrustedText(problem, 120),
+            docImages: validDocImages,
             langCode,
             age,
             gender,
@@ -1570,7 +1698,8 @@ app.post('/api/analyze-medicine', scanRateLimiter, async (req: Request, res: Res
 app.post('/api/medicine-chat', rateLimiter, async (req: Request, res: Response) => {
   try {
     const { medicine, question, language, healthProfile } = req.body;
-    if (!medicine || !question) {
+    const cleanQuestion = sanitizeUntrustedText(question, 300);
+    if (!medicine || !cleanQuestion) {
       res.status(400).json({ success: false, error: 'Medicine and question are required.' });
       return;
     }
@@ -1582,7 +1711,7 @@ app.post('/api/medicine-chat', rateLimiter, async (req: Request, res: Response) 
     const { langCode, targetLanguageName } = getLangDetails(language);
     const phrases = getLocalizedPhrases(langCode);
 
-    const qLower = String(question).toLowerCase();
+    const qLower = cleanQuestion.toLowerCase();
     const unsafeKeywords = [
       'how many mg',
       'increase dose',
@@ -1602,19 +1731,24 @@ app.post('/api/medicine-chat', rateLimiter, async (req: Request, res: Response) 
     const systemInstruction = `
 You answer a simple patient question about ONE scanned medicine in ${targetLanguageName}.
 STRICT SAFETY RULES:
-1. Answer ONLY using the VERIFIED FACTS and PRINTED PACK INFO below. Do NOT use outside medical memory.
+1. Answer ONLY using the VERIFIED FACTS and PRINTED PACK INFO inside <untrusted_input>. Do NOT use outside medical memory.
 2. Keep answer very short (max 2-3 short sentences, simple 12-year-old words).
 3. If user asks for dosage numbers/changes, starting/stopping medicine, or diagnosis, reply exactly: "${phrases.chatBlocked}"
 4. If the verified data does NOT contain the answer, reply exactly: "${phrases.chatNotSure}"
+${UNTRUSTED_DATA_SECURITY_RULE}
 `;
 
     const prompt = `
-Medicine: ${medicine.medicine?.brand} (${medicine.medicine?.salt || 'Unknown'})
-Printed pack info: ${JSON.stringify(medicine.medicine)}
-Verified database facts: ${JSON.stringify(medicine.verified_facts || {})}
-Explained summary: ${medicine.purpose}, ${medicine.how_to_take_as_printed}
-User health profile: ${JSON.stringify(healthProfile || {})}
-User question: ${question}
+${wrapUntrustedData('medicine_context', {
+  brand: medicine.medicine?.brand,
+  salt: medicine.medicine?.salt || 'Unknown',
+  printed_pack_info: medicine.medicine,
+  verified_facts: medicine.verified_facts || {},
+  purpose: medicine.purpose,
+  how_to_take_as_printed: medicine.how_to_take_as_printed,
+  health_profile: healthProfile || {},
+})}
+${wrapUntrustedData('user_question', cleanQuestion)}
 `;
 
     const answer = await runQueuedAiTask(() =>
@@ -1659,20 +1793,20 @@ app.post('/api/translate-medicine', rateLimiter, async (req: Request, res: Respo
 
     const { targetLanguageName } = getLangDetails(targetLanguage);
     const payload = {
-      brand: medicineAnalysis.medicine?.brand || '',
-      salt: medicineAnalysis.medicine?.salt || '',
-      what_is_it: medicineAnalysis.what_is_it || '',
-      purpose: medicineAnalysis.purpose || '',
-      how_it_works: medicineAnalysis.how_it_works || '',
-      how_to_take_as_printed: medicineAnalysis.how_to_take_as_printed || '',
-      side_effects_common: medicineAnalysis.side_effects_common || [],
-      side_effects_see_doctor: medicineAnalysis.side_effects_see_doctor || [],
-      time_to_feel_better: medicineAnalysis.time_to_feel_better || '',
-      be_careful_if: medicineAnalysis.be_careful_if || [],
-      interactions: medicineAnalysis.interactions || [],
-      storage_instructions: medicineAnalysis.storage_instructions || '',
-      dos_donts: medicineAnalysis.dos_donts || [],
-      allergy_condition_warning: medicineAnalysis.allergy_condition_warning || '',
+      brand: sanitizeUntrustedText(medicineAnalysis.medicine?.brand || '', 120),
+      salt: sanitizeUntrustedText(medicineAnalysis.medicine?.salt || '', 180),
+      what_is_it: sanitizeUntrustedText(medicineAnalysis.what_is_it || '', 300),
+      purpose: sanitizeUntrustedText(medicineAnalysis.purpose || '', 300),
+      how_it_works: sanitizeUntrustedText(medicineAnalysis.how_it_works || '', 300),
+      how_to_take_as_printed: sanitizeUntrustedText(medicineAnalysis.how_to_take_as_printed || '', 300),
+      side_effects_common: sanitizeStringArray(medicineAnalysis.side_effects_common, 10, 120),
+      side_effects_see_doctor: sanitizeStringArray(medicineAnalysis.side_effects_see_doctor, 10, 120),
+      time_to_feel_better: sanitizeUntrustedText(medicineAnalysis.time_to_feel_better || '', 240),
+      be_careful_if: sanitizeStringArray(medicineAnalysis.be_careful_if, 10, 120),
+      interactions: sanitizeStringArray(medicineAnalysis.interactions, 10, 120),
+      storage_instructions: sanitizeUntrustedText(medicineAnalysis.storage_instructions || '', 240),
+      dos_donts: sanitizeStringArray(medicineAnalysis.dos_donts, 10, 120),
+      allergy_condition_warning: sanitizeUntrustedText(medicineAnalysis.allergy_condition_warning || '', 240),
     };
 
     const cacheHash = crypto
@@ -1689,7 +1823,7 @@ app.post('/api/translate-medicine', rateLimiter, async (req: Request, res: Respo
     }
 
     const config = {
-      systemInstruction: `Translate this medicine explanation JSON into ${targetLanguageName}. Keep every line very short (max 10 words), simple words, explain medical terms in brackets. Never invent dosages. Return strict JSON.`,
+      systemInstruction: `Translate the medicine explanation JSON inside <untrusted_input> into ${targetLanguageName}. Keep every line very short (max 10 words), simple words, explain medical terms in brackets. Never invent dosages. Return strict JSON.\n${UNTRUSTED_DATA_SECURITY_RULE}`,
       responseMimeType: 'application/json',
       responseSchema: {
         type: Type.OBJECT,
@@ -1728,7 +1862,7 @@ app.post('/api/translate-medicine', rateLimiter, async (req: Request, res: Respo
 
     const text = await runQueuedAiTask(() =>
       withExponentialBackoff(
-        () => callGeminiWithFallback(JSON.stringify(payload), config, 22000),
+        () => callGeminiWithFallback(wrapUntrustedData('medicine_to_translate', payload), config, 22000),
         { jobType: 'translate_medicine', step: 'translate_medicine' }
       )
     );
@@ -1772,12 +1906,13 @@ app.post('/api/medicine-report-link', rateLimiter, async (req: Request, res: Res
 
     const reportSummary = report
       ? {
-          report_type: report.report_type,
+          report_type: sanitizeUntrustedText(report.report_type, 100),
           overall_severity: report.overall_severity,
-          severity_reason: report.severity_reason,
+          severity_reason: sanitizeUntrustedText(report.severity_reason, 200),
           abnormal_findings: (report.findings || [])
             .filter((f: any) => f.status !== 'normal')
-            .map((f: any) => `${f.name}: ${f.value} (${f.status})`),
+            .slice(0, 20)
+            .map((f: any) => `${sanitizeUntrustedText(f.name, 60)}: ${sanitizeUntrustedText(f.value, 30)} (${f.status})`),
         }
       : null;
 
@@ -1790,12 +1925,17 @@ CRITICAL WORDING RULES:
 - NEVER diagnose or prescribe or advise changing dosage.
 - If a report is provided and shows NO clear link to this medicine, set connection_found = false and why_given = "${noLinkMsg}".
 - If the typed problem and the report findings disagree, set conflict_detected = true, explain both simply, and tell the user to ask their doctor.
+${UNTRUSTED_DATA_SECURITY_RULE}
 `;
 
     const prompt = `
-Medicine: ${medicine.medicine?.brand} (${medicine.medicine?.salt || 'Unknown salt'}), Verified Uses: ${medicine.verified_facts?.uses || medicine.purpose}
-User typed problem: ${userProblem || 'None specified'}
-Medical report data: ${reportSummary ? JSON.stringify(reportSummary) : 'No report provided'}
+${wrapUntrustedData('medicine_and_report', {
+  brand: sanitizeUntrustedText(medicine.medicine?.brand, 120),
+  salt: sanitizeUntrustedText(medicine.medicine?.salt || 'Unknown salt', 160),
+  verified_uses: sanitizeUntrustedText(medicine.verified_facts?.uses || medicine.purpose, 400),
+  user_problem: sanitizeUntrustedText(userProblem, 140) || 'None specified',
+  report: reportSummary,
+})}
 Explain clearly and safely.
 `;
 
@@ -1859,6 +1999,7 @@ You read Indian doctor prescriptions carefully. Output text notes in ${targetLan
    - duration: e.g. "5 days" or "Not written".
    - confidence: 'high' | 'medium' | 'low'. Mark 'low' or 'medium' whenever handwriting is messy or ambiguous.
    - needs_check: true if confidence is 'low' or 'medium'.
+${UNTRUSTED_DATA_SECURITY_RULE}
 `;
 
   const config = {
@@ -1912,25 +2053,22 @@ app.post('/api/jobs/prescription-read', scanRateLimiter, async (req: Request, re
   const imagesRaw = req.body?.images;
   try {
     const { language } = req.body || {};
-    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
-      res.status(400).json({ success: false, error: 'Prescription photo is required.' });
-      return;
-    }
-    if (imagesRaw.length > MAX_SCAN_PAGES) {
-      res.status(400).json({
-        success: false,
-        error: `Maximum ${MAX_SCAN_PAGES} pages allowed per scan.`,
-      });
+    const checked = validateImageArray(imagesRaw, { minCount: 1, maxCount: MAX_SCAN_PAGES });
+    if (!checked.ok) {
+      clearImageArray(imagesRaw);
+      res.status(400).json({ success: false, error: checked.error });
       return;
     }
     if (!ai) {
+      clearImageArray(imagesRaw);
       res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
 
     const { langCode } = getLangDetails(language);
-    const payloadContainer = { images: imagesRaw.slice(0, MAX_SCAN_PAGES) as string[] };
-    req.body.images = [];
+    const payloadContainer = { images: checked.images };
+    clearImageArray(imagesRaw);
+    if (req.body) req.body.images = [];
 
     const job = await createScanJob({
       type: 'prescription_read',
@@ -1972,15 +2110,9 @@ app.post('/api/analyze-prescription', scanRateLimiter, async (req: Request, res:
   const imagesRaw = req.body?.images;
   try {
     const { language } = req.body;
-    if (!imagesRaw || !Array.isArray(imagesRaw) || imagesRaw.length === 0) {
-      res.status(400).json({ success: false, error: 'Prescription photo is required.' });
-      return;
-    }
-    if (imagesRaw.length > MAX_SCAN_PAGES) {
-      res.status(400).json({
-        success: false,
-        error: `Maximum ${MAX_SCAN_PAGES} pages allowed per scan.`,
-      });
+    const checked = validateImageArray(imagesRaw, { minCount: 1, maxCount: MAX_SCAN_PAGES });
+    if (!checked.ok) {
+      res.status(400).json({ success: false, error: checked.error });
       return;
     }
     if (!ai) {
@@ -1989,7 +2121,7 @@ app.post('/api/analyze-prescription', scanRateLimiter, async (req: Request, res:
     }
 
     const { langCode } = getLangDetails(language);
-    const pages = imagesRaw.slice(0, MAX_SCAN_PAGES) as string[];
+    const pages = checked.images;
     const pageDrafts = await Promise.all(
       pages.map((img, idx) =>
         runQueuedAiTask(() =>
@@ -2040,9 +2172,17 @@ app.post('/api/explain-prescription', rateLimiter, async (req: Request, res: Res
       return;
     }
     if (!ai) {
-      res.status(500).json({ success: false, error: 'Gemini API key is not configured.' });
+      res.status(503).json({ success: false, error: 'Service is temporarily unavailable.' });
       return;
     }
+
+    const safeLines = lines.slice(0, 12).map((l: any, idx: number) => ({
+      id: sanitizeUntrustedText(l.id, 40) || `rx-line-${idx + 1}`,
+      name: sanitizeUntrustedText(l.name, 120),
+      instructions: sanitizeUntrustedText(l.instructions, 120),
+      duration: sanitizeUntrustedText(l.duration, 60),
+      confidence: l.confidence,
+    }));
 
     const { langCode, targetLanguageName } = getLangDetails(language);
     const phrases = getLocalizedPhrases(langCode);
@@ -2052,8 +2192,9 @@ app.post('/api/explain-prescription', rateLimiter, async (req: Request, res: Res
       withExponentialBackoff(
         () =>
           callGeminiWithFallback(
-            `For these Indian medicine prescription lines, return ONLY the generic salt name (e.g. "Augmentin 625" -> "Amoxicillin + Clavulanic Acid", "Pan 40" -> "Pantoprazole") plus access_level ('otc'|'ask_doctor'|'prescription_only') and risk_flags (['steroid','strong_antibiotic','sleeping_anxiety','painkiller_steroid_mix']). If unknown salt, set salt = null.\nLines: ${JSON.stringify(lines)}`,
+            `For these Indian medicine prescription lines inside <untrusted_input>, return ONLY the generic salt name (e.g. "Augmentin 625" -> "Amoxicillin + Clavulanic Acid", "Pan 40" -> "Pantoprazole") plus access_level ('otc'|'ask_doctor'|'prescription_only') and risk_flags (['steroid','strong_antibiotic','sleeping_anxiety','painkiller_steroid_mix']). If unknown salt, set salt = null.\n${wrapUntrustedData('prescription_lines', safeLines)}`,
             {
+              systemInstruction: UNTRUSTED_DATA_SECURITY_RULE,
               responseMimeType: 'application/json',
               responseSchema: {
                 type: Type.OBJECT,
@@ -2108,21 +2249,25 @@ RULES:
 2. Explain ONLY from the verified_facts provided for each line! If verified_facts.verified is false, write "${phrases.notVerified}" for unverified fields and do not guess.
 3. For each medicine, "how_to_take_as_printed" MUST reflect the confirmed prescription line instructions & duration (since it came from the doctor's prescription).
 4. Include "why_this_prescription" using careful wording ("commonly used for", "may be related to"). NEVER diagnose.
+${UNTRUSTED_DATA_SECURITY_RULE}
 `;
 
-    const combinedInput = lines.map((line: any, idx: number) => ({
+    const combinedInput = safeLines.map((line: any, idx: number) => ({
       line,
       salt_info: saltMapItems[idx] || {},
       verified_facts: verifiedList[idx],
     }));
 
-    const prompt = `
-Patient: Age ${age || 'Unknown'}, Gender ${gender || 'Unknown'}, Allergies: ${(allergies || []).join(', ') || 'None'}, Conditions: ${(conditions || []).join(', ') || 'None'}, Pregnant: ${isPregnant ? 'Yes' : 'No'}
-User Problem: ${userProblem || 'None'}
-Linked Report: ${reportSummary ? JSON.stringify(reportSummary) : 'None'}
-Prescription medicines with verified openFDA facts:
-${JSON.stringify(combinedInput)}
-`;
+    const prompt = wrapUntrustedData('prescription_context', {
+      age: age ? sanitizeUntrustedText(age, 12) : 'Unknown',
+      gender: gender ? sanitizeUntrustedText(gender, 20) : 'Unknown',
+      allergies: sanitizeStringArray(allergies, 12, 60).join(', ') || 'None',
+      conditions: sanitizeStringArray(conditions, 12, 60).join(', ') || 'None',
+      pregnant: Boolean(isPregnant),
+      user_problem: sanitizeUntrustedText(userProblem, 140) || 'None',
+      linked_report: reportSummary,
+      medicines_with_verified_facts: combinedInput,
+    });
 
     const config = {
       systemInstruction,
@@ -2332,14 +2477,22 @@ app.post('/api/explain-prescription-line', rateLimiter, async (req: Request, res
 
     const { langCode } = getLangDetails(language);
     const phrases = getLocalizedPhrases(langCode);
+    const safeLine = {
+      id: sanitizeUntrustedText(line.id, 40) || `rx-line-${Date.now()}`,
+      name: sanitizeUntrustedText(line.name, 120),
+      instructions: sanitizeUntrustedText(line.instructions, 120),
+      duration: sanitizeUntrustedText(line.duration, 60),
+      confidence: line.confidence,
+    };
 
     // Quick text lookup for likely generic salt of the Indian prescription brand
     const mapText = await runQueuedAiTask(() =>
       withExponentialBackoff(
         () =>
           callGeminiWithFallback(
-            `For this Indian medicine prescription line, return ONLY generic salt name (e.g. "Augmentin 625" -> "Amoxicillin + Clavulanic Acid", "Pan 40" -> "Pantoprazole"), access_level ('otc'|'ask_doctor'|'prescription_only'), and risk_flags (['steroid','strong_antibiotic','sleeping_anxiety','painkiller_steroid_mix']). If unknown salt, set salt = null.\nLine: ${JSON.stringify(line)}`,
+            `For this Indian medicine prescription line inside <untrusted_input>, return ONLY generic salt name (e.g. "Augmentin 625" -> "Amoxicillin + Clavulanic Acid", "Pan 40" -> "Pantoprazole"), access_level ('otc'|'ask_doctor'|'prescription_only'), and risk_flags (['steroid','strong_antibiotic','sleeping_anxiety','painkiller_steroid_mix']). If unknown salt, set salt = null.\n${wrapUntrustedData('prescription_line', safeLine)}`,
             {
+              systemInstruction: UNTRUSTED_DATA_SECURITY_RULE,
               responseMimeType: 'application/json',
               responseSchema: {
                 type: Type.OBJECT,
@@ -2455,15 +2608,15 @@ app.post('/api/explain-prescription-summary', rateLimiter, async (req: Request, 
         }
       : null;
 
-    const summaryInput = medicines.map((m: any) => ({
-      brand: m.medicine?.brand,
-      salt: m.medicine?.salt,
-      purpose: m.purpose,
-      verified_uses: m.verified_facts?.uses || null,
+    const summaryInput = medicines.slice(0, 12).map((m: any) => ({
+      brand: sanitizeUntrustedText(m.medicine?.brand, 120),
+      salt: sanitizeUntrustedText(m.medicine?.salt, 160),
+      purpose: sanitizeUntrustedText(m.purpose, 200),
+      verified_uses: sanitizeUntrustedText(m.verified_facts?.uses, 300) || null,
     }));
 
     const config = {
-      systemInstruction: `You explain a doctor's prescription as a simple summary in ${targetLanguageName}. Max 10 words per bullet/line. Use careful wording ("commonly used for", "may be related to"). Never diagnose or advise changing dosage.`,
+      systemInstruction: `You explain a doctor's prescription as a simple summary in ${targetLanguageName}. Max 10 words per bullet/line. Use careful wording ("commonly used for", "may be related to"). Never diagnose or advise changing dosage.\n${UNTRUSTED_DATA_SECURITY_RULE}`,
       responseMimeType: 'application/json',
       responseSchema: {
         type: Type.OBJECT,
@@ -2482,7 +2635,11 @@ app.post('/api/explain-prescription-summary', rateLimiter, async (req: Request, 
       withExponentialBackoff(
         () =>
           callGeminiWithFallback(
-            `User Problem: ${userProblem || 'None'}\nLinked Report: ${reportSummary ? JSON.stringify(reportSummary) : 'None'}\nMedicines: ${JSON.stringify(summaryInput)}`,
+            wrapUntrustedData('prescription_summary_input', {
+              user_problem: sanitizeUntrustedText(userProblem, 140) || 'None',
+              linked_report: reportSummary,
+              medicines: summaryInput,
+            }),
             config,
             20000
           ),
@@ -2521,26 +2678,33 @@ app.post('/api/check-medicine-interactions', rateLimiter, async (req: Request, r
 
     const verifiedPairs = await Promise.all(
       medicines.slice(0, 6).map(async (m: any) => {
+        const brand = sanitizeUntrustedText(m.brand, 120);
+        const salt = sanitizeUntrustedText(m.salt, 160);
         if (m.verified_interactions) {
-          return { brand: m.brand, salt: m.salt, verified_interactions: m.verified_interactions };
+          return {
+            brand,
+            salt,
+            verified_interactions: sanitizeUntrustedText(m.verified_interactions, 900),
+          };
         }
-        const vf = await verifySaltInDatabase(m.salt || m.brand, m.brand);
+        const vf = await verifySaltInDatabase(salt || brand, brand);
         return {
-          brand: m.brand,
-          salt: vf.normalized_salt || m.salt,
+          brand,
+          salt: vf.normalized_salt || salt,
           verified_interactions: vf.interactions || vf.warnings || 'Not verified in openFDA',
         };
       })
     );
 
     const systemInstruction = `
-Check ONLY the verified drug interaction texts below for unsafe combinations among these saved medicines.
+Check ONLY the verified drug interaction texts inside <untrusted_input> for unsafe combinations among these saved medicines.
 Output strictly in ${targetLanguageName}.
 RULES:
 - Report ONLY interactions supported by the verified openFDA interaction texts or same-salt duplication.
 - Max 15 words per warning, very simple language.
 - Do NOT scare the patient. Always frame as "These may not be safe together. Ask a pharmacist or doctor."
 - NEVER tell user to stop or change medicine.
+${UNTRUSTED_DATA_SECURITY_RULE}
 `;
 
     const config = {
@@ -2571,7 +2735,7 @@ RULES:
       withExponentialBackoff(
         () =>
           callGeminiWithFallback(
-            `Verified data for saved medicines: ${JSON.stringify(verifiedPairs)}`,
+            wrapUntrustedData('verified_medicines', verifiedPairs),
             config,
             14000
           ),
@@ -2589,6 +2753,301 @@ RULES:
     res.status(503).json({
       success: false,
       error: 'Could not check medicine interactions right now.',
+      isRetryable: true,
+    });
+  }
+});
+
+// Plain-language "What is this?" Topic Explainer (personalized line OR fallback full explanation)
+app.post('/api/explain-topic', rateLimiter, async (req: Request, res: Response) => {
+  try {
+    const {
+      mode,
+      topicId,
+      topicName,
+      value,
+      referenceRange,
+      status,
+      shortExplanation,
+      language,
+    } = req.body || {};
+
+    const cleanTopic = sanitizeUntrustedText(topicName || topicId, 120);
+    if (!cleanTopic) {
+      res.status(400).json({ success: false, error: 'Topic name is required.' });
+      return;
+    }
+
+    const { langCode, targetLanguageName } = getLangDetails(language);
+    const uncertainFallback =
+      langCode === 'hi'
+        ? 'मैं इस हिस्से के बारे में पक्का नहीं कह सकता, कृपया डॉक्टर से पूछें।'
+        : langCode === 'or'
+        ? 'ମୁଁ ଏହି ଅଂଶ ବିଷୟରେ ନିଶ୍ଚିତ ନୁହେଁ, ଦୟାକରି ଡାକ୍ତରଙ୍କୁ ପଚାରନ୍ତୁ।'
+        : "I'm not sure about this part, please ask a doctor.";
+
+    if (!ai) {
+      res.json({
+        success: true,
+        personalLine: sanitizeUntrustedText(shortExplanation, 160) || uncertainFallback,
+      });
+      return;
+    }
+
+    const safeValue = sanitizeUntrustedText(value, 60);
+    const safeRange = sanitizeUntrustedText(referenceRange, 80);
+    const safeStatus = sanitizeUntrustedText(status, 24);
+    const safeNote = sanitizeUntrustedText(shortExplanation, 180);
+
+    if (mode === 'personal_line') {
+      const cacheKey = `explain:line:${crypto
+        .createHash('sha256')
+        .update(`${langCode}:${cleanTopic}:${safeValue}:${safeStatus}`)
+        .digest('hex')
+        .slice(0, 24)}`;
+      const cached = await storeGetJson<{ personalLine: string }>(cacheKey);
+      if (cached?.personalLine) {
+        res.json({ success: true, personalLine: cached.personalLine });
+        return;
+      }
+
+      const systemInstruction = `
+You are ReportSamjho, a warm, calm, friendly doctor talking to a rural patient in ${targetLanguageName}.
+Write ONE short, reassuring sentence (12-20 words max) explaining what the patient's specific test number means.
+RULES:
+- Mention the patient's number if provided.
+- Very simple village-level words, calm tone, never scary, never preachy.
+- NEVER diagnose or prescribe medicines.
+- If the test or value is unclear/unrecognized, respond ONLY with: "${uncertainFallback}"
+${UNTRUSTED_DATA_SECURITY_RULE}
+`;
+
+      const lineText = await runQueuedAiTask(() =>
+        withExponentialBackoff(
+          () =>
+            callGeminiWithFallback(
+              wrapUntrustedData('topic_value_context', {
+                topic: cleanTopic,
+                patient_value: safeValue || 'Not given',
+                normal_range: safeRange || 'Not given',
+                status: safeStatus || 'unknown',
+                existing_note: safeNote || 'None',
+              }),
+              { systemInstruction, responseMimeType: 'text/plain' },
+              12000
+            ),
+          { jobType: 'explain_topic_line', step: 'explain_topic_line' }
+        )
+      );
+
+      const personalLine = lineText.replace(/\s+/g, ' ').trim();
+      await storeSetJson(cacheKey, { personalLine }, TRANSLATION_CACHE_TTL_SEC);
+      res.json({ success: true, personalLine });
+      return;
+    }
+
+    // mode === 'full' (for topics absent from built-in medicalGlossary.json)
+    const fullCacheKey = `explain:full:${crypto
+      .createHash('sha256')
+      .update(`${langCode}:${cleanTopic.toLowerCase()}`)
+      .digest('hex')
+      .slice(0, 24)}`;
+    const cachedFull = await storeGetJson<any>(fullCacheKey);
+    if (cachedFull) {
+      res.json({ success: true, explanation: cachedFull });
+      return;
+    }
+
+    const fullSystemInstruction = `
+You are ReportSamjho, explaining a medical test or body term in ${targetLanguageName} to a rural patient.
+TONE & STYLE:
+- Warm, calm, reassuring, like a friendly doctor talking to a friend. Very simple words.
+- Every field must be 1-2 short lines max. Zero emojis.
+- NEVER diagnose or prescribe medicines.
+- Include a simple everyday analogy (like pipes, trucks, filters, keys, watchmen).
+- Provide 3 short steps for a flow diagram using icons ONLY from: ['head','signal','throttle','energy','drop','food','key','lungs','truck','bone','shield','check','filter','heart','pipe','cushion'].
+- Set isUncertain = true and analogy = "${uncertainFallback}" if the term is unreadable or too unclear to explain safely.
+${UNTRUSTED_DATA_SECURITY_RULE}
+`;
+
+    const fullConfig = {
+      systemInstruction: fullSystemInstruction,
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          title: { type: Type.STRING },
+          analogy: { type: Type.STRING },
+          whatItMeasures: { type: Type.STRING },
+          yourResultMeans: { type: Type.STRING },
+          feelings: { type: Type.ARRAY, items: { type: Type.STRING } },
+          doctorQuestion: { type: Type.STRING },
+          flowSteps: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                icon: { type: Type.STRING },
+                label: { type: Type.STRING },
+              },
+              required: ['icon', 'label'],
+            },
+          },
+          flowHighlightIndex: { type: Type.INTEGER },
+          flowCaption: { type: Type.STRING },
+          isUncertain: { type: Type.BOOLEAN },
+        },
+        required: [
+          'title',
+          'analogy',
+          'whatItMeasures',
+          'yourResultMeans',
+          'feelings',
+          'doctorQuestion',
+          'flowSteps',
+          'flowHighlightIndex',
+          'flowCaption',
+        ],
+      },
+    };
+
+    const fullJsonText = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          callGeminiWithFallback(
+            wrapUntrustedData('topic_full_context', {
+              topic: cleanTopic,
+              patient_value: safeValue || 'Not given',
+              normal_range: safeRange || 'Not given',
+              status: safeStatus || 'normal',
+              existing_note: safeNote || 'None',
+            }),
+            fullConfig,
+            18000
+          ),
+        { jobType: 'explain_topic_full', step: 'explain_topic_full' }
+      )
+    );
+
+    const explanation = JSON.parse(fullJsonText);
+    await storeSetJson(fullCacheKey, explanation, 24 * 60 * 60);
+    res.json({ success: true, explanation });
+  } catch (error) {
+    logJobEvent('error', {
+      step: 'explain_topic_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
+    res.status(503).json({
+      success: false,
+      error: "I'm not sure about this part, please ask a doctor.",
+      isRetryable: true,
+    });
+  }
+});
+
+// Ask a Question about the Current Report (typing or voice)
+app.post('/api/report-question', rateLimiter, async (req: Request, res: Response) => {
+  try {
+    const { report, question, language } = req.body || {};
+    const cleanQuestion = sanitizeUntrustedText(question, 260);
+    if (!report || !cleanQuestion) {
+      res.status(400).json({ success: false, error: 'Report and question are required.' });
+      return;
+    }
+
+    const { langCode, targetLanguageName } = getLangDetails(language);
+    const uncertainFallback =
+      langCode === 'hi'
+        ? 'मैं इस हिस्से के बारे में पक्का नहीं कह सकता, कृपया डॉक्टर से पूछें।'
+        : langCode === 'or'
+        ? 'ମୁଁ ଏହି ଅଂଶ ବିଷୟରେ ନିଶ୍ଚିତ ନୁହେଁ, ଦୟାକରି ଡାକ୍ତରଙ୍କୁ ପଚାରନ୍ତୁ।'
+        : "I'm not sure about this part, please ask a doctor.";
+
+    if (!ai) {
+      res.json({ success: true, answer: uncertainFallback });
+      return;
+    }
+
+    const reportContext = {
+      report_type: sanitizeUntrustedText(report.report_type, 100),
+      overall_severity: sanitizeUntrustedText(report.overall_severity, 20),
+      severity_reason: sanitizeUntrustedText(report.severity_reason, 200),
+      findings: Array.isArray(report.findings)
+        ? report.findings.slice(0, 20).map((f: any) => ({
+            name: sanitizeUntrustedText(f.name, 80),
+            value: sanitizeUntrustedText(f.value, 40),
+            unit: sanitizeUntrustedText(f.unit, 20),
+            reference_range: sanitizeUntrustedText(f.reference_range, 50),
+            status: sanitizeUntrustedText(f.status, 20),
+          }))
+        : [],
+    };
+
+    const systemInstruction = `
+You are ReportSamjho, a warm, calm, friendly doctor answering a patient's question about their own medical report in ${targetLanguageName}.
+RULES:
+1. Reply in 2 to 3 very short, friendly sentences using simple village-level words. Zero emojis.
+2. Refer directly to the patient's own test numbers inside <untrusted_input> when relevant.
+3. NEVER diagnose a disease and NEVER prescribe medicines or dosages.
+4. If the question asks for a diagnosis, medicine dosage, or something not in the report, or if findings look serious/unclear, gently say you are not sure and advise seeing a doctor (e.g. "${uncertainFallback}").
+${UNTRUSTED_DATA_SECURITY_RULE}
+`;
+
+    const answerText = await runQueuedAiTask(() =>
+      withExponentialBackoff(
+        () =>
+          callGeminiWithFallback(
+            `${wrapUntrustedData('patient_report', reportContext)}\n${wrapUntrustedData('patient_question', cleanQuestion)}`,
+            { systemInstruction, responseMimeType: 'text/plain' },
+            14000
+          ),
+        { jobType: 'report_question', step: 'report_question' }
+      )
+    );
+
+    res.json({ success: true, answer: answerText.replace(/\s+/g, ' ').trim() });
+  } catch (error) {
+    logJobEvent('error', {
+      step: 'report_question_failed',
+      status: 'failed',
+      errorType: classifyErrorType(error),
+    });
+    res.status(503).json({
+      success: false,
+      error: "I'm not sure about this part, please ask a doctor.",
+      isRetryable: true,
+    });
+  }
+});
+
+// Sanitized API error handler (never exposes raw stack traces or internal errors to clients)
+app.use('/api', (err: any, _req: Request, res: Response, _next: NextFunction) => {
+  if (err?.type === 'entity.too.large' || err?.status === 413) {
+    res.status(413).json({
+      success: false,
+      error: 'Photos are too large. Please upload up to 5 smaller photos.',
+      isRetryable: false,
+    });
+    return;
+  }
+  if (err?.type === 'entity.parse.failed' || err?.status === 400) {
+    res.status(400).json({
+      success: false,
+      error: 'Invalid request data. Please try again.',
+      isRetryable: false,
+    });
+    return;
+  }
+  logJobEvent('error', {
+    step: 'api_unhandled_error',
+    status: 'failed',
+    errorType: classifyErrorType(err),
+  });
+  if (!res.headersSent) {
+    res.status(500).json({
+      success: false,
+      error: 'Something went wrong. Please try again.',
       isRetryable: true,
     });
   }

@@ -5,6 +5,8 @@ import {
   SameSaltPair,
   UserHealthProfile,
 } from '../types/medicine';
+import { clearAllCaches } from './cache';
+import { clearAllFeedback } from './feedbackStorage';
 
 const PROFILE_KEY = 'reportsamjho_user_profile';
 const REPORTS_KEY = 'reportsamjho_saved_reports';
@@ -101,6 +103,8 @@ export function clearAllLocalData(): void {
     localStorage.removeItem(MEDICINES_KEY);
     localStorage.removeItem(PRESCRIPTIONS_KEY);
     localStorage.removeItem(HEALTH_PROFILE_KEY);
+    clearAllCaches();
+    clearAllFeedback();
   } catch (err) {
     console.error('Failed to clear local data', err);
   }

@@ -19,10 +19,17 @@ import {
 import { compressImage } from './utils/imageQuality';
 import { isPdfFile, MAX_SCAN_PAGES, renderPdfToJpegPages } from './utils/pdfUtils';
 import { getClientDeviceId, submitScanJobWithPolling } from './utils/uploadJob';
+import {
+  computeScanImageHash,
+  getCachedScanResult,
+  setCachedScanResult,
+  sha256Text,
+} from './utils/cache';
 import { combineReportsClientSide, mergeAddedPagesIntoReport } from './utils/reportMerge';
 import { demoCombinedReportsPreview, demoReports } from './utils/demoData';
 import { demoMedicines } from './utils/demoMedicineData';
 import { triggerLightHaptic } from './utils/haptics';
+import medicineVisualMapping from './data/medicineVisualMapping.json';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { CameraScanner } from './components/CameraScanner';
@@ -37,6 +44,7 @@ import {
 } from './components/PrescriptionScannerFlow';
 import { MedicineConfirmScreen } from './components/medicine/MedicineConfirmScreen';
 import { HealthProfileModal } from './components/HealthProfileModal';
+import { AboutCreditsModal } from './components/AboutCreditsModal';
 import {
   Camera,
   History,
@@ -62,6 +70,172 @@ type ScreenName =
   | 'prescription_verify'
   | 'prescription_results';
 
+interface MappingCategoryEntry {
+  icon: string;
+  body_region: string | null;
+  show_body_map: boolean;
+  include_related_region?: boolean;
+}
+
+interface MappingSaltRule {
+  id: string;
+  salts: string[];
+  category: string;
+}
+
+const MEDICINE_MAPPING_CATEGORIES = medicineVisualMapping.categories as Record<
+  string,
+  MappingCategoryEntry
+>;
+const MEDICINE_MAPPING_RULES = medicineVisualMapping.salt_mappings as MappingSaltRule[];
+
+function stripIngredientNoiseAndStrengths(segment: string): string {
+  return (segment || '')
+    .toLowerCase()
+    .replace(/\b(i\.p\.?|b\.p\.?|u\.s\.p\.?)\b/g, ' ')
+    .replace(/\b(w\/v|w\/w|v\/v)\b/g, ' ')
+    .replace(/\b\d+(?:\.\d+)?\s*(?:mg|mcg|ug|gm|g|ml|iu|units?)\b/gi, ' ')
+    .replace(/(?:^|[\s,(/+])\d+(?:\.\d+)?\s*%/g, ' ')
+    .replace(
+      /\b(ip|bp|usp|tablet|tablets|tab|tabs|capsule|capsules|cap|caps|syrup|injection|inj|drops|gel|cream|ointment|suspension|solution|sr|xr|er|cr|mr|dt|md|dr|ds|xl|forte|plus|duo|extra)\b/g,
+      ' '
+    )
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Normalize raw medicine salt/ingredient strings by removing strengths,
+ * dosage/pharmacopeia noise words, and splitting combination ingredients
+ * before querying the static medicine visual mapping table.
+ */
+export function normalizeMedicineIngredients(rawSalt: string | null | undefined): string[] {
+  const raw = (rawSalt || '').trim();
+  if (!raw) return [];
+
+  const withoutParens = raw
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\b(w\/v|w\/w|v\/v)\b/gi, ' ');
+
+  const splitParts = withoutParens
+    .split(/\s*(?:\+|\/|&|,|\band\b|\bwith\b)\s*/i)
+    .map(stripIngredientNoiseAndStrengths)
+    .filter((part) => part.length >= 2);
+
+  if (splitParts.length > 0) {
+    return Array.from(new Set(splitParts));
+  }
+
+  const wholeNormalized = stripIngredientNoiseAndStrengths(raw);
+  return wholeNormalized ? [wholeNormalized] : [];
+}
+
+function escapeRegExpToken(token: string): string {
+  return token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export function lookupMedicineVisualMapping(
+  rawSalt: string | null | undefined,
+  stage: 'step1_identify' | 'step2_verify'
+): {
+  rawSalt: string;
+  normalizedIngredients: string[];
+  matched: Array<{ ingredient: string; category: string }>;
+  unmatched: string[];
+  category: string;
+  bodyRegion: string | null;
+  fallbackReason: string;
+} {
+  const raw = (rawSalt || '').trim();
+  const normalizedIngredients = normalizeMedicineIngredients(raw);
+  const matched: Array<{ ingredient: string; category: string }> = [];
+  const unmatched: string[] = [];
+
+  for (const ingredient of normalizedIngredients) {
+    let matchedCategory: string | null = null;
+
+    // 1) Exact match across all rules
+    for (const rule of MEDICINE_MAPPING_RULES) {
+      for (const candidate of rule.salts) {
+        const cleanCandidate = stripIngredientNoiseAndStrengths(candidate);
+        if (cleanCandidate && ingredient === cleanCandidate) {
+          matchedCategory = rule.category;
+          break;
+        }
+      }
+      if (matchedCategory) break;
+    }
+
+    // 2) Word-boundary partial match across all rules
+    if (!matchedCategory) {
+      for (const rule of MEDICINE_MAPPING_RULES) {
+        for (const candidate of rule.salts) {
+          const cleanCandidate = stripIngredientNoiseAndStrengths(candidate);
+          if (!cleanCandidate || cleanCandidate.length < 4) continue;
+          const boundaryRegex = new RegExp(`(^|\\s)${escapeRegExpToken(cleanCandidate)}(\\s|$)`, 'i');
+          if (boundaryRegex.test(ingredient)) {
+            matchedCategory = rule.category;
+            break;
+          }
+        }
+        if (matchedCategory) break;
+      }
+    }
+
+    if (matchedCategory) {
+      matched.push({ ingredient, category: matchedCategory });
+    } else {
+      unmatched.push(ingredient);
+    }
+  }
+
+  let category = 'neutral';
+  let bodyRegion: string | null = null;
+  let fallbackReason = 'none';
+
+  if (normalizedIngredients.length === 0) {
+    fallbackReason = 'unmapped';
+  } else if (unmatched.length > 0) {
+    fallbackReason = normalizedIngredients.length > 1 ? 'combination_unclear' : 'unmapped';
+  } else {
+    const uniqueCategories = Array.from(new Set(matched.map((m) => m.category)));
+    const uniqueRegions = Array.from(
+      new Set(
+        matched
+          .map((m) => MEDICINE_MAPPING_CATEGORIES[m.category]?.body_region)
+          .filter((r): r is string => Boolean(r))
+      )
+    );
+
+    if (uniqueCategories.length !== 1 || uniqueRegions.length > 1) {
+      fallbackReason = 'combination_unclear';
+    } else if (uniqueCategories[0] === 'neutral') {
+      fallbackReason = 'steroid_multiple';
+    } else {
+      category = uniqueCategories[0];
+      bodyRegion = MEDICINE_MAPPING_CATEGORIES[category]?.body_region ?? null;
+    }
+  }
+
+  const lookupResult = {
+    rawSalt: raw || '(none)',
+    normalizedIngredients,
+    matched,
+    unmatched,
+    category,
+    bodyRegion,
+    fallbackReason,
+  };
+
+  console.debug('[MedicineIdentifyLookup]', {
+    stage,
+    ...lookupResult,
+  });
+
+  return lookupResult;
+}
+
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(getStoredProfile());
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('home');
@@ -83,6 +257,7 @@ export default function App() {
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
   const [showDemoSelector, setShowDemoSelector] = useState<boolean>(false);
   const [showDemoMedicineSelector, setShowDemoMedicineSelector] = useState<boolean>(false);
+  const [showAboutCredits, setShowAboutCredits] = useState<boolean>(false);
   const [prescriptionProgressText, setPrescriptionProgressText] = useState<string>('');
   const [scanProgressTitle, setScanProgressTitle] = useState<string | undefined>(undefined);
   const [scanProgressSubtitle, setScanProgressSubtitle] = useState<string | undefined>(undefined);
@@ -337,6 +512,21 @@ export default function App() {
     setErrorMessage(null);
 
     try {
+      const scanHash = await computeScanImageHash(
+        images,
+        `report:${currentLanguage}:${profile.age ?? ''}:${profile.gender ?? ''}`
+      );
+      const cachedReport = getCachedScanResult<ReportAnalysis>(scanHash);
+      if (cachedReport) {
+        saveReportToStorage(cachedReport);
+        setPendingImages(null);
+        setCombinedSource(null);
+        setFailedAppendPages([]);
+        setActiveReport(cachedReport);
+        setCurrentScreen('dashboard');
+        return;
+      }
+
       const report = await submitScanJobWithPolling<ReportAnalysis>({
         endpoint: '/api/jobs/scan-report',
         payload: {
@@ -360,6 +550,7 @@ export default function App() {
         return;
       }
 
+      setCachedScanResult(scanHash, report);
       saveReportToStorage(report);
       setPendingImages(null);
       setCombinedSource(null);
@@ -530,18 +721,23 @@ export default function App() {
     setErrorMessage(null);
 
     try {
-      const s1 = await submitScanJobWithPolling<MedicineStep1Result>({
-        endpoint: '/api/jobs/medicine-identify',
-        payload: {
-          images,
+      const medHash = await computeScanImageHash(images, `med_step1:${currentLanguage}`);
+      let s1 = getCachedScanResult<MedicineStep1Result>(medHash);
+
+      if (!s1) {
+        s1 = await submitScanJobWithPolling<MedicineStep1Result>({
+          endpoint: '/api/jobs/medicine-identify',
+          payload: {
+            images,
+            language: currentLanguage,
+          },
           language: currentLanguage,
-        },
-        language: currentLanguage,
-        onProgress: (upd) => {
-          setScanProgressTitle(upd.title);
-          setScanProgressSubtitle(upd.subtitle);
-        },
-      });
+          onProgress: (upd) => {
+            setScanProgressTitle(upd.title);
+            setScanProgressSubtitle(upd.subtitle);
+          },
+        });
+      }
 
       if (s1.is_loose_tablet_only) {
         setPendingMedIdentifyRetry(null);
@@ -559,9 +755,13 @@ export default function App() {
         return;
       }
 
+      setCachedScanResult(medHash, s1);
       setPendingMedIdentifyRetry(null);
       setStep1Result(s1);
       setIsManualConfirmMode(false);
+
+      // Normalize ingredients and query mapping table with debug logging
+      lookupMedicineVisualMapping(s1.medicine?.salt, 'step1_identify');
 
       // Skip "I have this problem" screen by default.
       // High confidence goes straight to verify + result; Medium/Low asks "Is this correct?"
@@ -603,6 +803,51 @@ export default function App() {
 
     try {
       const hp = getHealthProfile();
+      const verifyCacheKey = `med_verify:${await sha256Text(
+        JSON.stringify({
+          brand: confirmedStep1.medicine.brand,
+          salt: confirmedStep1.medicine.salt,
+          strength: confirmedStep1.medicine.strength,
+          problem,
+          docImages,
+          language: currentLanguage,
+          age: profile.age,
+          gender: profile.gender,
+          allergies: hp.allergies,
+          conditions: hp.conditions,
+          pregnant: Boolean(hp.is_pregnant_or_breastfeeding),
+        })
+      )}`;
+
+      const cachedMed = getCachedScanResult<MedicineAnalysis>(verifyCacheKey);
+      const thumbs = overrideImages || pendingMedicineImages;
+      let packThumbnail: string | undefined;
+      if (thumbs[0]) {
+        try {
+          packThumbnail = await compressImage(thumbs[0], 800, 0.7);
+        } catch {
+          packThumbnail = thumbs[0];
+        }
+      }
+
+      if (cachedMed) {
+        const medWithThumb: MedicineAnalysis = {
+          ...cachedMed,
+          pack_thumbnail: packThumbnail || cachedMed.pack_thumbnail,
+        };
+        lookupMedicineVisualMapping(
+          medWithThumb.medicine?.salt ||
+            medWithThumb.verified_facts?.normalized_salt ||
+            confirmedStep1.medicine?.salt,
+          'step2_verify'
+        );
+        setPendingMedVerifyRetry(null);
+        setActiveMedicine(medWithThumb);
+        setMedicineReturnScreen('home');
+        setCurrentScreen('medicine_result');
+        return;
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 90000);
 
@@ -639,11 +884,18 @@ export default function App() {
         throw new Error(data?.error || 'Could not verify medicine.');
       }
 
-      const thumbs = overrideImages || pendingMedicineImages;
       const med: MedicineAnalysis = {
         ...data.medicine,
-        pack_thumbnail: thumbs[0] || undefined,
+        pack_thumbnail: packThumbnail,
       };
+      // Store compact result without raw thumbnail to keep cache lean
+      setCachedScanResult(verifyCacheKey, { ...data.medicine, pack_thumbnail: undefined });
+
+      // Normalize ingredients and query mapping table with debug logging
+      lookupMedicineVisualMapping(
+        med.medicine?.salt || med.verified_facts?.normalized_salt || confirmedStep1.medicine?.salt,
+        'step2_verify'
+      );
 
       setPendingMedVerifyRetry(null);
       setActiveMedicine(med);
@@ -676,6 +928,21 @@ export default function App() {
     setErrorMessage(null);
 
     try {
+      const rxHash = await computeScanImageHash(images, `rx_draft:${currentLanguage}`);
+      const cachedDraft = getCachedScanResult<{
+        doctor_name?: string | null;
+        date?: string | null;
+        image_quality?: string;
+        quality_notes?: string;
+        lines: PrescriptionLineItem[];
+      }>(rxHash);
+      if (cachedDraft) {
+        setPendingPrescriptionImages(null);
+        setPrescriptionDraft(cachedDraft);
+        setCurrentScreen('prescription_verify');
+        return;
+      }
+
       const draft = await submitScanJobWithPolling<{
         doctor_name?: string | null;
         date?: string | null;
@@ -701,6 +968,7 @@ export default function App() {
         return;
       }
 
+      setCachedScanResult(rxHash, draft);
       setPendingPrescriptionImages(null);
       setPrescriptionDraft(draft);
       setCurrentScreen('prescription_verify');
@@ -1355,11 +1623,20 @@ export default function App() {
           onOpenPrescriptionScan={() => handleOpenPrescriptionScanner('camera')}
           onOpenDemoReport={() => setShowDemoSelector(true)}
           onOpenDemoMedicine={() => setShowDemoMedicineSelector(true)}
+          onOpenAboutCredits={() => setShowAboutCredits(true)}
           onDataReset={() => {
             setProfile(getStoredProfile());
             setCurrentScreen('home');
           }}
           onClose={() => setShowSettingsModal(false)}
+        />
+      )}
+
+      {/* About / Credits Modal */}
+      {showAboutCredits && (
+        <AboutCreditsModal
+          language={currentLanguage}
+          onClose={() => setShowAboutCredits(false)}
         />
       )}
 
@@ -1425,24 +1702,31 @@ export default function App() {
       {/* Demo Medicine Selection Modal */}
       {showDemoMedicineSelector && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-text)]/50 p-4">
-          <div className="rs-card w-full max-w-sm p-6 space-y-4">
+          <div className="rs-card w-full max-w-sm p-6 space-y-4 max-h-[85vh] overflow-y-auto">
             <h3 className="text-xl font-extrabold text-[var(--color-text)]">
               Select a Demo Medicine
             </h3>
             <div className="space-y-2.5">
-              {demoMedicines.map((demo) => (
-                <button
-                  key={demo.id}
-                  type="button"
-                  onClick={() => handleSelectDemoMedicine(demo)}
-                  className="w-full text-left rounded-[14px] bg-[var(--color-bg)] px-4 py-3.5 hover:bg-[var(--color-brand-soft)] flex items-center justify-between transition"
-                >
-                  <span className="font-bold text-base text-[var(--color-text)]">
-                    {demo.medicine.brand}
-                  </span>
-                  <span className="text-base font-bold text-[var(--color-brand)]">Open</span>
-                </button>
-              ))}
+              {demoMedicines.map((demo) => {
+                const label = demo.medicine.brand.startsWith('DEMO')
+                  ? demo.medicine.brand
+                  : `DEMO • ${demo.medicine.brand}`;
+                return (
+                  <button
+                    key={demo.id}
+                    type="button"
+                    onClick={() => handleSelectDemoMedicine(demo)}
+                    className="w-full text-left rounded-[14px] bg-[var(--color-bg)] px-4 py-3.5 hover:bg-[var(--color-brand-soft)] flex items-center justify-between gap-2 transition"
+                  >
+                    <span className="font-bold text-base text-[var(--color-text)]">
+                      {label}
+                    </span>
+                    <span className="text-base font-bold text-[var(--color-brand)] shrink-0">
+                      Open
+                    </span>
+                  </button>
+                );
+              })}
             </div>
             <button
               type="button"

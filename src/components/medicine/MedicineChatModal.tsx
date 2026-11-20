@@ -3,6 +3,7 @@ import { MedicineAnalysis } from '../../types/medicine';
 import { SupportedLanguage } from '../../utils/translations';
 import { medicineTranslations } from '../../utils/medicineTranslations';
 import { getHealthProfile } from '../../utils/storage';
+import { getClientDeviceId } from '../../utils/uploadJob';
 import { X, Send, Loader2, ShieldCheck, MessageCircleQuestion } from 'lucide-react';
 
 interface ChatMessage {
@@ -56,7 +57,10 @@ export const MedicineChatModal: React.FC<MedicineChatModalProps> = ({
       const hp = getHealthProfile();
       const res = await fetch('/api/medicine-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Id': getClientDeviceId(),
+        },
         body: JSON.stringify({
           medicine,
           question: q,

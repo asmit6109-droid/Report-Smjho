@@ -22,6 +22,7 @@ import {
 } from './storage';
 import { SupportedLanguage, translations } from './translations';
 import { medicineTranslations } from './medicineTranslations';
+import { ResolvedMedicineVisual, resolveMedicineVisual } from './medicineVisualMapper';
 
 export interface PdfExportOptions {
   language: SupportedLanguage;
@@ -72,6 +73,10 @@ export interface PdfMedicineEntry {
   seeDoctorSideEffects: string[];
   warnings: string[];
   whyGiven?: string;
+  visual: ResolvedMedicineVisual;
+  visualUsedForLine: string;
+  visualRelatedNote: string | null;
+  packThumbnail?: string;
 }
 
 export interface PdfCombinedScanItem {
@@ -744,6 +749,23 @@ export function buildFullPdfPayload(
       }
     }
 
+    const visualEn = resolveMedicineVisual(med, 'en');
+    const visualLang = resolveMedicineVisual(med, language);
+    const visualUsedForLine = combineBilingualText(
+      language,
+      includeEnglishBilingual,
+      visualEn.fullUsedForLine,
+      visualLang.fullUsedForLine
+    );
+    const visualRelatedNote = visualLang.relatedAreaNote
+      ? combineBilingualText(
+          language,
+          includeEnglishBilingual,
+          visualEn.relatedAreaNote || visualLang.relatedAreaNote,
+          visualLang.relatedAreaNote
+        )
+      : null;
+
     return {
       id: med.id,
       brand: combineBilingualText(
@@ -785,6 +807,13 @@ export function buildFullPdfPayload(
       ),
       warnings: Array.from(new Set(warnings)),
       whyGiven: med.connection_summary?.why_given || undefined,
+      visual: visualLang,
+      visualUsedForLine,
+      visualRelatedNote,
+      packThumbnail:
+        med.pack_thumbnail && /^data:image\/(?:jpeg|jpg|png|webp);base64,/i.test(med.pack_thumbnail)
+          ? med.pack_thumbnail
+          : undefined,
     };
   });
 

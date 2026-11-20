@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   MedicineAnalysis,
   MedicineReportConnection,
@@ -7,6 +7,7 @@ import { ReportAnalysis } from '../types/report';
 import { SupportedLanguage, translations } from '../utils/translations';
 import { medicineTranslations } from '../utils/medicineTranslations';
 import { speechService } from '../utils/speech';
+import { resolveMedicineVisual } from '../utils/medicineVisualMapper';
 import {
   detectSameSaltPairs,
   getStoredMedicines,
@@ -15,13 +16,20 @@ import {
   updateMedicineInStorage,
 } from '../utils/storage';
 import { MedicineChatModal } from './medicine/MedicineChatModal';
+import { MedicineVisualBadge } from './medicine/MedicineVisual';
+import { BodyMap } from './BodyMap';
+import { getClientDeviceId } from '../utils/uploadJob';
+import {
+  computeTranslationCacheKey,
+  getCachedTranslation,
+  setCachedTranslation,
+} from '../utils/cache';
 import {
   ArrowLeft,
   Languages,
   Volume2,
   VolumeX,
   Loader2,
-  Pill,
   AlertTriangle,
   AlertOctagon,
   ShieldAlert,
@@ -34,6 +42,7 @@ import {
   Phone,
   Share2,
   MessageCircleQuestion,
+  X,
 } from 'lucide-react';
 
 interface MedicineResultScreenProps {
@@ -81,6 +90,12 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
   const [isLinking, setIsLinking] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showBodyMapModal, setShowBodyMapModal] = useState(false);
+
+  const visual = useMemo(
+    () => resolveMedicineVisual(medicine, currentLanguage),
+    [medicine, currentLanguage]
+  );
 
   const savedReports = getStoredReports();
   const savedMedicines = getStoredMedicines();
@@ -118,9 +133,39 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
       if (!needsTranslation()) return;
       setIsTranslating(true);
       try {
+        const cacheKey = await computeTranslationCacheKey(
+          'medicine',
+          {
+            brand: medicine.medicine.brand,
+            salt: medicine.medicine.salt,
+            purpose: medicine.purpose,
+            how_it_works: medicine.how_it_works,
+            how_to_take_as_printed: medicine.how_to_take_as_printed,
+          },
+          currentLanguage
+        );
+        const cached = getCachedTranslation<any>(cacheKey);
+        if (cached) {
+          if (!cancelled) {
+            const updated: MedicineAnalysis = {
+              ...medicine,
+              translations: {
+                ...medicine.translations,
+                [currentLanguage]: cached,
+              },
+            };
+            updateMedicineInStorage(updated);
+            onMedicineUpdated?.(updated);
+          }
+          return;
+        }
+
         const res = await fetch('/api/translate-medicine', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Device-Id': getClientDeviceId(),
+          },
           body: JSON.stringify({
             medicineAnalysis: medicine,
             targetLanguage: currentLanguage,
@@ -129,6 +174,7 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
         const raw = await res.text();
         const data = JSON.parse(raw);
         if (!cancelled && res.ok && data.success && data.translation) {
+          setCachedTranslation(cacheKey, data.translation);
           const updated: MedicineAnalysis = {
             ...medicine,
             translations: {
@@ -213,6 +259,7 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
       medicine.medicine.strength || '',
       medicine.medicine.is_expired ? mt.expiryExpired : '',
       accessTag.label,
+      visual.fullUsedForLine,
       displayPurpose,
       topWarningSign,
       mt.medicineFooter,
@@ -284,7 +331,10 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
     try {
       const res = await fetch('/api/medicine-report-link', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Id': getClientDeviceId(),
+        },
         body: JSON.stringify({
           medicine,
           report,
@@ -465,18 +515,14 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
 
       {/* MAIN VIEW (ONLY THESE 4 VISIBLE) */}
       <div className="rs-card p-6 space-y-5">
-        {/* 1. Medicine name (big 20px+) + strength + small pack photo */}
+        {/* 1. Medicine name (big 20px+) + strength + small pack photo if captured */}
         <div className="flex items-center gap-4">
-          {medicine.pack_thumbnail ? (
+          {medicine.pack_thumbnail && (
             <img
               src={medicine.pack_thumbnail}
               alt={displayBrand}
-              className="w-16 h-16 rounded-[14px] object-cover shrink-0"
+              className="w-16 h-16 rounded-[14px] object-cover border border-[var(--color-divider)] shrink-0"
             />
-          ) : (
-            <div className="w-14 h-14 rounded-[14px] bg-[var(--color-brand-soft)] text-[var(--color-brand)] flex items-center justify-center shrink-0">
-              <Pill className="w-7 h-7" />
-            </div>
           )}
           <div className="min-w-0">
             <h1 className="text-2xl font-extrabold text-[var(--color-text)] leading-tight break-words">
@@ -496,18 +542,35 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
           <span className="text-base font-extrabold">{accessTag.label}</span>
         </div>
 
-        {/* 3. Used for: 1 short line */}
-        <div className="space-y-1">
-          <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-text-secondary)] block">
-            {currentLanguage === 'hi'
-              ? 'किस काम की है'
-              : currentLanguage === 'or'
-              ? 'କଣ ପାଇଁ ବ୍ୟବହାର ହୁଏ'
-              : 'Used for'}
-          </span>
-          <p className="text-lg font-bold text-[var(--color-text)] leading-snug line-clamp-1">
-            {displayPurpose}
-          </p>
+        {/* 3. Used for: small static visual + 1 short line + "Commonly used for" */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-3.5">
+            <MedicineVisualBadge
+              visual={visual}
+              onTapExpand={visual.bodyRegion ? () => setShowBodyMapModal(true) : undefined}
+              tapAriaLabel={visual.fullUsedForLine}
+            />
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-text-secondary)] block">
+                {currentLanguage === 'hi'
+                  ? 'किस काम की है'
+                  : currentLanguage === 'or'
+                  ? 'କଣ ପାଇଁ ବ୍ୟବହାର ହୁଏ'
+                  : 'Used for'}
+              </span>
+              <p className="text-lg font-bold text-[var(--color-text)] leading-snug line-clamp-1">
+                {displayPurpose}
+              </p>
+              <p className="text-sm font-semibold text-[var(--color-brand)] leading-snug">
+                {visual.fullUsedForLine}
+              </p>
+            </div>
+          </div>
+          {visual.relatedAreaNote && (
+            <p className="text-xs font-medium text-[var(--color-text-secondary)] leading-snug">
+              {visual.relatedAreaNote}
+            </p>
+          )}
         </div>
 
         {/* 4. Go to doctor if: 1 short line */}
@@ -588,6 +651,32 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
       {/* MORE DETAILS (Hidden by default, collapsed 1-line rows, only 1 open at a time) */}
       {showMore && (
         <div className="rs-card divide-y divide-[var(--color-divider)] overflow-hidden">
+          {/* Interactive related body area visual trigger inside More details */}
+          {visual.bodyRegion && (
+            <button
+              type="button"
+              onClick={() => setShowBodyMapModal(true)}
+              className="w-full px-5 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-[var(--color-bg)] transition"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <MedicineVisualBadge visual={visual} />
+                <div className="min-w-0">
+                  <p className="text-base font-bold text-[var(--color-text)] truncate">
+                    {visual.shortLabel}
+                  </p>
+                  <p className="text-xs font-medium text-[var(--color-text-secondary)]">
+                    {currentLanguage === 'hi'
+                      ? 'बड़ा शरीर मानचित्र देखने के लिए टैप करें'
+                      : currentLanguage === 'or'
+                      ? 'ବଡ଼ ଶରୀର ମାନଚିତ୍ର ଦେଖିବାକୁ ଟ୍ୟାପ୍ କରନ୍ତୁ'
+                      : 'Tap visual to view larger body map'}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[var(--color-text-secondary)] shrink-0" />
+            </button>
+          )}
+
           {/* How it works */}
           <div>
             <button
@@ -931,6 +1020,53 @@ export const MedicineResultScreen: React.FC<MedicineResultScreenProps> = ({
           language={currentLanguage}
           onClose={() => setShowChatModal(false)}
         />
+      )}
+
+      {/* Larger Body Map Modal when user taps the highlighted medicine visual */}
+      {showBodyMapModal && visual.bodyRegion && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[var(--color-text)]/50 p-0 sm:p-4"
+          onClick={() => setShowBodyMapModal(false)}
+        >
+          <div
+            className="rs-card w-full sm:max-w-lg rounded-b-none sm:rounded-[16px] p-4 sm:p-5 max-h-[90vh] overflow-y-auto space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 px-1">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-[var(--color-brand)] truncate">
+                  {displayBrand}
+                </p>
+                <p className="text-base font-extrabold text-[var(--color-text)]">
+                  {visual.fullUsedForLine}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBodyMapModal(false)}
+                aria-label="Close body map"
+                className="w-10 h-10 rounded-full bg-[var(--color-surface-subtle)] flex items-center justify-center text-[var(--color-text-secondary)] shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <BodyMap
+              affectedRegions={[visual.bodyRegion]}
+              findings={[]}
+              overallSeverity="green"
+              language={currentLanguage}
+              medicineContext={{
+                regionId: visual.bodyRegion,
+                medicineName: displayBrand,
+                commonlyUsedFor: visual.fullUsedForLine,
+                disclaimerNote:
+                  visual.relatedAreaNote ||
+                  'Shows a related area. It does not confirm your condition.',
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

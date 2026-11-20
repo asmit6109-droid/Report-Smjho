@@ -5,6 +5,7 @@ import {
   BACK_ONLY_REGION_IDS,
   BodyRegionSummary,
   buildBodyRegionSummaries,
+  getRegionLabel,
   RegionSeverity,
   SYSTEMIC_REGION_IDS,
 } from '../utils/bodyMapper';
@@ -27,6 +28,20 @@ interface BodyMapProps {
   reportType?: string;
   language: SupportedLanguage;
   onViewFinding?: (findingId: string) => void;
+  onExplainRegion?: (
+    regionId: BodyRegionId,
+    areaLabel: string,
+    findings: Finding[],
+    severity: RegionSeverity,
+    shortNote: string
+  ) => void;
+  onExplainFinding?: (finding: Finding) => void;
+  medicineContext?: {
+    regionId: BodyRegionId;
+    medicineName: string;
+    commonlyUsedFor: string;
+    disclaimerNote: string;
+  };
 }
 
 const SEVERITY_COLORS: Record<RegionSeverity, { fill: string; softBg: string; text: string }> = {
@@ -113,14 +128,34 @@ export const BodyMap: React.FC<BodyMapProps> = ({
   reportType = '',
   language,
   onViewFinding,
+  onExplainRegion,
+  onExplainFinding,
+  medicineContext,
 }) => {
   const t = translations[language];
   const ui = getLocalizedUiCopy(language);
 
-  const summaryData = useMemo(
-    () => buildBodyRegionSummaries(findings, reportType, language),
-    [findings, reportType, language]
-  );
+  const summaryData = useMemo(() => {
+    if (medicineContext) {
+      const rId = medicineContext.regionId;
+      const areaLabel = getRegionLabel(rId, language);
+      const summary: BodyRegionSummary = {
+        regionId: rId,
+        areaLabel,
+        mappingKind: 'related_lab',
+        shortNote: medicineContext.disclaimerNote,
+        severity: 'normal',
+        findings: [],
+      };
+      return {
+        regions: { [rId]: summary } as Record<string, BodyRegionSummary>,
+        orderedRegionIds: [rId],
+        unmappedAbnormalFindings: [] as Finding[],
+        mappedRegionIdsForFinding: {} as Record<string, BodyRegionId | null>,
+      };
+    }
+    return buildBodyRegionSummaries(findings, reportType, language);
+  }, [findings, reportType, language, medicineContext]);
 
   const { regions, orderedRegionIds } = summaryData;
 
@@ -162,7 +197,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
         opacity: 0.35,
       };
     }
-    const color = SEVERITY_COLORS[summary.severity].fill;
+    const color = medicineContext ? '#0F766E' : SEVERITY_COLORS[summary.severity].fill;
     return {
       highlighted: true,
       fill: color,
@@ -573,12 +608,14 @@ export const BodyMap: React.FC<BodyMapProps> = ({
                       type="button"
                       onClick={() => handleTapRegion(rId)}
                       className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-bold transition min-h-[40px] ${
-                        sevStyle.softBg
-                      } ${sevStyle.text} ${
-                        isSelected ? 'ring-2 ring-[var(--color-brand)] ring-offset-1' : ''
-                      }`}
+                        medicineContext
+                          ? 'bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
+                          : `${sevStyle.softBg} ${sevStyle.text}`
+                      } ${isSelected ? 'ring-2 ring-[var(--color-brand)] ring-offset-1' : ''}`}
                     >
-                      {rId === 'blood_system' ? (
+                      {medicineContext ? (
+                        <Info className="w-4 h-4 shrink-0 text-[var(--color-brand)]" />
+                      ) : rId === 'blood_system' ? (
                         <Droplets className="w-4 h-4 shrink-0" style={{ color: sevStyle.fill }} />
                       ) : rId === 'bones_joints' ? (
                         <Bone className="w-4 h-4 shrink-0" style={{ color: sevStyle.fill }} />
@@ -594,7 +631,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
               </div>
 
               <p className="text-center text-xs font-medium text-[var(--color-text-secondary)]">
-                {ui.tapHint}
+                {medicineContext ? medicineContext.disclaimerNote : ui.tapHint}
               </p>
             </div>
           ) : (
@@ -627,7 +664,11 @@ export const BodyMap: React.FC<BodyMapProps> = ({
                     : ui.relatedArea}
                 </span>
                 <div className="flex items-center gap-2">
-                  {renderSeverityIcon(activeRegionSummary.severity, 'w-5 h-5 shrink-0')}
+                  {medicineContext ? (
+                    <Info className="w-5 h-5 shrink-0 text-[var(--color-brand)]" />
+                  ) : (
+                    renderSeverityIcon(activeRegionSummary.severity, 'w-5 h-5 shrink-0')
+                  )}
                   <h4 className="text-xl font-extrabold text-[var(--color-text)] leading-tight">
                     {activeRegionSummary.areaLabel}
                   </h4>
@@ -644,75 +685,148 @@ export const BodyMap: React.FC<BodyMapProps> = ({
               </button>
             </div>
 
-            {/* Related findings */}
-            <div className="space-y-2">
-              <p className="text-sm font-bold text-[var(--color-text-secondary)]">
-                {ui.relatedFindings}
-              </p>
-              <div className="space-y-2">
-                {activeRegionSummary.findings.map((f) => {
-                  const fname = f.translations?.[language]?.name || f.name;
-                  return (
-                    <div
-                      key={f.id}
-                      className="rounded-[12px] bg-[var(--color-bg)] px-3.5 py-2.5 flex items-center justify-between gap-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-base font-bold text-[var(--color-text)] truncate">
-                          {fname}
-                        </p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-extrabold font-mono text-[var(--color-text)]">
-                            {f.value} {f.unit || ''}
-                          </span>
-                          {f.source_label && (
-                            <span className="text-xs font-bold text-[var(--color-brand)] bg-[var(--color-brand-soft)] rounded-full px-2 py-0.5">
-                              {f.source_label}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      {renderStatusBadge(f.status)}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* What this means (1-2 simple lines) */}
-            <div className="rounded-[12px] bg-[var(--color-brand-soft)]/50 px-4 py-3 space-y-1">
-              <p className="text-sm font-bold text-[var(--color-brand)]">{ui.whatThisMeans}</p>
-              <p className="text-base text-[var(--color-text)] font-medium leading-snug">
-                {activeRegionSummary.shortNote}
-              </p>
-              {activeRegionSummary.findings[0] && (
-                <p className="text-sm text-[var(--color-text-secondary)] leading-snug">
-                  {activeRegionSummary.findings[0].translations?.[language]?.short_explanation ||
-                    activeRegionSummary.findings[0].short_explanation}
+            {/* Related findings (or medicine calm explanation) */}
+            {medicineContext ? (
+              <div className="rounded-[12px] bg-[var(--color-brand-soft)]/50 px-4 py-3 space-y-1.5">
+                <p className="text-sm font-bold text-[var(--color-brand)]">
+                  {medicineContext.medicineName}
                 </p>
+                <p className="text-base text-[var(--color-text)] font-bold leading-snug">
+                  {medicineContext.commonlyUsedFor}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <p className="text-sm font-bold text-[var(--color-text-secondary)]">
+                    {ui.relatedFindings}
+                  </p>
+                  <div className="space-y-2">
+                    {activeRegionSummary.findings.map((f) => {
+                      const fname = f.translations?.[language]?.name || f.name;
+                      const rowContent = (
+                        <>
+                          <div className="min-w-0 text-left">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-base font-bold text-[var(--color-text)] truncate">
+                                {fname}
+                              </p>
+                              {onExplainFinding && (
+                                <Info className="w-3.5 h-3.5 text-[var(--color-brand)] shrink-0" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-extrabold font-mono text-[var(--color-text)]">
+                                {f.value} {f.unit || ''}
+                              </span>
+                              {f.source_label && (
+                                <span className="text-xs font-bold text-[var(--color-brand)]">
+                                  {f.source_label}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {renderStatusBadge(f.status)}
+                        </>
+                      );
+
+                      if (onExplainFinding) {
+                        return (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedRegionId(null);
+                              onExplainFinding(f);
+                            }}
+                            className="w-full rounded-[12px] bg-[var(--color-bg)] hover:bg-[var(--color-brand-soft)]/50 px-3.5 py-2.5 flex items-center justify-between gap-3 transition"
+                          >
+                            {rowContent}
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <div
+                          key={f.id}
+                          className="rounded-[12px] bg-[var(--color-bg)] px-3.5 py-2.5 flex items-center justify-between gap-3"
+                        >
+                          {rowContent}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* What this means (1-2 simple lines) */}
+                <div className="rounded-[12px] bg-[var(--color-brand-soft)]/50 px-4 py-3 space-y-1">
+                  <p className="text-sm font-bold text-[var(--color-brand)]">{ui.whatThisMeans}</p>
+                  <p className="text-base text-[var(--color-text)] font-medium leading-snug">
+                    {activeRegionSummary.shortNote}
+                  </p>
+                  {activeRegionSummary.findings[0] && (
+                    <p className="text-sm text-[var(--color-text-secondary)] leading-snug">
+                      {activeRegionSummary.findings[0].translations?.[language]?.short_explanation ||
+                        activeRegionSummary.findings[0].short_explanation}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* "What is this?" Organ Explainer & View Test Details Buttons */}
+            <div className="space-y-2.5">
+              {!medicineContext && onExplainRegion && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const summary = activeRegionSummary;
+                    setSelectedRegionId(null);
+                    onExplainRegion(
+                      summary.regionId,
+                      summary.areaLabel,
+                      summary.findings,
+                      summary.severity,
+                      summary.shortNote
+                    );
+                  }}
+                  className="rs-btn-primary w-full py-3.5 px-5 flex items-center justify-center gap-2 text-base font-extrabold"
+                >
+                  <Info className="w-5 h-5" />
+                  <span>
+                    {language === 'hi'
+                      ? 'यह क्या है? (सरल समझ)'
+                      : language === 'or'
+                      ? 'ଏହା କଣ? (ସରଳ ବୁଝାମଣା)'
+                      : 'What is this?'}
+                  </span>
+                </button>
+              )}
+
+              {onViewFinding && activeRegionSummary.findings[0] && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const firstId = activeRegionSummary.findings[0].id;
+                    setSelectedRegionId(null);
+                    onViewFinding(firstId);
+                  }}
+                  className={`w-full py-3 px-5 flex items-center justify-center gap-2 text-base font-extrabold rounded-[14px] transition ${
+                    !medicineContext && onExplainRegion
+                      ? 'bg-[var(--color-surface-subtle)] text-[var(--color-text)] hover:bg-[var(--color-divider)]'
+                      : 'rs-btn-primary'
+                  }`}
+                >
+                  <span>{ui.viewDetails}</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
               )}
             </div>
-
-            {/* View test details button */}
-            {onViewFinding && activeRegionSummary.findings[0] && (
-              <button
-                type="button"
-                onClick={() => {
-                  const firstId = activeRegionSummary.findings[0].id;
-                  setSelectedRegionId(null);
-                  onViewFinding(firstId);
-                }}
-                className="rs-btn-primary w-full py-3.5 px-5 flex items-center justify-center gap-2 text-base font-extrabold"
-              >
-                <span>{ui.viewDetails}</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            )}
 
             {/* Calm Medical Note */}
             <div className="flex items-start gap-2 text-xs text-[var(--color-text-secondary)] pt-1">
               <Info className="w-4 h-4 shrink-0 mt-0.5 text-[var(--color-brand)]" />
-              <span>{ui.disclaimer}</span>
+              <span>{medicineContext ? medicineContext.disclaimerNote : ui.disclaimer}</span>
             </div>
           </div>
         </div>

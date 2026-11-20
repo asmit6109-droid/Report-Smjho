@@ -4,6 +4,8 @@ import { medicineTranslations } from '../utils/medicineTranslations';
 import { UserProfile } from '../types/report';
 import { UserHealthProfile } from '../types/medicine';
 import { clearAllLocalData } from '../utils/storage';
+import { clearAllCaches, getCacheStats } from '../utils/cache';
+import { getThumbsDownTopics } from '../utils/feedbackStorage';
 import {
   X,
   Languages,
@@ -14,6 +16,11 @@ import {
   FileText,
   Pill,
   ChevronRight,
+  ChevronDown,
+  Info,
+  DatabaseZap,
+  ThumbsDown,
+  Check,
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -26,6 +33,7 @@ interface SettingsModalProps {
   onOpenPrescriptionScan: () => void;
   onOpenDemoReport: () => void;
   onOpenDemoMedicine: () => void;
+  onOpenAboutCredits: () => void;
   onDataReset: () => void;
   onClose: () => void;
 }
@@ -39,12 +47,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenPrescriptionScan,
   onOpenDemoReport,
   onOpenDemoMedicine,
+  onOpenAboutCredits,
   onDataReset,
   onClose,
 }) => {
   const t = translations[language];
   const mt = medicineTranslations[language];
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [cacheCount, setCacheCount] = useState(() => getCacheStats().totalCount);
+  const [cacheClearedMsg, setCacheClearedMsg] = useState(false);
+  const [showFeedbackList, setShowFeedbackList] = useState(false);
+  const thumbsDownTopics = getThumbsDownTopics();
 
   const profileSummary = [
     profile.age ? `${profile.age}y` : '',
@@ -188,8 +201,131 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <ChevronRight className="w-5 h-5 text-[var(--color-text-secondary)]" />
           </button>
 
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenAboutCredits();
+            }}
+            className="w-full flex items-center justify-between py-3 px-3 rounded-[12px] hover:bg-[var(--color-bg)] text-left transition"
+          >
+            <div className="flex items-center gap-3 text-base font-semibold text-[var(--color-text)]">
+              <Info className="w-5 h-5 text-[var(--color-brand)]" />
+              <span>
+                {language === 'hi'
+                  ? 'ऐप के बारे में / क्रेडिट्स'
+                  : language === 'or'
+                  ? 'ଆପ୍ ବିଷୟରେ / କ୍ରେଡିଟ୍ସ'
+                  : 'About / Credits'}
+              </span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[var(--color-text-secondary)]" />
+          </button>
+
           <div className="pt-2 flex justify-start">
             <PWAInstallButton language={language} />
+          </div>
+        </div>
+
+        {/* Cache Clearing (keeps saved reports & medicines) + Clarity Feedback Review */}
+        <div className="space-y-2.5 pt-2 border-t border-[var(--color-divider)]">
+          <button
+            type="button"
+            onClick={() => {
+              clearAllCaches();
+              setCacheCount(0);
+              setCacheClearedMsg(true);
+              setTimeout(() => setCacheClearedMsg(false), 2500);
+            }}
+            className="w-full flex items-center justify-between py-3 px-3.5 rounded-[12px] bg-[var(--color-bg)] hover:bg-[var(--color-surface-subtle)] text-left transition"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              {cacheClearedMsg ? (
+                <Check className="w-5 h-5 text-[var(--color-normal)] shrink-0" />
+              ) : (
+                <DatabaseZap className="w-5 h-5 text-[var(--color-brand)] shrink-0" />
+              )}
+              <div className="min-w-0">
+                <span className="text-base font-semibold text-[var(--color-text)] block">
+                  {cacheClearedMsg
+                    ? language === 'hi'
+                      ? 'कैश साफ हो गया'
+                      : language === 'or'
+                      ? 'କ୍ୟାସ୍ ସଫା ହୋଇଗଲା'
+                      : 'Cache cleared'
+                    : language === 'hi'
+                    ? 'सेव किया गया कैश साफ करें'
+                    : language === 'or'
+                    ? 'ସେଭ୍ ହୋଇଥିବା କ୍ୟାସ୍ ସଫା କରନ୍ତୁ'
+                    : 'Clear cached scans & explanations'}
+                </span>
+                <span className="text-xs text-[var(--color-text-secondary)] block">
+                  {language === 'hi'
+                    ? 'आपकी सेव रिपोर्ट और दवाइयां सुरक्षित रहेंगी'
+                    : language === 'or'
+                    ? 'ଆପଣଙ୍କ ସେଭ୍ ରିପୋର୍ଟ ଓ ଔଷଧ ସୁରକ୍ଷିତ ରହିବ'
+                    : 'Keeps all your saved reports & medicines'}
+                </span>
+              </div>
+            </div>
+            <span className="text-xs font-extrabold text-[var(--color-text-secondary)] shrink-0 ml-2">
+              {cacheCount}
+            </span>
+          </button>
+
+          {/* Explanation Clarity Feedback Debug View */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowFeedbackList((p) => !p)}
+              className="w-full flex items-center justify-between py-2.5 px-3 rounded-[12px] hover:bg-[var(--color-bg)] text-left transition"
+            >
+              <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-secondary)]">
+                <ThumbsDown className="w-4 h-4 shrink-0" />
+                <span>
+                  {language === 'hi'
+                    ? 'अस्पष्ट समझाई गई जांच सूची'
+                    : language === 'or'
+                    ? 'ଅସ୍ପଷ୍ଟ ବୁଝାଯାଇଥିବା ତାଲିକା'
+                    : 'Topics marked unclear'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-[var(--color-text-secondary)]">
+                  {thumbsDownTopics.length}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-[var(--color-text-secondary)] transition ${
+                    showFeedbackList ? 'rotate-180' : ''
+                  }`}
+                />
+              </div>
+            </button>
+            {showFeedbackList && (
+              <div className="mt-1.5 rounded-[12px] bg-[var(--color-bg)] px-3.5 py-2.5 space-y-1.5 text-xs">
+                {thumbsDownTopics.length === 0 ? (
+                  <p className="text-[var(--color-text-secondary)]">
+                    {language === 'hi'
+                      ? 'अभी तक किसी जांच पर डाउन-वोट नहीं है।'
+                      : language === 'or'
+                      ? 'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଅସ୍ପଷ୍ଟ ଭୋଟ୍ ନାହିଁ।'
+                      : 'No topics marked unclear yet.'}
+                  </p>
+                ) : (
+                  thumbsDownTopics.map((item) => (
+                    <div
+                      key={item.topicId}
+                      className="flex items-center justify-between gap-2 text-[var(--color-text)]"
+                    >
+                      <span className="font-bold truncate">{item.topicLabel}</span>
+                      <span className="text-[var(--color-text-secondary)] shrink-0">
+                        {new Date(item.updatedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
 
